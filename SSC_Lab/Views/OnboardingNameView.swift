@@ -1,0 +1,88 @@
+//
+//  OnboardingNameView.swift
+//  SSC_Lab
+//
+//  Onboarding view for user's name.
+//
+
+import SwiftUI
+
+struct OnboardingNameView: View {
+    @Binding var userName: String
+    @Binding var hasOnboarded: Bool
+    @Environment(\.dismiss) private var dismiss
+    
+    @State private var nameInput: String = ""
+    
+    private let horizontalMargin: CGFloat = 16
+    
+    private var isNameEmpty: Bool {
+        nameInput.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
+    
+    var body: some View {
+        NavigationStack {
+            VStack(spacing: 0) {
+                Spacer()
+                
+                VStack(spacing: 0) {
+
+                    VStack(spacing: 8) {
+                        Text("Welcome to SSC Lab! 🧪")
+                            .font(.appHeroSmall)
+                            .foregroundStyle(Color.appFont)
+                            .multilineTextAlignment(.center)
+                        
+                        Text("What should we call you, Director?")
+                            .font(.appBody)
+                            .foregroundStyle(Color.appSecondary)
+                            .multilineTextAlignment(.center)
+                    }
+                    
+                    TextField("Enter your name", text: $nameInput)
+                        .font(.appTitle)
+                        .foregroundStyle(Color.appFont)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, 20)
+                        .padding(.vertical, 16)
+                        .background(
+                            RoundedRectangle(cornerRadius: 16)
+                                .fill(Color.white)
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 16)
+                                        .stroke(Color.appSecondary.opacity(0.3), lineWidth: 1)
+                                )
+                        )
+                        .padding(.top, 30)
+                }
+                .padding(.horizontal, horizontalMargin)
+                
+                Spacer()
+                
+                // Button
+                AppButton(title: "Start Experimenting", style: .primary) {
+                    if !isNameEmpty {
+                        userName = nameInput.trimmingCharacters(in: .whitespacesAndNewlines)
+                    }
+                    hasOnboarded = true
+                    dismiss()
+                }
+                .disabled(isNameEmpty)
+                .opacity(isNameEmpty ? 0.5 : 1)
+                .padding(.horizontal, horizontalMargin)
+                .padding(.bottom, 32)
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .background(Color.appBg)
+            .navigationBarHidden(true)
+        }
+    }
+}
+
+// MARK: - Preview
+#Preview {
+    OnboardingNameView(
+        userName: .constant("Scientist"),
+        hasOnboarded: .constant(false)
+    )
+}
