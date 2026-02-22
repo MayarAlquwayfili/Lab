@@ -14,9 +14,25 @@ final class LabViewModel {
 
     // SwiftData actions
 
-    func delete(experiment: Experiment, context: ModelContext) {
+    /// Deletes the experiment immediately and saves. On success returns an undo closure that re-inserts the experiment; on save failure returns nil (caller should show error toast).
+    func deleteExperiment(experiment: Experiment, context: ModelContext) -> (() -> Void)? {
+        let copy = Experiment.copy(from: experiment)
         context.delete(experiment)
-        try? context.save() // Force write to disk immediately
+        do {
+            try context.save()
+        } catch {
+            Logger().error("SwiftData save failed: \(String(describing: error))")
+            context.insert(experiment)
+            return nil
+        }
+        return {
+            context.insert(copy)
+            do {
+                try context.save()
+            } catch {
+                Logger().error("SwiftData undo save failed: \(String(describing: error))")
+            }
+        }
     }
 
     /// Returns a random experiment from the array, or nil if empty.
@@ -35,12 +51,6 @@ final class LabViewModel {
             result = result.filter { $0.title.localizedCaseInsensitiveContains(searchText) }
         }
         return result
-    }
-
-    /// Excludes the experiment pending delete from the list (for undo flow).
-    func experimentsToShow(from filtered: [Experiment], pendingDelete: Experiment?) -> [Experiment] {
-        guard let pending = pendingDelete else { return filtered }
-        return filtered.filter { $0.id != pending.id }
     }
 
     /// Toggles active state: if currently active, deactivates; otherwise deactivates all others and sets this one active.

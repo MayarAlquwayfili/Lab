@@ -25,8 +25,6 @@ struct LabView: View {
     @State private var showNeedMoreExperimentsPopUp = false
     @State private var showRandomResultPopUp = false
     @State private var pickedRandomExperiment: Experiment?
-    @State private var experimentPendingDelete: Experiment?
-    @State private var pendingDeleteTask: Task<Void, Never>?
     @State private var searchText = ""
     @State private var filterCriteria = FilterCriteria()
     @State private var showFilterSheet = false
@@ -44,10 +42,6 @@ struct LabView: View {
 
     private var filteredExperiments: [Experiment] {
         viewModel.filteredExperiments(experiments, searchText: searchText, filterCriteria: filterCriteria)
-    }
-
-    private var experimentsToShow: [Experiment] {
-        viewModel.experimentsToShow(from: filteredExperiments, pendingDelete: experimentPendingDelete)
     }
 
     init(hideTabBar: Binding<Bool> = .constant(false)) {
@@ -116,7 +110,7 @@ struct LabView: View {
                             GridItem(.flexible(), spacing: gridSpacing),
                             GridItem(.flexible(), spacing: gridSpacing)
                         ], spacing: gridSpacing) {
-                            ForEach(experimentsToShow) { experiment in
+                            ForEach(filteredExperiments) { experiment in
                                 Button {
                                     selectedExperiment = experiment
                                 } label: {
@@ -158,7 +152,7 @@ struct LabView: View {
                         }
                         .padding(.horizontal, horizontalMargin)
                         .padding(.top, 8)
-                        .animation(.spring(response: 0.35, dampingFraction: 0.8), value: experimentPendingDelete?.id)
+                        .animation(.spring(response: 0.35, dampingFraction: 0.8), value: filteredExperiments.count)
                     }
                     .scrollDismissesKeyboard(.immediately)
                 }
@@ -307,25 +301,15 @@ struct LabView: View {
     }
 
     private func performDelete(experiment: Experiment) {
-        experimentPendingDelete = experiment
-        globalToastState?.show(
-            "Experiment Removed",
-            style: .destructive,
-            undoTitle: "Undo",
-            onUndo: {
-                pendingDeleteTask?.cancel()
-                pendingDeleteTask = nil
-                experimentPendingDelete = nil
-            }
-        )
-        pendingDeleteTask = Task { @MainActor in
-            try? await Task.sleep(nanoseconds: 3_000_000_000)
-            if Task.isCancelled { return }
-            if let exp = experimentPendingDelete {
-                viewModel.delete(experiment: exp, context: modelContext)
-            }
-            experimentPendingDelete = nil
-            pendingDeleteTask = nil
+        if let undo = viewModel.deleteExperiment(experiment: experiment, context: modelContext) {
+            globalToastState?.show(
+                "Experiment Removed",
+                style: .destructive,
+                undoTitle: "Undo",
+                onUndo: undo
+            )
+        } else {
+            globalToastState?.show("Failed to save changes. Please try again.", style: .destructive)
         }
     }
 }
