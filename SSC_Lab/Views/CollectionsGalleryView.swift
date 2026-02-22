@@ -90,8 +90,7 @@ struct CollectionsGalleryView: View {
     }
 
     var body: some View {
-        NavigationStack {
-            VStack(alignment: .leading, spacing: 0) {
+        VStack(alignment: .leading, spacing: 0) {
                 AppHeader(title: "Wins Collections") {
                     Button {
                         newCollectionName = ""
@@ -184,8 +183,7 @@ struct CollectionsGalleryView: View {
             .overlay {
                 if showRenamePopUp { renamePopUpOverlay }
             }
-        }
-        .navigationBarHidden(true)
+            .navigationBarHidden(true)
     }
 
     // Add collection

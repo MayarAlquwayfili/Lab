@@ -23,7 +23,9 @@ struct CollectionDetailView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.globalToastState) private var globalToastState
     @Environment(\.hideTabBarBinding) private var hideTabBarBinding
+    @Environment(\.selectedTabBinding) private var selectedTabBinding
     @Query(sort: \Win.date, order: .reverse) private var allWins: [Win]
+    @Query(sort: \Experiment.createdAt, order: .reverse) private var experiments: [Experiment]
 
     @State private var sortOrder: CollectionSortOrder = .newestFirst
     @State private var filterCriteria = FilterCriteria()
@@ -186,6 +188,47 @@ struct CollectionDetailView: View {
         }
     }
 
+    /// Do it again: find or create experiment from win, set active, switch to Home, present QuickLogView (same as WinDetailView).
+    private func openDoItAgain(for win: Win) {
+        let exp: Experiment? = win.activityID.flatMap { id in experiments.first(where: { $0.activityID == id }) }
+            ?? experiments.first(where: { $0.title == win.title })
+        let target: Experiment
+        if let existing = exp {
+            target = existing
+        } else {
+            let temp = temporaryExperiment(from: win)
+            modelContext.insert(temp)
+            target = temp
+        }
+        for e in experiments where e.id != target.id {
+            e.isActive = false
+        }
+        target.isActive = true
+        try? modelContext.save()
+        selectedTabBinding?.wrappedValue = .home
+    }
+
+    private func temporaryExperiment(from w: Win) -> Experiment {
+        let env = (w.icon1 == Constants.Icons.outdoor) ? "outdoor" : "indoor"
+        let toolsStr = (w.icon2 == Constants.Icons.toolsNone) ? "none" : "required"
+        let timeframeStr = w.icon3 ?? "1D"
+        let logTypeStr: String? = (w.logTypeIcon == Constants.Icons.newInterest) ? "newInterest" : "oneTime"
+        return Experiment(
+            title: w.title,
+            icon: "star.fill",
+            environment: env,
+            tools: toolsStr,
+            timeframe: timeframeStr,
+            logType: logTypeStr,
+            referenceURL: "",
+            labNotes: "",
+            isActive: false,
+            isCompleted: false,
+            createdAt: .now,
+            activityID: w.activityID ?? UUID()
+        )
+    }
+
     /// Deletes the win immediately and shows "Win deleted" toast with Undo (re-insert).
     private func deleteWinAndShowToast(_ win: Win) {
         let copy = Win.copy(from: win)
@@ -227,7 +270,7 @@ struct CollectionDetailView: View {
                             showEditSheet = true
                         }
                         Button {
-                            print("Repeat Win")
+                            openDoItAgain(for: win)
                         } label: {
                             Label("Do it again", systemImage: "arrow.trianglehead.2.clockwise")
                         }
@@ -260,7 +303,7 @@ struct CollectionDetailView: View {
                             showEditSheet = true
                         }
                         Button {
-                            print("Repeat Win")
+                            openDoItAgain(for: win)
                         } label: {
                             Label("Do it again", systemImage: "arrow.trianglehead.2.clockwise")
                         }

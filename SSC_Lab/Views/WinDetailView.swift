@@ -22,9 +22,9 @@ struct WinDetailView: View {
 
     @State private var labViewModel = LabViewModel()
     @State private var showEditSheet = false
-    @State private var showDoItAgainSheet = false
-    @State private var experimentForDoItAgain: Experiment?
     @State private var carouselIndex: Int = 0
+    @State private var showNewCollectionPopUp = false
+    @State private var newCollectionName = ""
 
     /// Carousel: all wins with the same activityID (only). If no activityID, single card.
     private var winsForCarousel: [Win] {
@@ -119,13 +119,11 @@ struct WinDetailView: View {
             .sheet(isPresented: $showEditSheet) {
                 QuickLogView(winToEdit: displayedWin)
             }
-            .sheet(isPresented: $showDoItAgainSheet) {
-                if let exp = experimentForDoItAgain {
-                    QuickLogView(experimentToLog: exp)
-                        .onDisappear {
-                            dismiss()
-                        }
-                }
+            .onChange(of: showNewCollectionPopUp) { _, isShowing in
+                if !isShowing { newCollectionName = "" }
+            }
+            .overlay {
+                if showNewCollectionPopUp { newCollectionPopUpOverlay }
             }
         }
         .ignoresSafeArea(.all, edges: .bottom)
@@ -159,6 +157,13 @@ struct WinDetailView: View {
                         Button(collection.name) {
                             moveToCollection(collection)
                         }
+                    }
+                    Divider()
+                    Button {
+                        newCollectionName = ""
+                        showNewCollectionPopUp = true
+                    } label: {
+                        Label("New Collection...", systemImage: "plus")
                     }
                 } label: {
                     HStack(spacing: 4) {
@@ -335,11 +340,85 @@ struct WinDetailView: View {
 
     /// Updates the currently displayed win's collection and saves. Used by the header collection Menu.
     private func moveToCollection(_ collection: WinCollection?) {
+        if displayedWin.collection?.id == collection?.id {
+            return
+        }
         displayedWin.collection = collection
         displayedWin.collectionName = collection?.name
         collection?.lastModified = Date()
         try? modelContext.save()
         let name = collection?.name ?? "All"
+        globalToastState?.show("Moved to \(name)")
+    }
+
+    private var existingCollectionNames: Set<String> {
+        var names = Set(collections.map { $0.name.lowercased() })
+        names.insert("all")
+        names.insert("all wins")
+        names.insert("uncategorized")
+        return names
+    }
+
+    /// Same custom pop-up as QuickLogView: dimmed overlay, title, TextField, Create/Cancel. On Create: new collection, move win to it, toast.
+    private var newCollectionPopUpOverlay: some View {
+        let trimmed = newCollectionName.trimmingCharacters(in: .whitespacesAndNewlines)
+        let isEmpty = trimmed.isEmpty
+        let isDuplicate = !isEmpty && existingCollectionNames.contains(trimmed.lowercased())
+        let canCreate = !isEmpty && !isDuplicate
+
+        return ZStack {
+            Color.black.opacity(0.4)
+                .ignoresSafeArea()
+                .onTapGesture { showNewCollectionPopUp = false }
+            VStack(spacing: 0) {
+                Text("New Collection")
+                    .font(.appHeroSmall)
+                    .foregroundStyle(Color.appFont)
+                    .multilineTextAlignment(.center)
+                    .frame(maxWidth: .infinity)
+                    .padding(.horizontal, 32)
+                TextField("Collection Name", text: $newCollectionName)
+                    .textFieldStyle(.roundedBorder)
+                    .padding(.horizontal, 24)
+                    .padding(.top, 20)
+                if isDuplicate {
+                    Text("A collection with this name already exists.")
+                        .font(.appBodySmall)
+                        .foregroundStyle(Color.appAlert)
+                        .multilineTextAlignment(.center)
+                        .padding(.top, 8)
+                        .padding(.horizontal, 24)
+                }
+                HStack(spacing: 12) {
+                    AppButton(title: "Cancel", style: .secondary) {
+                        showNewCollectionPopUp = false
+                    }
+                    AppButton(title: "Create", style: .primary) {
+                        createNewCollectionAndMove()
+                    }
+                    .disabled(!canCreate)
+                }
+                .padding(.top, 24)
+            }
+            .frame(maxWidth: .infinity)
+            .padding(24)
+            .background(RoundedRectangle(cornerRadius: 26).fill(Color.white))
+            .padding(.horizontal, 32)
+        }
+        .animation(.spring(response: 0.35, dampingFraction: 0.8), value: showNewCollectionPopUp)
+    }
+
+    private func createNewCollectionAndMove() {
+        let name = newCollectionName.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !name.isEmpty, !existingCollectionNames.contains(name.lowercased()) else { return }
+        let collection = WinCollection(name: name)
+        modelContext.insert(collection)
+        displayedWin.collection = collection
+        displayedWin.collectionName = collection.name
+        collection.lastModified = Date()
+        try? modelContext.save()
+        showNewCollectionPopUp = false
+        newCollectionName = ""
         globalToastState?.show("Moved to \(name)")
     }
 
@@ -360,12 +439,8 @@ struct WinDetailView: View {
             e.isActive = false
         }
         target.isActive = true
-        target.isCompleted = false
         try? modelContext.save()
-        /// Switch to Home first so the dashboard shows the active experiment; then present sheet.
         selectedTabBinding?.wrappedValue = .home
-        experimentForDoItAgain = target
-        showDoItAgainSheet = true
     }
 
     /// Creates a temporary experiment from the Win so QuickLogView can prefill (used when original experiment was removed from Lab).

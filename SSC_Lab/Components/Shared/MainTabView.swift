@@ -46,22 +46,19 @@ struct MainTabView: View {
             ZStack {
                 Color.appBg.ignoresSafeArea(.all, edges: .bottom)
 
-                NavigationStack {
-                    Group {
-                        switch selectedTab {
-                        case .home: HomeView()
-                        case .lab: LabView(hideTabBar: $hideTabBar)
-                        case .wins: CollectionsGalleryView()
-                        case .settings: SettingsView()
-                        }
+                Group {
+                    switch selectedTab {
+                    case .home: NavigationStack { HomeView() }
+                    case .lab: NavigationStack { LabView(hideTabBar: $hideTabBar) }
+                    case .wins: NavigationStack { CollectionsGalleryView() }
+                    case .settings: NavigationStack { SettingsView() }
                     }
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .toolbar(hideTabBar ? .hidden : .automatic, for: .tabBar)
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .background(Color.appBg.ignoresSafeArea(.all, edges: .bottom))
                 .containerBackground(Color.appBg, for: .navigation)
                 .ignoresSafeArea(.all, edges: .bottom)
+                .toolbar(hideTabBar ? .hidden : .automatic, for: .tabBar)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .ignoresSafeArea(.all, edges: .bottom)

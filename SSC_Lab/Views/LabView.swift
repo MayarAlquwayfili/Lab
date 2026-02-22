@@ -55,8 +55,7 @@ struct LabView: View {
     }
 
     var body: some View {
-        NavigationStack {
-            VStack(alignment: .leading, spacing: 0) {
+        VStack(alignment: .leading, spacing: 0) {
                 AppHeader(title: dynamicLabTitle) {
                     HStack(spacing: 4) {
                         EmptyView().navButton(icon: "dice.fill") {
@@ -240,7 +239,6 @@ struct LabView: View {
                     showOnboarding = true
                 }
             }
-        }
     }
     
     private func pickRandomAndShowResult() {
