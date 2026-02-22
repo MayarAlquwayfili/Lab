@@ -2,30 +2,46 @@
 //  QuickLogView.swift
 //  SSC_Lab
 //
-//  Sheet for logging a win
+//  Sheet for logging a win (from Lab with optional experiment) or editing a win (from WinDetailView).
 //
 
 import SwiftUI
 import SwiftData
-import PhotosUI
+import UIKit
 
 struct QuickLogView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
+    @Environment(\.selectedTabBinding) private var selectedTabBinding
+
+    /// When set, prefill from this experiment (Log Win from Lab) and save creates a new Win.
+    var experimentToLog: Experiment?
+    /// When set, prefill from this win (Edit from WinDetailView) and save updates the existing Win.
+    var winToEdit: Win?
+    /// When set (e.g. opening from CollectionDetailView to add a win), this collection is pre-selected.
+    var initialCollection: WinCollection?
+
+    @Query(sort: \WinCollection.name, order: .forward) private var collections: [WinCollection]
 
     @State private var winTitle: String = ""
     @State private var selectedIcon: String = "star.fill"
-    @State private var selectedCollection: String?
+    @State private var selectedCollection: WinCollection?
     @State private var quickNote: String = ""
     @State private var showDiscardAlert: Bool = false
     @State private var showIconPicker: Bool = false
     @State private var showMediaOptions: Bool = false
-    @State private var photoLibraryItem: PhotosPickerItem?
     @State private var selectedUIImage: UIImage?
     @State private var showCamera: Bool = false
     @State private var showPhotoLibrarySheet: Bool = false
+    @State private var showNewCollectionPopUp: Bool = false
+    @State private var newCollectionName: String = ""
 
-    private let collections = ["Summer 20", "Chapter 19"]
+    @State private var environment: EnvironmentOption = .indoor
+    @State private var tools: ToolsOption = .required
+    @State private var timeframe: TimeframeOption = .oneD
+    @State private var logType: LogTypeOption = .oneTime
+
+    private var isEditMode: Bool { winToEdit != nil }
     private let horizontalMargin: CGFloat = 16
     private let sectionSpacing: CGFloat = 30
     private let mediaBoxSize: CGFloat = 254
@@ -34,6 +50,20 @@ struct QuickLogView: View {
 
     private var hasChanges: Bool {
         !winTitle.isEmpty || !quickNote.isEmpty || selectedUIImage != nil
+    }
+
+    private var existingCollectionNames: Set<String> {
+        var names = Set(collections.map { $0.name.lowercased() })
+        names.insert("all")
+        names.insert("all wins")
+        names.insert("uncategorized")
+        return names
+    }
+
+    private func isDuplicateCollectionName(_ name: String) -> Bool {
+        let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return false }
+        return existingCollectionNames.contains(trimmed.lowercased())
     }
 
     var body: some View {
@@ -57,7 +87,13 @@ struct QuickLogView: View {
                         Spacer().frame(height: sectionSpacing)
 
                         EmptyView().sectionHeader(title: "Setup", topSpacing: 0, horizontalPadding: horizontalMargin)
-                        ExperimentSetupCard(showLogType: true)
+                        ExperimentSetupCard(
+                            showLogType: true,
+                            environment: $environment,
+                            tools: $tools,
+                            timeframe: $timeframe,
+                            logType: $logType
+                        )
                             .frame(maxWidth: .infinity, alignment: .center)
                             .padding(.horizontal, horizontalMargin)
 
@@ -69,7 +105,7 @@ struct QuickLogView: View {
                         Spacer().frame(height: sectionSpacing)
                         Spacer().frame(height: 16)
 
-                        AppButton(title: "Log a Win", style: .primary) { saveAndDismiss() }
+                        AppButton(title: isEditMode ? "Save" : "Log a Win", style: .primary) { saveAndDismiss() }
                             .padding(.horizontal, horizontalMargin)
                             .padding(.bottom, 32)
                     }
@@ -113,22 +149,102 @@ struct QuickLogView: View {
             Text("Choose a source for your media.")
         }
         .sheet(isPresented: $showCamera) {
-            CameraImagePicker(image: $selectedUIImage)
+            ImagePicker(sourceType: .camera, image: $selectedUIImage)
                 .ignoresSafeArea()
         }
-        .photosPicker(
-            isPresented: $showPhotoLibrarySheet,
-            selection: $photoLibraryItem,
-            matching: .images
-        )
-        .onChange(of: photoLibraryItem) { _, newItem in
-            Task {
-                guard let newItem else { return }
-                if let data = try? await newItem.loadTransferable(type: Data.self), let uiImage = UIImage(data: data) {
-                    await MainActor.run { selectedUIImage = uiImage }
-                }
-            }
+        .sheet(isPresented: $showPhotoLibrarySheet) {
+            ImagePicker(sourceType: .photoLibrary, image: $selectedUIImage)
+                .ignoresSafeArea()
         }
+        .onChange(of: showNewCollectionPopUp) { _, isShowing in
+            if !isShowing { newCollectionName = "" }
+        }
+        .overlay {
+            if showNewCollectionPopUp { newCollectionPopUpOverlay }
+        }
+        .onAppear { prefillFromSource() }
+    }
+
+    // New Collection popup  
+    private var newCollectionPopUpOverlay: some View {
+        let trimmed = newCollectionName.trimmingCharacters(in: .whitespacesAndNewlines)
+        let isEmpty = trimmed.isEmpty
+        let isDuplicate = !isEmpty && isDuplicateCollectionName(newCollectionName)
+        let canCreate = !isEmpty && !isDuplicate
+
+        return ZStack {
+            Color.black.opacity(0.4)
+                .ignoresSafeArea()
+                .onTapGesture { showNewCollectionPopUp = false }
+            VStack(spacing: 0) {
+                Text("New Collection")
+                    .font(.appHeroSmall)
+                    .foregroundStyle(Color.appFont)
+                    .multilineTextAlignment(.center)
+                    .frame(maxWidth: .infinity)
+                    .padding(.horizontal, 32)
+                TextField("Collection Name", text: $newCollectionName)
+                    .textFieldStyle(.roundedBorder)
+                    .padding(.horizontal, 24)
+                    .padding(.top, 20)
+                if isDuplicate {
+                    Text("A collection with this name already exists.")
+                        .font(.appBodySmall)
+                        .foregroundStyle(Color.appAlert)
+                        .multilineTextAlignment(.center)
+                        .padding(.top, 8)
+                        .padding(.horizontal, 24)
+                }
+                HStack(spacing: 12) {
+                    AppButton(title: "Cancel", style: .secondary) {
+                        showNewCollectionPopUp = false
+                    }
+                    AppButton(title: "Create", style: .primary) {
+                        createNewCollectionAndSelect()
+                    }
+                    .disabled(!canCreate)
+                }
+                .padding(.top, 24)
+            }
+            .frame(maxWidth: .infinity)
+            .padding(24)
+            .background(RoundedRectangle(cornerRadius: 26).fill(Color.white))
+            .padding(.horizontal, 32)
+        }
+        .animation(.spring(response: 0.35, dampingFraction: 0.8), value: showNewCollectionPopUp)
+    }
+
+    private func createNewCollectionAndSelect() {
+        let name = newCollectionName.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !name.isEmpty else { return }
+        let collection = WinCollection(name: name)
+        modelContext.insert(collection)
+        try? modelContext.save()
+        selectedCollection = collection
+        showNewCollectionPopUp = false
+    }
+
+    private func prefillFromSource() {
+        if let exp = experimentToLog {
+            winTitle = exp.title
+            environment = EnvironmentOption(rawValue: exp.environment) ?? .indoor
+            tools = ToolsOption(rawValue: exp.tools) ?? .required
+            timeframe = TimeframeOption(rawValue: exp.timeframe) ?? .oneD
+            logType = LogTypeOption(rawValue: exp.logType ?? "oneTime") ?? .oneTime
+        } else if let win = winToEdit {
+            winTitle = win.title
+            quickNote = win.notes
+            selectedUIImage = win.imageData.flatMap { UIImage(data: $0) }
+            selectedCollection = win.collection
+            environment = (win.icon1 == Constants.Icons.outdoor) ? .outdoor : .indoor
+            tools = (win.icon2 == Constants.Icons.toolsNone) ? .none : .required
+            timeframe = TimeframeOption(rawValue: win.icon3 ?? "1D") ?? .oneD
+            logType = (win.logTypeIcon == Constants.Icons.newInterest) ? .newInterest : .oneTime
+        }
+        if let initial = initialCollection, selectedCollection == nil {
+            selectedCollection = initial
+        }
+        // When no collection selected, leave selectedCollection = nil (Gallery shows as "All"); do not create a persistent "All" collection.
     }
 
  
@@ -159,7 +275,7 @@ struct QuickLogView: View {
                         }
                         .buttonStyle(.plain)
                     }
-                    Text("LOG A WIN")
+                    Text(isEditMode ? "Edit Win" : "LOG A WIN")
                         .font(.appHeroSmall)
                         .foregroundStyle(Color.appFont)
                 }
@@ -209,34 +325,43 @@ struct QuickLogView: View {
                 .padding(.horizontal, 16)
 
             HStack {
-                Text("Collection")
-                    .font(.appBodySmall)
-                    .foregroundStyle(Color.appSecondary)
+                HStack(spacing: 6) {
+                    Image(systemName: "folder.fill")
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundStyle(Color.appSecondary)
+                    Text("Collection")
+                        .font(.appBodySmall)
+                        .foregroundStyle(Color.appSecondary)
+                }
                 Spacer(minLength: 0)
                 Menu {
-                    ForEach(collections, id: \.self) { name in
-                        Button(name) { selectedCollection = name }
+                    Button("All") {
+                        selectedCollection = nil
+                    }
+                    ForEach(collections) { collection in
+                        Button(collection.name) {
+                            selectedCollection = collection
+                        }
                     }
                     Divider()
                     Button {
-                        // Add New Collection action
+                        newCollectionName = ""
+                        showNewCollectionPopUp = true
                     } label: {
-                        Label {
-                            Text("Add New...")
-                        } icon: {
-                            Image(systemName: "plus")
-                                .font(.system(size: 12, weight: .medium))
-                        }
+                        Label("New Collection...", systemImage: "plus")
                     }
                 } label: {
-                    HStack(spacing: 4) {
-                        Text(selectedCollection ?? "Choose")
+                    HStack(spacing: 6) {
+                        Text(selectedCollection?.name ?? "All")
                             .font(.appBodySmall)
                             .foregroundStyle(Color.appFont)
-                        Image(systemName: selectedCollection == nil ? "chevron.right" : "chevron.down")
+                        Image(systemName: "chevron.down")
                             .font(.system(size: 12, weight: .semibold))
                             .foregroundStyle(Color.appSecondary)
                     }
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 6)
+                    .background(Capsule().fill(Color.appShade02))
                 }
                 .buttonStyle(.plain)
             }
@@ -253,64 +378,125 @@ struct QuickLogView: View {
     // Media Section
 
     private var mediaSection: some View {
-        ZStack {
+        Group {
             if let uiImage = selectedUIImage {
-                Image(uiImage: uiImage)
-                    .resizable()
-                    .scaledToFill()
-                    .frame(width: mediaBoxSize, height: mediaBoxSize)
-                    .clipped()
-                    .clipShape(RoundedRectangle(cornerRadius: 16))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 16)
-                            .stroke(Color.appSecondary, lineWidth: 1)
-                    )
-                    .overlay(alignment: .topTrailing) {
-                        Button(action: { selectedUIImage = nil; photoLibraryItem = nil }) {
-                            Image(systemName: "xmark")
-                                .font(.system(size: 12, weight: .bold))
-                                .foregroundStyle(.white)
-                                .frame(width: 28, height: 28)
-                                .background(Circle().fill(Color.appFont.opacity(0.7)))
+                imageMenuContainer {
+                    Menu {
+                        Button {
+                            showMediaOptions = true
+                        } label: {
+                            Label("Change Photo", systemImage: "photo.on.rectangle")
                         }
-                        .buttonStyle(.plain)
-                        .padding(8)
+                        Button(role: .destructive) {
+                            selectedUIImage = nil
+                        } label: {
+                            Label("Remove Photo", systemImage: "trash")
+                        }
+                    } label: {
+                        imageView(uiImage: uiImage)
+                            .contentShape(RoundedRectangle(cornerRadius: 12))
                     }
-            } else {
-                Button(action: { showMediaOptions = true }) {
-                    ZStack {
-                        RoundedRectangle(cornerRadius: 16)
-                            .strokeBorder(style: StrokeStyle(lineWidth: 2, dash: [8]))
-                            .foregroundStyle(Color.appSecondary)
-                        Text("+ Add Media")
-                            .font(.appBodySmall)
-                            .foregroundStyle(Color.appSecondary)
-                    }
-                    .frame(width: mediaBoxSize, height: mediaBoxSize)
+                    .buttonStyle(.plain)
+                    .contentShape(RoundedRectangle(cornerRadius: 12))
                 }
-                .buttonStyle(.plain)
+            } else {
+                imagePlaceholderButton
             }
         }
         .frame(width: mediaBoxSize, height: mediaBoxSize)
         .frame(maxWidth: .infinity)
+        .contentShape(RoundedRectangle(cornerRadius: 12))
+        .clipShape(RoundedRectangle(cornerRadius: 12))
+        .clipped()
+    }
+
+    /// Wraps the image Menu so tap highlight stays rectangular (no circular liquid effect).
+    @ViewBuilder
+    private func imageMenuContainer<Label: View>(@ViewBuilder label: () -> Label) -> some View {
+        label()
+            .contentShape(RoundedRectangle(cornerRadius: 12))
+            .clipShape(RoundedRectangle(cornerRadius: 12))
+            .clipped()
+    }
+
+    private var imagePlaceholderButton: some View {
+        Button(action: { showMediaOptions = true }) {
+            ZStack {
+                RoundedRectangle(cornerRadius: 16)
+                    .strokeBorder(style: StrokeStyle(lineWidth: 2, dash: [8]))
+                    .foregroundStyle(Color.appSecondary)
+                Text("+ Add Media")
+                    .font(.appBodySmall)
+                    .foregroundStyle(Color.appSecondary)
+            }
+            .frame(width: mediaBoxSize, height: mediaBoxSize)
+            .contentShape(RoundedRectangle(cornerRadius: 12))
+        }
+        .buttonStyle(.plain)
+        .contentShape(RoundedRectangle(cornerRadius: 12))
+        .clipShape(RoundedRectangle(cornerRadius: 12))
+        .clipped()
+    }
+
+    private func imageView(uiImage: UIImage) -> some View {
+        Image(uiImage: uiImage)
+            .resizable()
+            .scaledToFill()
+            .frame(width: mediaBoxSize, height: mediaBoxSize)
+            .contentShape(RoundedRectangle(cornerRadius: 12))
+            .clipShape(RoundedRectangle(cornerRadius: 12))
+            .clipped()
+            .overlay(
+                RoundedRectangle(cornerRadius: 12)
+                    .stroke(Color.appSecondary, lineWidth: 1)
+            )
     }
 
     // Actions
 
     private func saveAndDismiss() {
-        let imageData = selectedUIImage?.jpegData(compressionQuality: 0.8)
-        let win = Win(
-            title: winTitle.isEmpty ? "New Win" : winTitle,
-            imageData: imageData,
-            logTypeIcon: Constants.Icons.oneTime,
-            icon1: Constants.Icons.indoor,
-            icon2: Constants.Icons.tools,
-            icon3: "7D",
-            collectionName: selectedCollection
-        )
-        modelContext.insert(win)
-        try? modelContext.save()
-        dismiss()
+        let imageData = selectedUIImage?.jpegDataForStorage(compressionQuality: 0.7, maxDimension: 1024)
+        let icon1 = environment == .outdoor ? Constants.Icons.outdoor : Constants.Icons.indoor
+        let icon2 = tools == .none ? Constants.Icons.toolsNone : Constants.Icons.tools
+        let icon3 = timeframe.rawValue
+        let logTypeIcon = logType == .newInterest ? Constants.Icons.newInterest : Constants.Icons.oneTime
+
+        if let win = winToEdit {
+            win.title = winTitle.isEmpty ? "New Win" : winTitle
+            win.notes = quickNote
+            win.imageData = imageData
+            win.icon1 = icon1
+            win.icon2 = icon2
+            win.icon3 = icon3
+            win.logTypeIcon = logTypeIcon
+            win.collection = selectedCollection
+            win.collectionName = selectedCollection?.name
+            win.collection?.lastModified = Date()
+            try? modelContext.save()
+            dismiss()
+        } else {
+            let win = Win(
+                title: winTitle.isEmpty ? "New Win" : winTitle,
+                imageData: imageData,
+                logTypeIcon: logTypeIcon,
+                icon1: icon1,
+                icon2: icon2,
+                icon3: icon3,
+                collectionName: selectedCollection?.name,
+                collection: selectedCollection,
+                notes: quickNote,
+                activityID: experimentToLog?.activityID
+            )
+            modelContext.insert(win)
+            win.collection?.lastModified = Date()
+            if let experiment = experimentToLog {
+                experiment.isActive = false
+                experiment.isCompleted = true
+            }
+            try? modelContext.save()
+            selectedTabBinding?.wrappedValue = .wins
+            dismiss()
+        }
     }
 }
 

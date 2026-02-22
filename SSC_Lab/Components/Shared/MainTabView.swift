@@ -51,6 +51,8 @@ struct MainTabView: View {
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .environment(\.hideTabBarBinding, $hideTabBar)
+            .environment(\.selectedTabBinding, $selectedTab)
 
             if !hideTabBar {
                 customTabBar

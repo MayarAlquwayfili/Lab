@@ -2,7 +2,7 @@
 //  WinCard.swift
 //  SSC_Lab
 //
-//  Exact same layout as ExperimentCard; only difference is background image + overlay.
+//
 //
 
 import SwiftUI
@@ -12,34 +12,39 @@ import UIKit
 struct WinCard: View {
     var win: Win
     let cardHeight: CGFloat
+    /// When set (e.g. from masonry grid), card and image are strictly constrained to this width to prevent overflow.
+    var cardWidth: CGFloat? = nil
 
     private let cornerRadius: CGFloat = 16
     private let size: BadgeSize = .small
     private let variant: BadgeVariant = .primary
 
+    /// When cardWidth is set, fixes width; otherwise allows flexible width (e.g. in detail view).
+    private var fixedWidth: CGFloat? { cardWidth }
+
     var body: some View {
         ZStack {
-            // 1. Background: Image from win.imageData or placeholder
-            Group {
+            // 1. Background: Image
+            ZStack {
+                Color.clear
                 if let data = win.imageData, let uiImage = UIImage(data: data) {
                     Image(uiImage: uiImage)
                         .resizable()
                         .scaledToFill()
-                        .frame(maxWidth: .infinity, minHeight: cardHeight, maxHeight: cardHeight)
-                        .clipped()
                 } else {
                     Rectangle()
                         .fill(Color.appSecondary.opacity(0.25))
-                        .frame(maxWidth: .infinity, minHeight: cardHeight, maxHeight: cardHeight)
                 }
             }
+            .frame(minWidth: fixedWidth ?? 0, maxWidth: fixedWidth ?? .infinity, minHeight: cardHeight, maxHeight: cardHeight)
+            .clipped()
             .clipShape(RoundedRectangle(cornerRadius: cornerRadius))
 
             // 2. Overlay so white text/badges are clear
             RoundedRectangle(cornerRadius: cornerRadius)
                 .fill(Color.black.opacity(0.3))
 
-            // 3. Content — same ZStack/VStack structure as ExperimentCard
+            // 3. Content
             VStack(alignment: .leading, spacing: 0) {
                 HStack {
                     Spacer(minLength: 0)
@@ -55,7 +60,8 @@ struct WinCard: View {
                 Text(win.title)
                     .font(.appWin)
                     .foregroundStyle(.white)
-                    .lineLimit(2)
+                    .lineLimit(1)
+                    .truncationMode(.tail)
                     .frame(maxWidth: .infinity)
                     .multilineTextAlignment(.center)
 
@@ -66,14 +72,18 @@ struct WinCard: View {
                     .padding(.top, 8)
             }
 
-            // 4. Stroke border (same as ExperimentCard)
+            // 4. Stroke border
             RoundedRectangle(cornerRadius: cornerRadius)
                 .stroke(Color.appSecondary, lineWidth: 1.5)
         }
-        .frame(maxWidth: .infinity, minHeight: cardHeight, maxHeight: cardHeight)
+        .frame(minWidth: fixedWidth ?? 0, maxWidth: fixedWidth ?? .infinity, minHeight: cardHeight, maxHeight: cardHeight)
+        .clipShape(RoundedRectangle(cornerRadius: cornerRadius))
+        .contentShape(Rectangle())
+        .contentShape(.contextMenuPreview, RoundedRectangle(cornerRadius: cornerRadius))
+        .layoutPriority(1)
     }
 
-    /// First icon from win model → top badge.
+    /// Top badge.
     private var topBadgeType: BadgeType? {
         [win.icon1, win.icon2, win.icon3, win.logTypeIcon]
             .compactMap { $0 }
@@ -81,7 +91,7 @@ struct WinCard: View {
             .flatMap { badgeType(for: $0) }
     }
 
-    /// All 4 icons (icon1, icon2, icon3, logTypeIcon) for bottom StatusGroup.
+    /// Bottom StatusGroup.
     private var bottomBadgeTypes: [BadgeType] {
         [win.icon1, win.icon2, win.icon3, win.logTypeIcon]
             .compactMap { $0 }

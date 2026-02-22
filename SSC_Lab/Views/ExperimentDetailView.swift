@@ -19,17 +19,10 @@ struct ExperimentDetailView: View {
     @State private var showEditSheet = false
     @State private var showDeleteAlert = false
 
-    private let cardSize: CGFloat = 370
-    private let cardBorderWidth: CGFloat = 3
-    private let cardCornerRadius: CGFloat = 16
     private let topRightIconPadding: CGFloat = 8
-    private let cardInternalPadding: CGFloat = 8
     private let bottomRowBadgeSpacing: CGFloat = 8
     private let badgeDimension: CGFloat = 45
     private let badgeIconDimension: CGFloat = 24
-    private let scrollBottomPadding: CGFloat = 32
-    private let spacingBelowCard: CGFloat = 20
-    private let spacingNotesToButtons: CGFloat = 16
 
     private var hasReferenceURL: Bool {
         LabViewModel.hasReferenceURL(experiment)
@@ -45,14 +38,12 @@ struct ExperimentDetailView: View {
 
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
-                    detailCard
-                        .frame(maxWidth: cardSize, maxHeight: cardSize)
-                        .aspectRatio(1, contentMode: .fit)
+                    DetailCardFrame { detailCardContent }
                         .frame(maxWidth: .infinity)
-                        .padding(.top, 16)
+                        .padding(.top, DetailCardLayout.spacingHeaderToCard)
 
                     AppNoteEditor(text: $experiment.labNotes, placeholder: Constants.Lab.placeholderNote)
-                        .padding(.top, spacingBelowCard)
+                        .padding(.top, DetailCardLayout.spacingCardToContent)
 
                     VStack(spacing: 12) {
                         if experiment.isActive {
@@ -72,8 +63,8 @@ struct ExperimentDetailView: View {
                             showDeleteAlert = true
                         }
                     }
-                    .padding(.top, spacingNotesToButtons)
-                    .padding(.bottom, scrollBottomPadding)
+                    .padding(.top, DetailCardLayout.spacingContentToButtons)
+                    .padding(.bottom, Constants.ExperimentDetail.scrollBottomPadding)
                 }
                 .padding(.horizontal, Constants.ExperimentDetail.paddingHorizontal)
             }
@@ -103,15 +94,11 @@ struct ExperimentDetailView: View {
         )
     }
 
-    // Detail Card
-    private var detailCard: some View {
+    // Detail Card  
+    private var detailCardContent: some View {
         ZStack(alignment: .topTrailing) {
-            RoundedRectangle(cornerRadius: cardCornerRadius)
+            RoundedRectangle(cornerRadius: DetailCardLayout.cardCornerRadius)
                 .fill(Color.white)
-                .overlay(
-                    RoundedRectangle(cornerRadius: cardCornerRadius)
-                        .stroke(Color.appFont, lineWidth: cardBorderWidth)
-                )
 
             VStack(alignment: .leading, spacing: 0) {
                 HStack {
@@ -141,10 +128,10 @@ struct ExperimentDetailView: View {
                         linkBadge
                     }
                 }
-                .padding(.horizontal, cardInternalPadding)
-                .padding(.bottom, cardInternalPadding)
+                .padding(.horizontal, DetailCardLayout.cardInternalPadding)
+                .padding(.bottom, DetailCardLayout.cardInternalPadding)
             }
-            .padding(cardInternalPadding)
+            .padding(DetailCardLayout.cardInternalPadding)
         }
     }
 

@@ -2,7 +2,7 @@
 //  AppToast.swift
 //  SSC_Lab
 //
-//  Single toast modifier: one source of truth at root, unified capsule pill, fixed position above tab bar.
+//  Single toast modifier
 //
 
 import SwiftUI
@@ -15,7 +15,7 @@ enum AppToastStyle {
     var iconName: String {
         switch self {
         case .primary, .secondary: return "checkmark.circle.fill"
-        case .destructive: return "minus.circle.fill"
+        case .destructive: return "trash.fill"
         }
     }
 
@@ -35,11 +35,8 @@ enum AppToastStyle {
     }
 }
 
-/// Distance above bottom safe area (lifts toast comfortably above tab bar).
 private let toastAboveSafeArea: CGFloat = 120
-/// Fixed height so all toasts look identical.
 private let toastPillHeight: CGFloat = 50
-/// Horizontal padding inside the capsule.
 private let toastHorizontalPadding: CGFloat = 20
 
 struct AppToastModifier: ViewModifier {
@@ -69,7 +66,6 @@ struct AppToastModifier: ViewModifier {
     }
 }
 
-// MARK: - One layout: VStack + Spacer, exact bottom padding, fixed pill size, tap to dismiss
 private struct ToastOverlayContent: View {
     @Binding var isShowing: Bool
     var message: String
@@ -113,7 +109,6 @@ private struct ToastOverlayContent: View {
         }
     }
 
-    /// Single capsule pill: fixed height, same padding and shadow for every toast.
     private var pillContent: some View {
         HStack(spacing: 12) {
             HStack(spacing: 8) {

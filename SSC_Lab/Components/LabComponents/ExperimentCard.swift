@@ -14,6 +14,8 @@ struct ExperimentCard: View {
     var bottomBadges: [BadgeType] = []
     var size: BadgeSize = .small
     var variant: BadgeVariant = .primary
+    /// When non-nil and > 1, show a small repeat badge (e.g. "x2", "x3"). First win is standard; we only show repeats.
+    var winCount: Int? = nil
 
     private var allBottomBadges: [BadgeType] {
         var badges = bottomBadges
@@ -24,14 +26,14 @@ struct ExperimentCard: View {
     }
 
     var body: some View {
-        ZStack {
+        ZStack(alignment: .topLeading) {
             RoundedRectangle(cornerRadius: 16)
                 .fill(Color.white)
             RoundedRectangle(cornerRadius: 16)
                 .stroke(Color.appSecondary, lineWidth: 1.5)
 
             VStack(spacing: 0) {
-                // Top row: top badge (right only)
+                // Top row
                 HStack {
                     Spacer(minLength: 0)
                     if let topBadge = topBadges.first {
@@ -42,7 +44,6 @@ struct ExperimentCard: View {
 
                 Spacer(minLength: 0)
 
-                // Title centered with safe horizontal padding
                 Text(title)
                     .font(.appCard)
                     .foregroundStyle(Color.appPrimary)
@@ -53,11 +54,21 @@ struct ExperimentCard: View {
 
                 Spacer(minLength: 0)
 
-                // Bottom row: StatusGroup with badges including link
+                // Bottom row
                 StatusGroup(items: allBottomBadges, size: size, variant: variant)
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
+
+            if let count = winCount, count > 1 {
+                Text("x\(count)")
+                    .font(.appMicro)
+                    .foregroundStyle(Color.appSecondary)
+                    .padding(.horizontal, 6)
+                    .padding(.vertical, 4)
+                    .background(Capsule().fill(Color.appBg.opacity(0.9)))
+                    .padding(8)
+            }
         }
         .frame(maxWidth: .infinity)
         .aspectRatio(1, contentMode: .fit)

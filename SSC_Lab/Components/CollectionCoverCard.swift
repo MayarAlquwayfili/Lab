@@ -2,8 +2,7 @@
 //  CollectionCoverCard.swift
 //  SSC_Lab
 //
-//  Gallery cover card: image only. Same layout as ExperimentCard (stroke, corners).
-//  Title and win count are shown outside/below the card in the gallery.
+//  Gallery cover card: image only.
 //
 
 import SwiftUI
@@ -13,7 +12,6 @@ struct CollectionCoverCard: View {
     /// Image data of the most recently added Win. Nil → white background.
     let coverImageData: Data?
 
-    // Match ExperimentCard
     private let cornerRadius: CGFloat = 16
     private let strokeWidth: CGFloat = 1.5
 
@@ -30,6 +28,8 @@ struct CollectionCoverCard: View {
                     Color.white
                 }
             }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .clipped()
             .clipShape(RoundedRectangle(cornerRadius: cornerRadius))
             RoundedRectangle(cornerRadius: cornerRadius)
                 .stroke(Color.appSecondary, lineWidth: strokeWidth)

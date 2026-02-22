@@ -12,7 +12,8 @@ struct LabView: View {
     @Binding var hideTabBar: Bool
     @Environment(\.globalToastState) private var globalToastState
 
-    @Query(sort: \Experiment.createdAt, order: .reverse) private var experiments: [Experiment]
+    @Query(filter: #Predicate<Experiment> { !$0.isCompleted }, sort: \Experiment.createdAt, order: .reverse) private var experiments: [Experiment]
+    @Query(sort: \Win.date, order: .reverse) private var allWins: [Win]
     @Environment(\.modelContext) private var modelContext
     @State private var viewModel = LabViewModel()
     @State private var showAddSheet = false
@@ -20,6 +21,7 @@ struct LabView: View {
     @State private var experimentToEdit: Experiment?
     @State private var showEditSheet = false
     @State private var showQuickLogSheet = false
+    @State private var experimentForLog: Experiment?
     @State private var showNeedMoreExperimentsPopUp = false
     @State private var showRandomResultPopUp = false
     @State private var pickedRandomExperiment: Experiment?
@@ -123,16 +125,15 @@ struct LabView: View {
                                         title: experiment.title,
                                         hasLink: !experiment.referenceURL.isEmpty,
                                         topBadges: [LabViewModel.topBadge(for: experiment.environment)],
-                                        bottomBadges: LabViewModel.bottomBadges(for: experiment)
+                                        bottomBadges: LabViewModel.bottomBadges(for: experiment),
+                                        winCount: winCount(for: experiment)
                                     )
                                 }
                                 .buttonStyle(.plain)
                                 .contextMenu {
-                                    Button {
+                                    SharedEditMenuItem {
                                         experimentToEdit = experiment
                                         showEditSheet = true
-                                    } label: {
-                                        Label("Edit", systemImage: "slider.horizontal.3")
                                     }
                                     Button {
                                         viewModel.toggleActive(experiment: experiment, allExperiments: experiments, context: modelContext) { previous in
@@ -144,15 +145,14 @@ struct LabView: View {
                                         Label("Let's do it!", systemImage: "play.circle")
                                     }
                                     Button {
+                                        experimentForLog = experiment
                                         showQuickLogSheet = true
                                     } label: {
                                         Label("Log a Win", systemImage: "star.circle.fill")
                                     }
                                     Divider()
-                                    Button(role: .destructive) {
+                                    SharedDeleteMenuItem {
                                         performDelete(experiment: experiment)
-                                    } label: {
-                                        Label("Delete", systemImage: "minus.circle.fill")
                                     }
                                 }
                             }
@@ -188,7 +188,10 @@ struct LabView: View {
                 }
             }
             .sheet(isPresented: $showQuickLogSheet) {
-                QuickLogView()
+                QuickLogView(experimentToLog: experimentForLog)
+            }
+            .onChange(of: showQuickLogSheet) { _, isShowing in
+                if !isShowing { experimentForLog = nil }
             }
             .sheet(isPresented: $showFilterSheet) {
                 FilterSheetView(allExperiments: experiments, filterCriteria: $filterCriteria)
@@ -300,6 +303,14 @@ struct LabView: View {
         } else {
             filterCriteria = FilterCriteria()
         }
+    }
+
+    /// Win count for repeat badge: match by activityID when available, else by title (backwards compat).
+    private func winCount(for experiment: Experiment) -> Int {
+        if let id = experiment.activityID {
+            return allWins.filter { $0.activityID == id }.count
+        }
+        return allWins.filter { $0.title == experiment.title }.count
     }
 
     private func performDelete(experiment: Experiment) {

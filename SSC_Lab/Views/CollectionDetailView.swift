@@ -2,7 +2,7 @@
 //  CollectionDetailView.swift
 //  SSC_Lab
 //
-//  Detail view for a WinCollection or Uncategorized wins. Masonry grid of wins with sort/filter.
+//  Detail view for a WinCollection.
 //
 
 import SwiftUI
@@ -16,22 +16,28 @@ enum CollectionSortOrder: String, CaseIterable {
 
 struct CollectionDetailView: View {
     var collection: WinCollection?
-    /// When true and collection is nil, show all wins. When false and collection is nil, show uncategorized only.
+    /// When true and collection is nil, show all wins. When false and collection is nil, show all only.
     var showAllWins: Bool = false
 
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.modelContext) private var modelContext
+    @Environment(\.globalToastState) private var globalToastState
+    @Environment(\.hideTabBarBinding) private var hideTabBarBinding
     @Query(sort: \Win.date, order: .reverse) private var allWins: [Win]
 
     @State private var sortOrder: CollectionSortOrder = .newestFirst
     @State private var filterCriteria = FilterCriteria()
     @State private var showFilterSheet = false
+    @State private var showEditSheet = false
+    @State private var winToEdit: Win?
+    @State private var winToShare: Win?
+    @State private var showAddWinSheet = false
 
-    /// Golden margin: 16pt each side, 12pt between columns. Card width = (Screen Width - 32 - 12) / 2.
     private let horizontalPadding: CGFloat = 16
     private let columnSpacing: CGFloat = 12
     private let cardSpacing: CGFloat = 12
-    private let totalHorizontalInset: CGFloat = 44  // 16 + 16 + 12
-
+    private let totalHorizontalInset: CGFloat = 44
+    
     private var collectionTitle: String {
         if showAllWins && collection == nil { return "All Wins" }
         return collection?.name ?? "Uncategorized"
@@ -47,7 +53,7 @@ struct CollectionDetailView: View {
         return allWins.filter { $0.collection == nil }
     }
 
-    /// Filter by category (Indoor, Outdoor, etc.) then sort. Updates instantly when filter or sort changes.
+    /// Filter by category (Indoor, Outdoor, etc.) then sort.
     private var displayedWins: [Win] {
         var result = winsInCollection
         if !filterCriteria.isEmpty {
@@ -129,17 +135,22 @@ struct CollectionDetailView: View {
                         filterEmptyState
                     }
                 } else {
-                    ScrollView {
-                        staggeredGrid(availableWidth: outer.size.width)
+                    if outer.size.width > 0 {
+                        ScrollView {
+                            staggeredGrid(availableWidth: outer.size.width)
+                        }
+                        .contentMargins(.horizontal, 0, for: .scrollContent)
                     }
-                    .contentMargins(.horizontal, 0, for: .scrollContent)
                 }
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color.appBg)
+        .toolbar(.hidden, for: .tabBar)
         .navigationBarHidden(true)
         .enableSwipeToBack()
+        .onAppear { hideTabBarBinding?.wrappedValue = true }
+        .onDisappear { hideTabBarBinding?.wrappedValue = false }
         .sheet(isPresented: $showFilterSheet) {
             CollectionFilterSheetView(
                 allWins: winsInCollection,
@@ -147,11 +158,36 @@ struct CollectionDetailView: View {
                 sortOrder: $sortOrder
             )
         }
+        .sheet(item: $winToEdit) { win in
+            QuickLogView(winToEdit: win)
+        }
+        .sheet(item: $winToShare) { win in
+            ShareSheet(activityItems: shareActivityItems(for: win))
+        }
+    }
+
+    /// Deletes the win immediately and shows "Win deleted" toast with Undo (re-insert).
+    private func deleteWinAndShowToast(_ win: Win) {
+        let copy = Win.copy(from: win)
+        modelContext.delete(win)
+        try? modelContext.save()
+        globalToastState?.show("Win deleted", style: .destructive, undoTitle: "Undo", onUndo: {
+            modelContext.insert(copy)
+            try? modelContext.save()
+        })
+    }
+
+    private func shareActivityItems(for win: Win) -> [Any] {
+        var items: [Any] = [win.title]
+        if let data = win.imageData, let image = UIImage(data: data) {
+            items.append(image)
+        }
+        return items
     }
 
     /// Staggered grid: exactly 16pt margins, 12pt between columns. Card width = (availableWidth - 44) / 2. Uses parent width so no NavigationStack/ScrollView padding affects margins.
     private func staggeredGrid(availableWidth: CGFloat) -> some View {
-        let cardWidth = (availableWidth - totalHorizontalInset) / 2
+        let cardWidth = max(1, (availableWidth - totalHorizontalInset) / 2)
         let squareHeight = cardWidth
         let tallHeight = squareHeight * 1.4
         let leftItems = leftColumnItems(squareHeight: squareHeight, tallHeight: tallHeight)
@@ -162,9 +198,31 @@ struct CollectionDetailView: View {
                 ForEach(Array(leftItems.enumerated()), id: \.element.0.id) { _, pair in
                     let (win, h) = pair
                     NavigationLink(destination: WinDetailView(win: win)) {
-                        WinCard(win: win, cardHeight: h)
+                        WinCard(win: win, cardHeight: h, cardWidth: cardWidth)
                     }
                     .buttonStyle(.plain)
+                    .contextMenu {
+                        SharedEditMenuItem {
+                            winToEdit = win
+                            showEditSheet = true
+                        }
+                        Button {
+                            print("Repeat Win")
+                        } label: {
+                            Label("Do it again", systemImage: "arrow.trianglehead.2.clockwise")
+                        }
+                        Button {
+                            winToShare = win
+                        } label: {
+                            Label("Share", systemImage: "square.and.arrow.up")
+                        }
+                        Divider()
+                        SharedDeleteMenuItem {
+                            deleteWinAndShowToast(win)
+                        }
+                    } preview: {
+                        WinCard(win: win, cardHeight: h, cardWidth: cardWidth)
+                    }
                 }
             }
             .frame(width: cardWidth)
@@ -173,9 +231,31 @@ struct CollectionDetailView: View {
                 ForEach(Array(rightItems.enumerated()), id: \.element.0.id) { _, pair in
                     let (win, h) = pair
                     NavigationLink(destination: WinDetailView(win: win)) {
-                        WinCard(win: win, cardHeight: h)
+                        WinCard(win: win, cardHeight: h, cardWidth: cardWidth)
                     }
                     .buttonStyle(.plain)
+                    .contextMenu {
+                        SharedEditMenuItem {
+                            winToEdit = win
+                            showEditSheet = true
+                        }
+                        Button {
+                            print("Repeat Win")
+                        } label: {
+                            Label("Do it again", systemImage: "arrow.trianglehead.2.clockwise")
+                        }
+                        Button {
+                            winToShare = win
+                        } label: {
+                            Label("Share", systemImage: "square.and.arrow.up")
+                        }
+                        Divider()
+                        SharedDeleteMenuItem {
+                            deleteWinAndShowToast(win)
+                        }
+                    } preview: {
+                        WinCard(win: win, cardHeight: h, cardWidth: cardWidth)
+                    }
                 }
             }
             .frame(width: cardWidth)
@@ -198,16 +278,24 @@ struct CollectionDetailView: View {
                     .font(.appBody)
                     .foregroundStyle(Color.appFont)
                     .multilineTextAlignment(.center)
-                Text("Log a new win and add it here")
-                    .font(.appBodySmall)
-                    .foregroundStyle(Color.appSecondary)
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal, horizontalPadding)
+                Button {
+                    showAddWinSheet = true
+                } label: {
+                    Text("Log a new win and add it here")
+                        .font(.appBodySmall)
+                        .foregroundStyle(Color.appPrimary)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, horizontalPadding)
+                }
+                .buttonStyle(.plain)
             }
             .frame(maxWidth: .infinity)
             Spacer()
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .sheet(isPresented: $showAddWinSheet) {
+            QuickLogView(initialCollection: collection)
+        }
     }
 
     /// Empty state when filters return no results (matches Lab's filter empty state: same icon, text, Clear Filter button).
@@ -240,7 +328,18 @@ struct CollectionDetailView: View {
 
 }
 
-// MARK: - Masonry card (legacy; staggered grid uses WinCard): full image background, large yellow-stroke title, badges at bottom
+// Sharing a win
+private struct ShareSheet: UIViewControllerRepresentable {
+    let activityItems: [Any]
+
+    func makeUIViewController(context: Context) -> UIActivityViewController {
+        UIActivityViewController(activityItems: activityItems, applicationActivities: nil)
+    }
+
+    func updateUIViewController(_ uiViewController: UIActivityViewController, context: Context) {}
+}
+
+// Masonry card
 struct WinMasonryCard: View {
     let win: Win
     let cardWidth: CGFloat
@@ -249,13 +348,17 @@ struct WinMasonryCard: View {
     private let cornerRadius: CGFloat = 12
     private let badgeSize: BadgeSize = .small
     private let badgeVariant: BadgeVariant = .primary
-    /// Staggered aspect ratios for masonry (0.75, 0.9, 1.05)
     private var aspectRatio: CGFloat {
         let r: [CGFloat] = [0.75, 0.9, 1.05]
         return r[itemIndex % r.count]
     }
 
-    private var cardHeight: CGFloat { cardWidth / aspectRatio }
+    /// Height from aspect ratio; fallback to square if ratio is non-finite or zero to avoid invalid frame dimension.
+    private var cardHeight: CGFloat {
+        guard aspectRatio.isFinite, aspectRatio > 0 else { return max(1, cardWidth) }
+        let h = cardWidth / aspectRatio
+        return h.isFinite && h > 0 ? h : max(1, cardWidth)
+    }
 
     var body: some View {
         ZStack(alignment: .bottom) {
@@ -285,7 +388,7 @@ struct WinMasonryCard: View {
                     )
                 )
 
-            // 3. Bottom stack: title (yellow stroke) above badges row on translucent background
+            // 3. Bottom stack
             VStack(spacing: 0) {
                 Spacer(minLength: 0)
                 strokedTitle(text: win.title)
@@ -311,7 +414,6 @@ struct WinMasonryCard: View {
         .frame(width: cardWidth, height: cardHeight)
     }
 
-    /// Yellow outline-only title (stroke, no fill) via 8-direction shadow.
     private func strokedTitle(text: String) -> some View {
         Text(text)
             .font(.appCard)
@@ -349,7 +451,7 @@ struct WinMasonryCard: View {
     }
 }
 
-// MARK: - Win row placeholder (simple row for list; kept for reuse elsewhere)
+// Win row placeholder  
 struct WinRowView: View {
     var win: Win
 

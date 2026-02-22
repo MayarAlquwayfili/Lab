@@ -2,7 +2,7 @@
 //  Win.swift
 //  SSC_Lab
 //
-//  SwiftData model for a logged win. Conforms to Identifiable via @Model.
+//  SwiftData model for a logged win.  
 //
 
 import Foundation
@@ -13,9 +13,8 @@ final class Win {
     var title: String
     var imageData: Data?
     var createdAt: Date = Date()
-    var logTypeIcon: String   // 4th icon on WinCard (e.g. oneTime, newInterest)
+    var logTypeIcon: String
     var date: Date = Date()
-    /// Optional icon names (SF Symbol or asset) for the first 3 badges on the card.
     var icon1: String?
     var icon2: String?
     var icon3: String?
@@ -25,8 +24,10 @@ final class Win {
     var collection: WinCollection?
     /// User notes for the win (bound in detail view).
     var notes: String = ""
+    /// When set, links this win to an experiment for repeat count and "Do it again". Preserved even if user edits the title.
+    var activityID: UUID?
 
-    /// Relative date string for UI: "Today", "Yesterday", or "Feb 21".
+    /// Relative date string for UI
     var relativeDateString: String { date.relativeString }
 
     init(
@@ -39,7 +40,8 @@ final class Win {
         icon3: String? = nil,
         collectionName: String? = nil,
         collection: WinCollection? = nil,
-        notes: String = ""
+        notes: String = "",
+        activityID: UUID? = nil
     ) {
         self.title = title
         self.imageData = imageData
@@ -51,12 +53,29 @@ final class Win {
         self.collectionName = collectionName
         self.collection = collection
         self.notes = notes
+        self.activityID = activityID
+    }
+
+    /// Creates a new Win with the same property values (for undo-after-delete). Caller must insert into context.
+    static func copy(from win: Win) -> Win {
+        Win(
+            title: win.title,
+            imageData: win.imageData,
+            logTypeIcon: win.logTypeIcon,
+            date: win.date,
+            icon1: win.icon1,
+            icon2: win.icon2,
+            icon3: win.icon3,
+            collectionName: win.collectionName,
+            collection: win.collection,
+            notes: win.notes,
+            activityID: win.activityID
+        )
     }
 }
 
-// MARK: - Relative date string for Win UI
+// Relative date string for Win UI
 extension Date {
-    /// "Today", "Yesterday", or "Feb 21" style.
     var relativeString: String {
         let cal = Calendar.current
         if cal.isDateInToday(self) { return "Today" }

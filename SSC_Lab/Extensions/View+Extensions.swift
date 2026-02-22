@@ -136,7 +136,31 @@ extension EnvironmentValues {
     }
 }
 
-// Syncs local isPresented to global state when useGlobal and available; otherwise draws overlay in place (e.g. previews or dynamic content).
+/// Optional binding to hide the main tab bar
+private struct HideTabBarBindingKey: EnvironmentKey {
+    static var defaultValue: Binding<Bool>? { nil }
+}
+
+extension EnvironmentValues {
+    var hideTabBarBinding: Binding<Bool>? {
+        get { self[HideTabBarBindingKey.self] }
+        set { self[HideTabBarBindingKey.self] = newValue }
+    }
+}
+
+/// Optional binding to the main tab selection
+private struct SelectedTabBindingKey: EnvironmentKey {
+    static var defaultValue: Binding<Tab>? { nil }
+}
+
+extension EnvironmentValues {
+    var selectedTabBinding: Binding<Tab>? {
+        get { self[SelectedTabBindingKey.self] }
+        set { self[SelectedTabBindingKey.self] = newValue }
+    }
+}
+
+/// Syncs local isPresented to global state when useGlobal and available
 private struct GlobalPopUpSyncView: View {
     @Binding var isPresented: Bool
     var title: String
@@ -210,7 +234,7 @@ private struct GlobalPopUpSyncView: View {
     }
 }
 
-// Custom popup overlay
+// Custom popup
 extension View {
     func showPopUp(
         isPresented: Binding<Bool>,
@@ -332,13 +356,9 @@ private struct SwipeToBackEnabler: UIViewControllerRepresentable {
     
     func updateUIViewController(_ uiViewController: UIViewController, context: Context) {
         DispatchQueue.main.async {
-            // Access the navigation controller through the view controller hierarchy
-            // This works because SwiftUI embeds views in UIHostingController which is in a navigation stack
+           
             if let navigationController = uiViewController.navigationController {
-                // Enable the interactive pop gesture recognizer
                 navigationController.interactivePopGestureRecognizer?.isEnabled = true
-                // Set delegate to nil to allow the gesture to work
-                // This is safe because we're only enabling the standard iOS gesture
                 navigationController.interactivePopGestureRecognizer?.delegate = nil
             }
         }

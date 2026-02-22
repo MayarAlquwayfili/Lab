@@ -2,7 +2,7 @@
 //  Experiment.swift
 //  SSC_Lab
 //
-//  SwiftData model for a lab experiment. Conforms to Identifiable via @Model.
+//  SwiftData model for a lab experiment. 
 //
 
 import Foundation
@@ -18,8 +18,11 @@ final class Experiment {
     var logType: String?      
     var referenceURL: String
     var labNotes: String
-    var isActive: Bool        // Currently active experiment (only one at a time)
-    var createdAt: Date       // For sorting (newest first)
+    var isActive: Bool        /// Currently active experiment (only one at a time)
+    var isCompleted: Bool     /// true when a Win was logged from this experiment (graduated; hidden from Lab)
+    var createdAt: Date       /// For sorting (newest first)
+    /// Stable id for linking wins to this experiment (repeat counter, "Do it again"). New experiments get a UUID; existing may be nil.
+    var activityID: UUID?
 
     init(
         title: String,
@@ -31,7 +34,9 @@ final class Experiment {
         referenceURL: String = "",
         labNotes: String = "",
         isActive: Bool = false,
-        createdAt: Date = .now
+        isCompleted: Bool = false,
+        createdAt: Date = .now,
+        activityID: UUID? = nil
     ) {
         self.title = title
         self.icon = icon
@@ -42,6 +47,8 @@ final class Experiment {
         self.referenceURL = referenceURL
         self.labNotes = labNotes
         self.isActive = isActive
+        self.isCompleted = isCompleted
         self.createdAt = createdAt
+        self.activityID = activityID ?? UUID()
     }
 }

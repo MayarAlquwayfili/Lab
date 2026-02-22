@@ -23,6 +23,10 @@ extension Font {
     static var appWin: Font {
         .custom("MAGICWORLDLINE", size: 36, relativeTo: .largeTitle)
     }
+    /// Magic World Line (64) – outline style for Win detail card title
+    static var appHeroOutline: Font {
+        .custom("MAGICWORLDLINE", size: 64, relativeTo: .title)
+    }
     /// Magic World (64) – Lab / detail card titles
     static var appDetailCard: Font {
         .custom("MAGICWORLD", size: 64, relativeTo: .title)

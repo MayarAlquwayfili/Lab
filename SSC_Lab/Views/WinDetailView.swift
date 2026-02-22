@@ -2,7 +2,7 @@
 //  WinDetailView.swift
 //  SSC_Lab
 //
-//  Detail view for a single Win. Layout matches ExperimentDetailView; card uses win.imageData and badges.
+//  Detail view for a single Win.
 //
 
 import SwiftUI
@@ -13,61 +13,81 @@ struct WinDetailView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
     @Environment(\.globalToastState) private var globalToastState
+    @Environment(\.hideTabBarBinding) private var hideTabBarBinding
+    @Environment(\.selectedTabBinding) private var selectedTabBinding
     @Query(sort: \WinCollection.name, order: .forward) private var collections: [WinCollection]
+    @Query(sort: \Win.date, order: .reverse) private var allWins: [Win]
+    @Query(sort: \Experiment.createdAt, order: .reverse) private var experiments: [Experiment]
     @Bindable var win: Win
 
+    @State private var labViewModel = LabViewModel()
     @State private var showEditSheet = false
-    @State private var showDeleteAlert = false
+    @State private var showDoItAgainSheet = false
+    @State private var experimentForDoItAgain: Experiment?
+    @State private var carouselIndex: Int = 0
 
-    private var collectionDisplayName: String {
-        win.collection?.name ?? "Uncategorized"
+    /// Carousel: all wins with the same activityID (only). If no activityID, single card.
+    private var winsForCarousel: [Win] {
+        guard let id = win.activityID else { return [win] }
+        let list = allWins.filter { $0.activityID == id }
+        return list.isEmpty ? [win] : list
     }
 
-    private let cardSize: CGFloat = 370
-    private let cardBorderWidth: CGFloat = 3
-    private let cardCornerRadius: CGFloat = 16
+    /// The win currently shown (drives notes, date, and which iteration is displayed).
+    private var displayedWin: Win {
+        let list = winsForCarousel
+        guard !list.isEmpty, carouselIndex >= 0, carouselIndex < list.count else { return win }
+        return list[carouselIndex]
+    }
+
+    private var collectionDisplayName: String {
+        displayedWin.collection?.name ?? "All"
+    }
+
     private let topRightIconPadding: CGFloat = 8
-    private let cardInternalPadding: CGFloat = 8
     private let bottomRowBadgeSpacing: CGFloat = 8
-    private let badgeDimension: CGFloat = 45
-    private let badgeIconDimension: CGFloat = 24
-    private let scrollBottomPadding: CGFloat = 32
-    private let spacingBelowCard: CGFloat = 20
-    private let spacingNotesToButtons: CGFloat = 16
+    private let dotSize: CGFloat = 8
+    private let dotSpacing: CGFloat = 6
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            AppHeader(title: win.title, onBack: { dismiss() }) {
-                Button(Constants.WinDetail.buttonEdit) { showEditSheet = true }
-                    .font(.appBodySmall)
-                    .foregroundStyle(Color.appFont)
-            }
-
-            collectionBreadcrumb
-                .padding(.top, 4)
-                .padding(.bottom, 8)
+            winDetailHeader
 
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
-                    detailCard
-                        .frame(maxWidth: cardSize, maxHeight: cardSize)
-                        .aspectRatio(1, contentMode: .fit)
+                    carouselCard
+                        .frame(height: DetailCardLayout.cardSize)
                         .frame(maxWidth: .infinity)
-                        .padding(.top, 16)
+                        .padding(.top, DetailCardLayout.spacingHeaderToCard)
 
-                    AppNoteEditor(text: $win.notes, placeholder: Constants.Lab.placeholderNote)
-                        .padding(.top, spacingBelowCard)
+                    pageIndicator
+                        .padding(.top, DetailCardLayout.spacingCardToContent)
+
+                    Text(displayedWin.date.formatted(date: .abbreviated, time: .omitted))
+                        .font(.appBodySmall)
+                        .foregroundStyle(Color.appSecondary)
+                        .frame(maxWidth: .infinity, alignment: .trailing)
+                        .padding(.top, 12)
+
+                    if !displayedWin.notes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                        Text(displayedWin.notes)
+                            .font(.appBody.italic())
+                            .foregroundStyle(Color.appFont)
+                            .multilineTextAlignment(.center)
+                            .frame(maxWidth: .infinity)
+                            .padding(.top, 12)
+                    }
 
                     VStack(spacing: 12) {
                         primaryButton(title: Constants.WinDetail.buttonDoItAgain) {
-                            dismiss()
+                            openDoItAgain()
                         }
                         secondaryButton(title: Constants.WinDetail.buttonDelete) {
-                            showDeleteAlert = true
+                            deleteWinAndDismiss()
                         }
                     }
-                    .padding(.top, spacingNotesToButtons)
-                    .padding(.bottom, scrollBottomPadding)
+                    .padding(.top, DetailCardLayout.spacingContentToButtons)
+                    .padding(.bottom, Constants.WinDetail.scrollBottomPadding)
                 }
                 .padding(.horizontal, Constants.WinDetail.paddingHorizontal)
             }
@@ -75,70 +95,112 @@ struct WinDetailView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color.appBg)
         .toolbar(.hidden, for: .tabBar)
+        .navigationBarBackButtonHidden(true)
         .enableSwipeToBack()
-        .onChange(of: win.notes) { _, _ in
-            try? modelContext.save()
+        .onAppear {
+            hideTabBarBinding?.wrappedValue = true
+            if let idx = winsForCarousel.firstIndex(where: { $0.id == win.id }) {
+                carouselIndex = idx
+            }
+        }
+        .onDisappear {
+            hideTabBarBinding?.wrappedValue = false
         }
         .sheet(isPresented: $showEditSheet) {
-            WinEditSheet(win: win)
+            QuickLogView(winToEdit: displayedWin)
         }
-        .showPopUp(
-            isPresented: $showDeleteAlert,
-            title: Constants.WinDetail.deletePopUpTitle,
-            message: Constants.WinDetail.deletePopUpMessage,
-            primaryButtonTitle: Constants.WinDetail.deletePopUpPrimary,
-            secondaryButtonTitle: Constants.WinDetail.deletePopUpSecondary,
-            primaryStyle: .destructive,
-            showCloseButton: false,
-            onPrimary: {
-                modelContext.delete(win)
-                try? modelContext.save()
-                dismiss()
-            },
-            onSecondary: {
-                showDeleteAlert = false
+        .sheet(isPresented: $showDoItAgainSheet) {
+            if let exp = experimentForDoItAgain {
+                QuickLogView(experimentToLog: exp)
+                    .onDisappear {
+                        dismiss()
+                    }
             }
-        )
+        }
     }
 
-    // MARK: - Collection breadcrumb (Menu under title)
-    private var collectionBreadcrumb: some View {
-        Menu {
-            Button("Uncategorized") {
-                moveToCollection(nil)
+    // Header
+    private var winDetailHeader: some View {
+        HStack(alignment: .center, spacing: 0) {
+            Button { dismiss() } label: {
+                Image(systemName: "chevron.left")
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundStyle(Color.appFont)
+                    .frame(width: 40, height: 40)
+                    .background(Circle().fill(Color.appFont.opacity(0.05)))
+                    .contentShape(Circle())
             }
-            ForEach(collections) { collection in
-                Button(collection.name) {
-                    moveToCollection(collection)
+            .buttonStyle(.plain)
+
+            VStack(spacing: 4) {
+                Text(displayedWin.title)
+                    .font(.appHeroSmall)
+                    .foregroundStyle(Color.appFont)
+                    .lineLimit(1)
+                    .truncationMode(.tail)
+                    .multilineTextAlignment(.center)
+                Menu {
+                    Button("All") {
+                        moveToCollection(nil)
+                    }
+                    ForEach(collections) { collection in
+                        Button(collection.name) {
+                            moveToCollection(collection)
+                        }
+                    }
+                } label: {
+                    HStack(spacing: 4) {
+                        Text(collectionDisplayName)
+                            .font(.appCaption)
+                            .foregroundStyle(Color.appSecondary)
+                        Image(systemName: "chevron.down")
+                            .font(.system(size: 10, weight: .bold))
+                            .foregroundStyle(Color.appSecondary.opacity(0.5))
+                    }
                 }
-            }
-        } label: {
-            HStack(spacing: 4) {
-                Text(collectionDisplayName)
-                    .font(.appMicro)
-                    .foregroundStyle(Color.appSecondary)
-                Image(systemName: "chevron.up.down")
-                    .font(.appMicro)
-                    .foregroundStyle(Color.appSecondary)
+                .buttonStyle(.plain)
+                .animation(.easeInOut(duration: 0.2), value: collectionDisplayName)
             }
             .frame(maxWidth: .infinity)
+
+            Button(Constants.WinDetail.buttonEdit) { showEditSheet = true }
+                .font(.appBodySmall)
+                .foregroundStyle(Color.appFont)
+                .frame(width: 40, height: 40)
         }
-        .buttonStyle(.plain)
+        .padding(.horizontal, Constants.WinDetail.paddingHorizontal)
+        .padding(.top, 16)
     }
 
-    private func moveToCollection(_ collection: WinCollection?) {
-        win.collection = collection
-        win.collectionName = collection?.name
-        try? modelContext.save()
-        let name = collection?.name ?? "Uncategorized"
-        globalToastState?.show("Moved to \(name)")
+    // Carousel
+
+    private var carouselCard: some View {
+        TabView(selection: $carouselIndex) {
+            ForEach(Array(winsForCarousel.enumerated()), id: \.element.id) { index, w in
+                DetailCardFrame { detailCardContent(for: w) }
+                    .tag(index)
+            }
+        }
+        .tabViewStyle(.page(indexDisplayMode: .never))
     }
 
-    // MARK: - Detail Card (image background + overlay + badges, same layout as WinCard with .large badges)
-    private var detailCard: some View {
-        ZStack(alignment: .topTrailing) {
+    private var pageIndicator: some View {
+        HStack(spacing: dotSpacing) {
+            ForEach(0..<winsForCarousel.count, id: \.self) { index in
+                Circle()
+                    .fill(index == carouselIndex ? Color.appPrimary : Color.appSecondary.opacity(0.4))
+                    .frame(width: dotSize, height: dotSize)
+            }
+        }
+        .frame(maxWidth: .infinity)
+    }
+
+    /// Card content
+    private func detailCardContent(for w: Win) -> some View {
+        let padding = DetailCardLayout.cardInternalPadding
+        return ZStack(alignment: .center) {
             Group {
-                if let data = win.imageData, let uiImage = UIImage(data: data) {
+                if let data = w.imageData, let uiImage = UIImage(data: data) {
                     Image(uiImage: uiImage)
                         .resizable()
                         .scaledToFill()
@@ -150,58 +212,63 @@ struct WinDetailView: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .clipped()
 
-            RoundedRectangle(cornerRadius: cardCornerRadius)
-                .fill(Color.black.opacity(0.3))
+            RoundedRectangle(cornerRadius: DetailCardLayout.cardCornerRadius)
+                .fill(Color.black.opacity(0.4))
 
-            VStack(alignment: .leading, spacing: 0) {
+            Text(w.title)
+                .font(.appHeroOutline)
+                .foregroundStyle(.white)
+                .lineLimit(2)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, padding)
+
+            VStack {
                 HStack {
                     Spacer(minLength: 0)
-                    if let topIcon = topBadgeType {
-                        StatusBadge(type: topIcon, size: .large, variant: .primary)
-                            .padding(.top, topRightIconPadding)
-                            .padding(.trailing, topRightIconPadding)
+                    if let topType = topBadgeType(for: w) {
+                        StatusBadge(type: topType, size: .large, variant: .primary)
                     }
                 }
-
+                .padding(.top, padding)
+                .padding(.trailing, padding)
                 Spacer(minLength: 0)
-
-                Text(win.title)
-                    .font(.appDetailCard)
-                    .foregroundStyle(.white)
-                    .lineLimit(2)
-                    .frame(maxWidth: .infinity)
-                    .multilineTextAlignment(.center)
-
-                Spacer(minLength: 0)
-
                 HStack(alignment: .center, spacing: bottomRowBadgeSpacing) {
-                    ForEach(bottomBadgeTypes, id: \.self) { type in
+                    ForEach(bottomBadgeTypes(for: w), id: \.self) { type in
                         StatusBadge(type: type, size: .large, variant: .primary)
                     }
                     Spacer(minLength: 0)
+                    if let logType = logTypeBadgeType(for: w) {
+                        StatusBadge(type: logType, size: .large, variant: .primary)
+                    }
                 }
-                .padding(.horizontal, cardInternalPadding)
-                .padding(.bottom, cardInternalPadding)
+                .padding(.horizontal, padding)
+                .padding(.bottom, padding)
             }
-            .padding(cardInternalPadding)
-
-            RoundedRectangle(cornerRadius: cardCornerRadius)
-                .stroke(Color.appSecondary, lineWidth: cardBorderWidth)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
-        .clipShape(RoundedRectangle(cornerRadius: cardCornerRadius))
     }
 
-    private var topBadgeType: BadgeType? {
-        [win.icon1, win.icon2, win.icon3, win.logTypeIcon]
+     private func topBadgeType(for w: Win) -> BadgeType? {
+        [w.icon1, w.icon2, w.icon3, w.logTypeIcon]
             .compactMap { $0 }
             .first
             .flatMap { badgeType(for: $0) }
     }
 
-    private var bottomBadgeTypes: [BadgeType] {
-        [win.icon1, win.icon2, win.icon3, win.logTypeIcon]
+     private func bottomBadgeTypes(for w: Win) -> [BadgeType] {
+        [w.icon1, w.icon2, w.icon3]
             .compactMap { $0 }
             .compactMap { badgeType(for: $0) }
+    }
+
+    private func logTypeBadgeType(for w: Win) -> BadgeType? {
+        guard !w.logTypeIcon.isEmpty else { return nil }
+        let icon = w.logTypeIcon
+        switch icon {
+        case Constants.Icons.oneTime: return .oneTime
+        case Constants.Icons.newInterest: return .newInterest
+        default: return .oneTime
+        }
     }
 
     private func badgeType(for iconName: String) -> BadgeType? {
@@ -220,7 +287,86 @@ struct WinDetailView: View {
         }
     }
 
-    // MARK: - Buttons (same style as ExperimentDetailView)
+    // Actions
+
+    private func deleteWinAndDismiss() {
+        let toDelete = displayedWin
+        let copy = Win.copy(from: toDelete)
+        let wasBoundWin = toDelete.id == win.id
+        let countBefore = winsForCarousel.count
+        modelContext.delete(toDelete)
+        try? modelContext.save()
+        let remainingCount = countBefore - 1
+        if remainingCount <= 0 || wasBoundWin {
+            dismiss()
+        } else {
+            carouselIndex = min(carouselIndex, remainingCount - 1)
+        }
+        globalToastState?.show("Win deleted", style: .destructive, undoTitle: "Undo", onUndo: {
+            modelContext.insert(copy)
+            try? modelContext.save()
+        })
+    }
+
+    /// Updates the currently displayed win's collection and saves. Used by the header collection Menu.
+    private func moveToCollection(_ collection: WinCollection?) {
+        displayedWin.collection = collection
+        displayedWin.collectionName = collection?.name
+        collection?.lastModified = Date()
+        try? modelContext.save()
+        let name = collection?.name ?? "All"
+        globalToastState?.show("Moved to \(name)")
+    }
+
+    /// Do It Again: make the experiment active (and visible in Lab), save, switch to Home, then show QuickLogView pre-filled.
+    private func openDoItAgain() {
+        let exp: Experiment? = win.activityID.flatMap { id in experiments.first(where: { $0.activityID == id }) }
+            ?? experiments.first(where: { $0.title == win.title })
+        let target: Experiment
+        if let existing = exp {
+            target = existing
+        } else {
+            let temp = temporaryExperiment(from: win)
+            modelContext.insert(temp)
+            target = temp
+        }
+        /// Set this experiment active and not completed; deactivate all others.
+        for e in experiments where e.id != target.id {
+            e.isActive = false
+        }
+        target.isActive = true
+        target.isCompleted = false
+        try? modelContext.save()
+        /// Switch to Home first so the dashboard shows the active experiment; then present sheet.
+        selectedTabBinding?.wrappedValue = .home
+        experimentForDoItAgain = target
+        showDoItAgainSheet = true
+    }
+
+    /// Creates a temporary experiment from the Win so QuickLogView can prefill (used when original experiment was removed from Lab).
+    private func temporaryExperiment(from w: Win) -> Experiment {
+        let env = (w.icon1 == Constants.Icons.outdoor) ? "outdoor" : "indoor"
+        let toolsStr = (w.icon2 == Constants.Icons.toolsNone) ? "none" : "required"
+        let timeframeStr = w.icon3 ?? "1D"
+        let logTypeStr: String? = (w.logTypeIcon == Constants.Icons.newInterest) ? "newInterest" : "oneTime"
+        return Experiment(
+            title: w.title,
+            icon: "star.fill",
+            environment: env,
+            tools: toolsStr,
+            timeframe: timeframeStr,
+            logType: logTypeStr,
+            referenceURL: "",
+            labNotes: "",
+            isActive: false,
+            isCompleted: false,
+            createdAt: .now,
+            activityID: w.activityID ?? UUID()
+        )
+    }
+
+    // Buttons
+
     private func primaryButton(title: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Text(title)
@@ -245,54 +391,6 @@ struct WinDetailView: View {
                 .clipShape(RoundedRectangle(cornerRadius: 12))
         }
         .buttonStyle(.plain)
-    }
-}
-
-// MARK: - Edit Win Sheet (title + notes, matches experiment edit flow)
-private struct WinEditSheet: View {
-    @Environment(\.dismiss) private var dismiss
-    @Environment(\.modelContext) private var modelContext
-    @Bindable var win: Win
-
-    private let horizontalMargin: CGFloat = 16
-
-    var body: some View {
-        NavigationStack {
-            VStack(alignment: .leading, spacing: 0) {
-                TextField("Title", text: $win.title)
-                    .font(.appBody)
-                    .padding(.horizontal, horizontalMargin)
-                    .padding(.vertical, 12)
-                    .background(Color.appShade02)
-                    .clipShape(RoundedRectangle(cornerRadius: 12))
-                    .padding(.horizontal, horizontalMargin)
-                    .padding(.top, 16)
-
-                AppNoteEditor(text: $win.notes, placeholder: Constants.Lab.placeholderNote)
-                    .padding(.horizontal, horizontalMargin)
-                    .padding(.top, 20)
-
-                Spacer(minLength: 0)
-            }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .background(Color.appBg)
-            .navigationTitle("Edit Win")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") { dismiss() }
-                        .foregroundStyle(Color.appFont)
-                }
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Save") {
-                        try? modelContext.save()
-                        dismiss()
-                    }
-                    .fontWeight(.semibold)
-                    .foregroundStyle(Color.appPrimary)
-                }
-            }
-        }
     }
 }
 

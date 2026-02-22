@@ -2,7 +2,7 @@
 //  CollectionsGalleryView.swift
 //  SSC_Lab
 //
-//  Gallery of collections using AppHeader, popup style, and 2-column LazyVGrid.
+//  Gallery of collections
 //
 
 import SwiftUI
@@ -11,7 +11,7 @@ import SwiftData
 struct CollectionsGalleryView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.globalToastState) private var globalToastState
-    @Query(sort: \WinCollection.createdAt, order: .reverse) private var collections: [WinCollection]
+    @Query(sort: \WinCollection.lastModified, order: .reverse) private var collections: [WinCollection]
     @Query(sort: \Win.date, order: .reverse) private var allWins: [Win]
 
     @State private var showAddCollectionPopUp = false
@@ -23,6 +23,7 @@ struct CollectionsGalleryView: View {
     private let horizontalPadding: CGFloat = Constants.Lab.horizontalMargin
     private let gridSpacing: CGFloat = Constants.Lab.gridSpacing
 
+    /// All card only when there is at least one win or user has custom collections.
     private var galleryItems: [GalleryGridItem] {
         let allWinsSorted = allWins.sorted { $0.date > $1.date }
         let allItem = GalleryGridItem(
@@ -33,7 +34,10 @@ struct CollectionsGalleryView: View {
             winCollection: nil,
             isAllWins: true
         )
-        var items: [GalleryGridItem] = [allItem]
+        var items: [GalleryGridItem] = []
+        if allWins.count > 0 || !collections.isEmpty {
+            items.append(allItem)
+        }
         items += collections.map { collection in
             let wins = collection.wins
             let sorted = wins.sorted { $0.date > $1.date }
@@ -47,6 +51,11 @@ struct CollectionsGalleryView: View {
             )
         }
         return items
+    }
+
+    /// Show only the empty state when user has no custom collections and no wins.
+    private var showEmptyStateOnly: Bool {
+        collections.isEmpty && allWins.isEmpty
     }
 
     private var existingCollectionNames: Set<String> {
@@ -63,32 +72,20 @@ struct CollectionsGalleryView: View {
         return existingCollectionNames.contains(trimmed.lowercased())
     }
 
-    private var emptyState: some View {
-        VStack(spacing: 0) {
-            Spacer()
-            VStack(spacing: 16) {
-                Image(systemName: "folder.badge.plus")
-                    .font(.system(size: 40, weight: .medium))
-                    .foregroundStyle(Color.appSecondary)
-                Text("No Collections Yet")
-                    .font(.appBody)
-                    .foregroundStyle(Color.appFont)
-                    .multilineTextAlignment(.center)
-                Text("Create your first collection to organize your wins.")
-                    .font(.appBodySmall)
-                    .foregroundStyle(Color.appSecondary)
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal, horizontalPadding)
-                AppButton(title: "Create Collection", style: .primary) {
-                    showAddCollectionPopUp = true
-                }
-                .padding(.top, 8)
-            }
-            .frame(maxWidth: .infinity)
-            Spacer()
+    /// Shown when there are no user collections. No Create button — use '+' in header.
+    private var emptyStateMessage: some View {
+        VStack(spacing: 16) {
+            Image(systemName: "folder.badge.plus")
+                .font(.system(size: 40, weight: .medium))
+                .foregroundStyle(Color.appSecondary)
+            Text("No Collections Yet. Tap the + button at the top to organize your wins!")
+                .font(.appBodySmall)
+                .foregroundStyle(Color.appFont)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, horizontalPadding)
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .padding(.horizontal, horizontalPadding)
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 24)
     }
 
     var body: some View {
@@ -109,8 +106,13 @@ struct CollectionsGalleryView: View {
                     .buttonStyle(.plain)
                 }
 
-                if galleryItems.isEmpty {
-                    emptyState
+                if showEmptyStateOnly {
+                    VStack(spacing: 0) {
+                        Spacer(minLength: 0)
+                        emptyStateMessage
+                        Spacer(minLength: 0)
+                    }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
                 } else {
                     ScrollView {
                         LazyVGrid(columns: [
@@ -119,17 +121,20 @@ struct CollectionsGalleryView: View {
                         ], spacing: gridSpacing) {
                             ForEach(galleryItems) { item in
                                 NavigationLink(destination: CollectionDetailView(collection: item.winCollection, showAllWins: item.isAllWins)) {
-                                    VStack(alignment: .center, spacing: 4) {
+                                    VStack(alignment: .center, spacing: 8) {
                                         CollectionCoverCard(coverImageData: item.coverImageData)
                                         Text(item.title)
                                             .font(.appBody)
                                             .foregroundStyle(Color.appFont)
                                             .multilineTextAlignment(.center)
-                                            .lineLimit(2)
+                                            .lineLimit(1)
+                                            .truncationMode(.tail)
                                             .frame(maxWidth: .infinity)
                                         Text("\(item.winCount) Wins")
                                             .font(.appMicro)
                                             .foregroundStyle(Color.appSecondary)
+                                            .lineLimit(1)
+                                            .truncationMode(.tail)
                                             .frame(maxWidth: .infinity)
                                     }
                                 }
@@ -141,7 +146,7 @@ struct CollectionsGalleryView: View {
                                             renameText = collection.name
                                             showRenamePopUp = true
                                         } label: {
-                                            Label("Rename", systemImage: "pencil")
+                                            Label("Rename", systemImage: "pencil.line")
                                         }
                                         Button(role: .destructive) {
                                             deleteCollection(collection)
@@ -169,8 +174,9 @@ struct CollectionsGalleryView: View {
                     renameText = ""
                 }
             }
-            .overlay {
-                if showAddCollectionPopUp { addCollectionPopUpOverlay }
+            .fullScreenCover(isPresented: $showAddCollectionPopUp) {
+                addCollectionFullScreenOverlay
+                    .presentationBackground(.clear)
             }
             .overlay {
                 if showRenamePopUp { renamePopUpOverlay }
@@ -179,27 +185,30 @@ struct CollectionsGalleryView: View {
         .navigationBarHidden(true)
     }
 
-    // MARK: - Add collection popup (AppPopUp style: single Collection Name input, duplicate check)
-    private var addCollectionPopUpOverlay: some View {
+    // Add collection
+    private var addCollectionFullScreenOverlay: some View {
         let trimmed = newCollectionName.trimmingCharacters(in: .whitespacesAndNewlines)
         let isEmpty = trimmed.isEmpty
         let isDuplicate = !isEmpty && isDuplicateCollectionName(newCollectionName)
         let canCreate = !isEmpty && !isDuplicate
 
         return ZStack {
+
             Color.black.opacity(0.4)
-                .ignoresSafeArea()
+                .ignoresSafeArea(.all)
                 .onTapGesture { showAddCollectionPopUp = false }
+
             VStack(spacing: 0) {
                 Text("New Collection")
                     .font(.appHeroSmall)
                     .foregroundStyle(Color.appFont)
                     .multilineTextAlignment(.center)
                     .frame(maxWidth: .infinity)
-                    .padding(.horizontal, 32)
                 TextField("Collection Name", text: $newCollectionName)
+                    .font(.appBody)
+                    .foregroundStyle(Color.appFont)
                     .textFieldStyle(.roundedBorder)
-                    .padding(.horizontal, 24)
+                    .padding(.horizontal, 20)
                     .padding(.top, 20)
                 if isDuplicate {
                     Text("A collection with this name already exists.")
@@ -207,7 +216,7 @@ struct CollectionsGalleryView: View {
                         .foregroundStyle(Color.appAlert)
                         .multilineTextAlignment(.center)
                         .padding(.top, 8)
-                        .padding(.horizontal, 24)
+                        .padding(.horizontal, 20)
                 }
                 HStack(spacing: 12) {
                     AppButton(title: "Cancel", style: .secondary) {
@@ -222,14 +231,19 @@ struct CollectionsGalleryView: View {
                 .padding(.top, 24)
             }
             .frame(maxWidth: .infinity)
-            .padding(24)
-            .background(RoundedRectangle(cornerRadius: 26).fill(Color.white))
-            .padding(.horizontal, 32)
+            .padding(28)
+            .background(RoundedRectangle(cornerRadius: 20).fill(Color.white))
+            .overlay(
+                RoundedRectangle(cornerRadius: 20)
+                    .stroke(Color.appSecondary.opacity(0.4), lineWidth: 1)
+            )
+            .padding(.horizontal, 40)
         }
-        .animation(.spring(response: 0.35, dampingFraction: 0.8), value: showAddCollectionPopUp)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(Color.clear)
     }
 
-    // MARK: - Rename popup (same style as AppPopUp)
+    // Rename popup
     private var renamePopUpOverlay: some View {
         Group {
             if showRenamePopUp, let collection = collectionToRename {
@@ -280,16 +294,25 @@ struct CollectionsGalleryView: View {
     }
 
     private func deleteCollection(_ collection: WinCollection) {
-        for win in collection.wins {
+        let name = collection.name
+        let winsToRestore = Array(collection.wins)
+        for win in winsToRestore {
             win.collection = nil
         }
         modelContext.delete(collection)
         try? modelContext.save()
-        globalToastState?.show("Collection deleted")
+        globalToastState?.show("Collection deleted", style: .destructive, undoTitle: "Undo", onUndo: {
+            let newCol = WinCollection(name: name)
+            modelContext.insert(newCol)
+            for w in winsToRestore {
+                w.collection = newCol
+            }
+            try? modelContext.save()
+        })
     }
 }
 
-// MARK: - Grid item model
+// Grid item model
 private struct GalleryGridItem: Identifiable {
     let id: String
     let title: String

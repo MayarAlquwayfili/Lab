@@ -31,17 +31,22 @@ let package = Package(
                 .landscapeRight,
                 .landscapeLeft,
                 .portraitUpsideDown(.when(deviceFamilies: [.pad]))
+            ],
+            capabilities: [
+                .camera(purposeString: "Capture your wins!"),
+                .photoLibrary(purposeString: "Capture your wins!"),
+                .photoLibraryAdd(purposeString: "To save your captured wins to your photo library.")
             ]
         )
     ],
     targets: [
-            .executableTarget(
-                name: "AppModule",
-                path: ".",
-                resources: [
-                    .process("Resources") 
-                ]
-            )
-        ],
+        .executableTarget(
+            name: "AppModule",
+            path: ".",
+            resources: [
+                .process("Resources")
+            ]
+        )
+    ],
     swiftLanguageVersions: [.version("6")]
 )
