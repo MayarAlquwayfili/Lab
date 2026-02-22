@@ -59,20 +59,6 @@ struct CollectionsGalleryView: View {
         collections.isEmpty && allWins.isEmpty
     }
 
-    private var existingCollectionNames: Set<String> {
-        var names = Set(collections.map { $0.name.lowercased() })
-        names.insert("all")
-        names.insert("all wins")
-        names.insert("uncategorized")
-        return names
-    }
-
-    private func isDuplicateCollectionName(_ name: String) -> Bool {
-        let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty else { return false }
-        return existingCollectionNames.contains(trimmed.lowercased())
-    }
-
     /// Shown when there are no user collections. No Create button — use '+' in header.
     private var emptyStateMessage: some View {
         VStack(spacing: 16) {
@@ -190,7 +176,7 @@ struct CollectionsGalleryView: View {
     private var addCollectionFullScreenOverlay: some View {
         let trimmed = newCollectionName.trimmingCharacters(in: .whitespacesAndNewlines)
         let isEmpty = trimmed.isEmpty
-        let isDuplicate = !isEmpty && isDuplicateCollectionName(newCollectionName)
+        let isDuplicate = !isEmpty && collections.isDuplicateOrReservedCollectionName(newCollectionName)
         let canCreate = !isEmpty && !isDuplicate
 
         return ZStack {
@@ -288,7 +274,7 @@ struct CollectionsGalleryView: View {
 
     private func createCollection() {
         let name = newCollectionName.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !name.isEmpty else { return }
+        guard !name.isEmpty, !collections.isDuplicateOrReservedCollectionName(name) else { return }
         let collection = WinCollection(name: name)
         modelContext.insert(collection)
         try? modelContext.save()

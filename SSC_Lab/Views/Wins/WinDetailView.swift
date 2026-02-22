@@ -21,6 +21,7 @@ struct WinDetailView: View {
     @Query(sort: \Experiment.createdAt, order: .reverse) private var experiments: [Experiment]
     @Bindable var win: Win
 
+    @State private var viewModel = WinDetailViewModel()
     @State private var showEditSheet = false
     @State private var carouselIndex: Int = 0
     @State private var showNewCollectionPopUp = false
@@ -298,57 +299,38 @@ struct WinDetailView: View {
     // Actions
 
     private func deleteWinAndDismiss() {
-        let toDelete = displayedWin
-        let copy = Win.copy(from: toDelete)
-        let wasBoundWin = toDelete.id == win.id
-        let countBefore = winsForCarousel.count
-        modelContext.delete(toDelete)
-        do {
-            try modelContext.save()
-        } catch {
-            Logger().error("SwiftData save failed: \(String(describing: error))")
-            modelContext.insert(copy)
-            globalToastState?.show("Failed to save changes. Please try again.", style: .destructive)
-            return
-        }
-        let remainingCount = countBefore - 1
-        if remainingCount <= 0 || wasBoundWin {
-            dismiss()
+        let (outcome, undo) = viewModel.deleteWin(
+            displayedWin: displayedWin,
+            boundWinId: win.id,
+            winsForCarouselCount: winsForCarousel.count,
+            currentCarouselIndex: carouselIndex,
+            context: modelContext
+        )
+        if let outcome {
+            switch outcome {
+            case .dismiss:
+                dismiss()
+            case .stay(let newIndex):
+                carouselIndex = newIndex
+            }
+            globalToastState?.show("Win deleted", style: .destructive, undoTitle: "Undo", onUndo: undo)
         } else {
-            carouselIndex = min(carouselIndex, remainingCount - 1)
+            globalToastState?.show("Failed to save changes. Please try again.", style: .destructive)
         }
-        globalToastState?.show("Win deleted", style: .destructive, undoTitle: "Undo", onUndo: {
-            modelContext.insert(copy)
-            try? modelContext.save()
-        })
     }
 
     /// Updates the currently displayed win's collection and saves. Used by the header collection Menu.
     private func moveToCollection(_ collection: WinCollection?) {
-        if displayedWin.collection?.id == collection?.id {
-            return
-        }
-        displayedWin.collection = collection
-        displayedWin.collectionName = collection?.name
-        collection?.lastModified = Date()
-        try? modelContext.save()
+        guard viewModel.moveToCollection(displayedWin: displayedWin, collection: collection, context: modelContext) else { return }
         let name = collection?.name ?? "All"
         globalToastState?.show("Moved to \(name)")
-    }
-
-    private var existingCollectionNames: Set<String> {
-        var names = Set(collections.map { $0.name.lowercased() })
-        names.insert("all")
-        names.insert("all wins")
-        names.insert("uncategorized")
-        return names
     }
 
     /// Same custom pop-up as QuickLogView: dimmed overlay, title, TextField, Create/Cancel. On Create: new collection, move win to it, toast.
     private var newCollectionPopUpOverlay: some View {
         let trimmed = newCollectionName.trimmingCharacters(in: .whitespacesAndNewlines)
         let isEmpty = trimmed.isEmpty
-        let isDuplicate = !isEmpty && existingCollectionNames.contains(trimmed.lowercased())
+        let isDuplicate = !isEmpty && collections.isDuplicateOrReservedCollectionName(newCollectionName)
         let canCreate = !isEmpty && !isDuplicate
 
         return ZStack {
@@ -379,7 +361,18 @@ struct WinDetailView: View {
                         showNewCollectionPopUp = false
                     }
                     AppButton(title: "Create", style: .primary) {
-                        createNewCollectionAndMove()
+                        if let name = viewModel.createNewCollectionAndMove(
+                            displayedWin: displayedWin,
+                            name: newCollectionName,
+                            collections: collections,
+                            context: modelContext
+                        ) {
+                            showNewCollectionPopUp = false
+                            newCollectionName = ""
+                            globalToastState?.show("Moved to \(name)")
+                        } else {
+                            globalToastState?.show("Failed to save changes. Please try again.", style: .destructive)
+                        }
                     }
                     .disabled(!canCreate)
                 }
@@ -393,67 +386,11 @@ struct WinDetailView: View {
         .animation(.spring(response: 0.35, dampingFraction: 0.8), value: showNewCollectionPopUp)
     }
 
-    private func createNewCollectionAndMove() {
-        let name = newCollectionName.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !name.isEmpty, !existingCollectionNames.contains(name.lowercased()) else { return }
-        let collection = WinCollection(name: name)
-        modelContext.insert(collection)
-        displayedWin.collection = collection
-        displayedWin.collectionName = collection.name
-        collection.lastModified = Date()
-        do {
-            try modelContext.save()
-        } catch {
-            Logger().error("SwiftData save failed: \(String(describing: error))")
-            globalToastState?.show("Failed to save changes. Please try again.", style: .destructive)
-            return
-        }
-        showNewCollectionPopUp = false
-        newCollectionName = ""
-        globalToastState?.show("Moved to \(name)")
-    }
-
-    /// Do It Again: make the experiment active (and visible in Lab), save, switch to Home, then show QuickLogView pre-filled.
+    /// Do It Again: make the experiment active, save, switch to Home (QuickLogView can then be presented).
     private func openDoItAgain() {
-        let exp: Experiment? = win.activityID.flatMap { id in experiments.first(where: { $0.activityID == id }) }
-            ?? experiments.first(where: { $0.title == win.title })
-        let target: Experiment
-        if let existing = exp {
-            target = existing
-        } else {
-            let temp = temporaryExperiment(from: win)
-            modelContext.insert(temp)
-            target = temp
+        viewModel.openDoItAgain(win: win, experiments: experiments, context: modelContext) {
+            selectedTabBinding?.wrappedValue = .home
         }
-        /// Set this experiment active and not completed; deactivate all others.
-        for e in experiments where e.id != target.id {
-            e.isActive = false
-        }
-        target.isActive = true
-        try? modelContext.save()
-        selectedTabBinding?.wrappedValue = .home
-    }
-
-    /// Creates a temporary experiment from the Win so QuickLogView can prefill (used when original experiment was removed from Lab).
-    private func temporaryExperiment(from w: Win) -> Experiment {
-        let env = (w.icon1 == Constants.Icons.outdoor) ? "outdoor" : "indoor"
-        let toolsStr = (w.icon2 == Constants.Icons.toolsNone) ? "none" : "required"
-        let timeframeStr = w.icon3 ?? "1D"
-        let logTypeStr: String? = (w.logTypeIcon == Constants.Icons.newInterest) ? "newInterest" : "oneTime"
-        return Experiment(
-            title: w.title,
-            icon: "star.fill",
-            environment: env,
-            tools: toolsStr,
-            timeframe: timeframeStr,
-            logType: logTypeStr,
-            referenceURL: "",
-            labNotes: "",
-            isActive: false,
-            isCompleted: false,
-            createdAt: .now,
-            activityID: w.activityID ?? UUID()
-        )
     }
 
     // Buttons

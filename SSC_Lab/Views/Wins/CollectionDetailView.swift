@@ -28,6 +28,7 @@ struct CollectionDetailView: View {
     @Query(sort: \Win.date, order: .reverse) private var allWins: [Win]
     @Query(sort: \Experiment.createdAt, order: .reverse) private var experiments: [Experiment]
 
+    @State private var viewModel = CollectionDetailViewModel()
     @State private var sortOrder: CollectionSortOrder = .newestFirst
     @State private var filterCriteria = FilterCriteria()
     @State private var showFilterSheet = false
@@ -189,63 +190,20 @@ struct CollectionDetailView: View {
         }
     }
 
-    /// Do it again: find or create experiment from win, set active, switch to Home, present QuickLogView (same as WinDetailView).
+    /// Do it again: find or create experiment, set active, switch to Home (QuickLogView can then be presented).
     private func openDoItAgain(for win: Win) {
-        let exp: Experiment? = win.activityID.flatMap { id in experiments.first(where: { $0.activityID == id }) }
-            ?? experiments.first(where: { $0.title == win.title })
-        let target: Experiment
-        if let existing = exp {
-            target = existing
-        } else {
-            let temp = temporaryExperiment(from: win)
-            modelContext.insert(temp)
-            target = temp
+        viewModel.openDoItAgain(win: win, experiments: experiments, context: modelContext) {
+            selectedTabBinding?.wrappedValue = .home
         }
-        for e in experiments where e.id != target.id {
-            e.isActive = false
-        }
-        target.isActive = true
-        try? modelContext.save()
-        selectedTabBinding?.wrappedValue = .home
     }
 
-    private func temporaryExperiment(from w: Win) -> Experiment {
-        let env = (w.icon1 == Constants.Icons.outdoor) ? "outdoor" : "indoor"
-        let toolsStr = (w.icon2 == Constants.Icons.toolsNone) ? "none" : "required"
-        let timeframeStr = w.icon3 ?? "1D"
-        let logTypeStr: String? = (w.logTypeIcon == Constants.Icons.newInterest) ? "newInterest" : "oneTime"
-        return Experiment(
-            title: w.title,
-            icon: "star.fill",
-            environment: env,
-            tools: toolsStr,
-            timeframe: timeframeStr,
-            logType: logTypeStr,
-            referenceURL: "",
-            labNotes: "",
-            isActive: false,
-            isCompleted: false,
-            createdAt: .now,
-            activityID: w.activityID ?? UUID()
-        )
-    }
-
-    /// Deletes the win immediately and shows "Win deleted" toast with Undo (re-insert).
+    /// Deletes the win and shows "Win deleted" toast with Undo, or error toast on save failure.
     private func deleteWinAndShowToast(_ win: Win) {
-        let copy = Win.copy(from: win)
-        modelContext.delete(win)
-        do {
-            try modelContext.save()
-        } catch {
-            Logger().error("SwiftData save failed: \(String(describing: error))")
-            modelContext.insert(copy)
+        if let undo = viewModel.deleteWin(win: win, context: modelContext) {
+            globalToastState?.show("Win deleted", style: .destructive, undoTitle: "Undo", onUndo: undo)
+        } else {
             globalToastState?.show("Failed to save changes. Please try again.", style: .destructive)
-            return
         }
-        globalToastState?.show("Win deleted", style: .destructive, undoTitle: "Undo", onUndo: {
-            modelContext.insert(copy)
-            try? modelContext.save()
-        })
     }
 
     private func shareActivityItems(for win: Win) -> [Any] {
