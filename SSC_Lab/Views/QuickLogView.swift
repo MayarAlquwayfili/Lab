@@ -8,10 +8,12 @@
 import SwiftUI
 import SwiftData
 import UIKit
+import os
 
 struct QuickLogView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
+    @Environment(\.globalToastState) private var globalToastState
     @Environment(\.selectedTabBinding) private var selectedTabBinding
 
     /// When set, prefill from this experiment (Log Win from Lab) and save creates a new Win.
@@ -219,7 +221,13 @@ struct QuickLogView: View {
         guard !name.isEmpty else { return }
         let collection = WinCollection(name: name)
         modelContext.insert(collection)
-        try? modelContext.save()
+        do {
+            try modelContext.save()
+        } catch {
+            Logger().error("SwiftData save failed: \(String(describing: error))")
+            globalToastState?.show("Failed to save changes. Please try again.", style: .destructive)
+            return
+        }
         selectedCollection = collection
         showNewCollectionPopUp = false
     }
@@ -393,11 +401,13 @@ struct QuickLogView: View {
                             Label("Remove Photo", systemImage: "trash")
                         }
                     } label: {
-                        imageView(uiImage: uiImage)
-                            .contentShape(RoundedRectangle(cornerRadius: 12))
+                        Color.clear
+                            .frame(width: mediaBoxSize, height: mediaBoxSize)
+                            .overlay(imageView(uiImage: uiImage))
+                            .compositingGroup()
+                            .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
-                    .contentShape(RoundedRectangle(cornerRadius: 12))
                 }
             } else {
                 imagePlaceholderButton
@@ -472,7 +482,13 @@ struct QuickLogView: View {
             win.collection = selectedCollection
             win.collectionName = selectedCollection?.name
             win.collection?.lastModified = Date()
-            try? modelContext.save()
+            do {
+                try modelContext.save()
+            } catch {
+                Logger().error("SwiftData save failed: \(String(describing: error))")
+                globalToastState?.show("Failed to save changes. Please try again.", style: .destructive)
+                return
+            }
             dismiss()
         } else {
             let win = Win(
@@ -493,7 +509,13 @@ struct QuickLogView: View {
                 experiment.isActive = false
                 experiment.isCompleted = true
             }
-            try? modelContext.save()
+            do {
+                try modelContext.save()
+            } catch {
+                Logger().error("SwiftData save failed: \(String(describing: error))")
+                globalToastState?.show("Failed to save changes. Please try again.", style: .destructive)
+                return
+            }
             selectedTabBinding?.wrappedValue = .wins
             dismiss()
         }

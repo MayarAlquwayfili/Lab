@@ -51,28 +51,11 @@ struct FilterCriteria {
         selectedBadges.isEmpty
     }
 
-    /// Map Win icon names to BadgeType (same as Lab/WinCard).
-    private static func badgeType(forIcon iconName: String) -> BadgeType? {
-        switch iconName {
-        case Constants.Icons.indoor: return .indoor
-        case Constants.Icons.outdoor: return .outdoor
-        case Constants.Icons.tools: return .tools
-        case Constants.Icons.toolsNone: return .noTools
-        case Constants.Icons.oneTime: return .oneTime
-        case Constants.Icons.newInterest: return .newInterest
-        default:
-            if iconName == "1D" || iconName == "7D" || iconName == "30D" || iconName == "+30D" {
-                return .timeframe(iconName)
-            }
-            return nil
-        }
-    }
-
     /// Returns true if criteria is empty, or if the win matches at least one selected badge in every active category (AND logic).
     func matches(_ win: Win) -> Bool {
         guard !selectedBadges.isEmpty else { return true }
         let iconNames = [win.icon1, win.icon2, win.icon3, win.logTypeIcon].compactMap { $0 }
-        let winBadges = Set(iconNames.compactMap { Self.badgeType(forIcon: $0) })
+        let winBadges = Set(iconNames.compactMap { BadgeType.from(iconName: $0) })
         let envSelected = selectedBadges.filter { Self.category(of: $0) == 0 }
         let toolsSelected = selectedBadges.filter { Self.category(of: $0) == 1 }
         let timeSelected = selectedBadges.filter { Self.category(of: $0) == 2 }

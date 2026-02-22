@@ -12,6 +12,7 @@
 
 import SwiftUI
 import SwiftData
+import os
 
 /// Holds the result of loading the SwiftData container. Used so we can show DatabaseErrorView instead of crashing.
 private final class DatabaseLoader: ObservableObject {
@@ -28,7 +29,7 @@ private final class DatabaseLoader: ObservableObject {
             )
             self.loadError = nil
         } catch {
-            print("[SwiftData] ModelContainer failed to load: \(error)")
+            Logger().error("SwiftData ModelContainer failed: \(String(describing: error))")
             self.container = nil
             self.loadError = error
         }

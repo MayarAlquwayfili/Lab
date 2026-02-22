@@ -8,6 +8,7 @@
 import SwiftUI
 import SwiftData
 import UIKit
+import os
 
 enum CollectionSortOrder: String, CaseIterable {
     case newestFirst = "Newest First"
@@ -233,7 +234,14 @@ struct CollectionDetailView: View {
     private func deleteWinAndShowToast(_ win: Win) {
         let copy = Win.copy(from: win)
         modelContext.delete(win)
-        try? modelContext.save()
+        do {
+            try modelContext.save()
+        } catch {
+            Logger().error("SwiftData save failed: \(String(describing: error))")
+            modelContext.insert(copy)
+            globalToastState?.show("Failed to save changes. Please try again.", style: .destructive)
+            return
+        }
         globalToastState?.show("Win deleted", style: .destructive, undoTitle: "Undo", onUndo: {
             modelContext.insert(copy)
             try? modelContext.save()
@@ -494,23 +502,7 @@ struct WinMasonryCard: View {
     private var bottomBadgeTypes: [BadgeType] {
         [win.icon1, win.icon2, win.icon3, win.logTypeIcon]
             .compactMap { $0 }
-            .compactMap { badgeType(for: $0) }
-    }
-
-    private func badgeType(for iconName: String) -> BadgeType? {
-        switch iconName {
-        case Constants.Icons.indoor: return .indoor
-        case Constants.Icons.outdoor: return .outdoor
-        case Constants.Icons.tools: return .tools
-        case Constants.Icons.toolsNone: return .noTools
-        case Constants.Icons.oneTime: return .oneTime
-        case Constants.Icons.newInterest: return .newInterest
-        default:
-            if iconName == "1D" || iconName == "7D" || iconName == "30D" || iconName == "+30D" {
-                return .timeframe(iconName)
-            }
-            return nil
-        }
+            .compactMap { BadgeType.from(iconName: $0) }
     }
 }
 
@@ -556,21 +548,29 @@ struct WinRowView: View {
 
 // MARK: - Preview
 #Preview("CollectionDetailView – with collection") {
-    let config = ModelConfiguration(isStoredInMemoryOnly: true)
-    let container = try! ModelContainer(for: Win.self, WinCollection.self, configurations: config)
-    let col = WinCollection(name: "Pottery")
-    container.mainContext.insert(col)
-    return NavigationStack {
-        CollectionDetailView(collection: col)
-            .modelContainer(container)
+    do {
+        let config = ModelConfiguration(isStoredInMemoryOnly: true)
+        let container = try ModelContainer(for: Win.self, WinCollection.self, configurations: config)
+        let col = WinCollection(name: "Pottery")
+        container.mainContext.insert(col)
+        return NavigationStack {
+            CollectionDetailView(collection: col)
+                .modelContainer(container)
+        }
+    } catch {
+        return Text("Preview failed to load")
     }
 }
 
 #Preview("CollectionDetailView – Uncategorized") {
-    let config = ModelConfiguration(isStoredInMemoryOnly: true)
-    let container = try! ModelContainer(for: Win.self, WinCollection.self, configurations: config)
-    return NavigationStack {
-        CollectionDetailView(collection: nil)
-            .modelContainer(container)
+    do {
+        let config = ModelConfiguration(isStoredInMemoryOnly: true)
+        let container = try ModelContainer(for: Win.self, WinCollection.self, configurations: config)
+        return NavigationStack {
+            CollectionDetailView(collection: nil)
+                .modelContainer(container)
+        }
+    } catch {
+        return Text("Preview failed to load")
     }
 }

@@ -102,8 +102,12 @@ private struct WinArchiveCard: View {
 }
 
 #Preview {
-    let config = ModelConfiguration(isStoredInMemoryOnly: true)
-    let container = try! ModelContainer(for: Win.self, configurations: config)
-    return WinsView()
-        .modelContainer(container)
+    do {
+        let config = ModelConfiguration(isStoredInMemoryOnly: true)
+        let container = try ModelContainer(for: Win.self, configurations: config)
+        return WinsView()
+            .modelContainer(container)
+    } catch {
+        return Text("Preview failed to load")
+    }
 }

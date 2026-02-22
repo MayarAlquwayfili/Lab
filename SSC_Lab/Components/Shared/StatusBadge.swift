@@ -42,6 +42,23 @@ enum BadgeType: Hashable {
         if case .timeframe = self { return true }
         return false
     }
+
+    /// Maps an icon string (e.g. from Win or filter) to the corresponding BadgeType. Single source of truth for Win/Collection badge display and filtering.
+    static func from(iconName: String) -> BadgeType? {
+        switch iconName {
+        case Constants.Icons.indoor: return .indoor
+        case Constants.Icons.outdoor: return .outdoor
+        case Constants.Icons.tools: return .tools
+        case Constants.Icons.toolsNone: return .noTools
+        case Constants.Icons.oneTime: return .oneTime
+        case Constants.Icons.newInterest: return .newInterest
+        default:
+            if iconName == "1D" || iconName == "7D" || iconName == "30D" || iconName == "+30D" {
+                return .timeframe(iconName)
+            }
+            return nil
+        }
+    }
 }
 
 // Badge Size

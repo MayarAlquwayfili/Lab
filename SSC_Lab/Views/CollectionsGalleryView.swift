@@ -325,9 +325,13 @@ private struct GalleryGridItem: Identifiable {
 
 // MARK: - Preview
 #Preview {
-    let config = ModelConfiguration(isStoredInMemoryOnly: true)
-    let container = try! ModelContainer(for: Win.self, WinCollection.self, configurations: config)
-    CollectionsGalleryView()
-        .modelContainer(container)
-        .previewDevice(PreviewDevice(rawValue: "iPhone 15 Pro"))
+    do {
+        let config = ModelConfiguration(isStoredInMemoryOnly: true)
+        let container = try ModelContainer(for: Win.self, WinCollection.self, configurations: config)
+        return CollectionsGalleryView()
+            .modelContainer(container)
+            .previewDevice(PreviewDevice(rawValue: "iPhone 15 Pro"))
+    } catch {
+        return Text("Preview failed to load")
+    }
 }

@@ -99,48 +99,36 @@ struct WinCard: View {
         [win.icon1, win.icon2, win.icon3, win.logTypeIcon]
             .compactMap { $0 }
             .first
-            .flatMap { badgeType(for: $0) }
+            .flatMap { BadgeType.from(iconName: $0) }
     }
 
     /// Bottom StatusGroup.
     private var bottomBadgeTypes: [BadgeType] {
         [win.icon1, win.icon2, win.icon3, win.logTypeIcon]
             .compactMap { $0 }
-            .compactMap { badgeType(for: $0) }
-    }
-
-    private func badgeType(for iconName: String) -> BadgeType? {
-        switch iconName {
-        case Constants.Icons.indoor: return .indoor
-        case Constants.Icons.outdoor: return .outdoor
-        case Constants.Icons.tools: return .tools
-        case Constants.Icons.toolsNone: return .noTools
-        case Constants.Icons.oneTime: return .oneTime
-        case Constants.Icons.newInterest: return .newInterest
-        default:
-            if iconName == "1D" || iconName == "7D" || iconName == "30D" || iconName == "+30D" {
-                return .timeframe(iconName)
-            }
-            return nil
-        }
+            .compactMap { BadgeType.from(iconName: $0) }
     }
 }
 
 // MARK: - Preview
 #Preview("WinCard – Placeholder") {
-    let config = ModelConfiguration(isStoredInMemoryOnly: true)
-    let container = try! ModelContainer(for: Win.self, configurations: config)
-    let win = Win(
-        title: "My First Win",
-        imageData: nil,
-        logTypeIcon: Constants.Icons.oneTime,
-        icon1: Constants.Icons.indoor,
-        icon2: Constants.Icons.tools,
-        icon3: "1D"
-    )
-    container.mainContext.insert(win)
-    return WinCard(win: win, cardHeight: 181)
-        .padding()
-        .background(Color.appBg)
-        .modelContainer(container)
+    do {
+        let config = ModelConfiguration(isStoredInMemoryOnly: true)
+        let container = try ModelContainer(for: Win.self, configurations: config)
+        let win = Win(
+            title: "My First Win",
+            imageData: nil,
+            logTypeIcon: Constants.Icons.oneTime,
+            icon1: Constants.Icons.indoor,
+            icon2: Constants.Icons.tools,
+            icon3: "1D"
+        )
+        container.mainContext.insert(win)
+        return WinCard(win: win, cardHeight: 181)
+            .padding()
+            .background(Color.appBg)
+            .modelContainer(container)
+    } catch {
+        return Text("Preview failed to load")
+    }
 }

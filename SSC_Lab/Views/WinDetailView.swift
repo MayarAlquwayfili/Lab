@@ -8,6 +8,7 @@
 import SwiftUI
 import SwiftData
 import UIKit
+import os
 
 struct WinDetailView: View {
     @Environment(\.dismiss) private var dismiss
@@ -20,7 +21,6 @@ struct WinDetailView: View {
     @Query(sort: \Experiment.createdAt, order: .reverse) private var experiments: [Experiment]
     @Bindable var win: Win
 
-    @State private var labViewModel = LabViewModel()
     @State private var showEditSheet = false
     @State private var carouselIndex: Int = 0
     @State private var showNewCollectionPopUp = false
@@ -44,7 +44,6 @@ struct WinDetailView: View {
         displayedWin.collection?.name ?? "All"
     }
 
-    private let topRightIconPadding: CGFloat = 8
     private let bottomRowBadgeSpacing: CGFloat = 8
     private let dotSize: CGFloat = 8
     private let dotSpacing: CGFloat = 6
@@ -282,39 +281,18 @@ struct WinDetailView: View {
         [w.icon1, w.icon2, w.icon3, w.logTypeIcon]
             .compactMap { $0 }
             .first
-            .flatMap { badgeType(for: $0) }
+            .flatMap { BadgeType.from(iconName: $0) }
     }
 
      private func bottomBadgeTypes(for w: Win) -> [BadgeType] {
         [w.icon1, w.icon2, w.icon3]
             .compactMap { $0 }
-            .compactMap { badgeType(for: $0) }
+            .compactMap { BadgeType.from(iconName: $0) }
     }
 
     private func logTypeBadgeType(for w: Win) -> BadgeType? {
         guard !w.logTypeIcon.isEmpty else { return nil }
-        let icon = w.logTypeIcon
-        switch icon {
-        case Constants.Icons.oneTime: return .oneTime
-        case Constants.Icons.newInterest: return .newInterest
-        default: return .oneTime
-        }
-    }
-
-    private func badgeType(for iconName: String) -> BadgeType? {
-        switch iconName {
-        case Constants.Icons.indoor: return .indoor
-        case Constants.Icons.outdoor: return .outdoor
-        case Constants.Icons.tools: return .tools
-        case Constants.Icons.toolsNone: return .noTools
-        case Constants.Icons.oneTime: return .oneTime
-        case Constants.Icons.newInterest: return .newInterest
-        default:
-            if iconName == "1D" || iconName == "7D" || iconName == "30D" || iconName == "+30D" {
-                return .timeframe(iconName)
-            }
-            return nil
-        }
+        return BadgeType.from(iconName: w.logTypeIcon) ?? .oneTime
     }
 
     // Actions
@@ -325,7 +303,14 @@ struct WinDetailView: View {
         let wasBoundWin = toDelete.id == win.id
         let countBefore = winsForCarousel.count
         modelContext.delete(toDelete)
-        try? modelContext.save()
+        do {
+            try modelContext.save()
+        } catch {
+            Logger().error("SwiftData save failed: \(String(describing: error))")
+            modelContext.insert(copy)
+            globalToastState?.show("Failed to save changes. Please try again.", style: .destructive)
+            return
+        }
         let remainingCount = countBefore - 1
         if remainingCount <= 0 || wasBoundWin {
             dismiss()
@@ -416,7 +401,13 @@ struct WinDetailView: View {
         displayedWin.collection = collection
         displayedWin.collectionName = collection.name
         collection.lastModified = Date()
-        try? modelContext.save()
+        do {
+            try modelContext.save()
+        } catch {
+            Logger().error("SwiftData save failed: \(String(describing: error))")
+            globalToastState?.show("Failed to save changes. Please try again.", style: .destructive)
+            return
+        }
         showNewCollectionPopUp = false
         newCollectionName = ""
         globalToastState?.show("Moved to \(name)")
@@ -497,20 +488,24 @@ struct WinDetailView: View {
 // MARK: - Preview
 
 #Preview("Win Detail") {
-    let config = ModelConfiguration(isStoredInMemoryOnly: true)
-    let container = try! ModelContainer(for: Win.self, configurations: config)
-    let win = Win(
-        title: "APP STORE PUBLISH",
-        imageData: nil,
-        logTypeIcon: "trophy.fill",
-        icon1: "apple.logo",
-        icon2: "globe",
-        icon3: "FINAL",
-        notes: "Shipped!"
-    )
-    container.mainContext.insert(win)
-    return NavigationStack {
-        WinDetailView(win: win)
-            .modelContainer(container)
+    do {
+        let config = ModelConfiguration(isStoredInMemoryOnly: true)
+        let container = try ModelContainer(for: Win.self, configurations: config)
+        let win = Win(
+            title: "APP STORE PUBLISH",
+            imageData: nil,
+            logTypeIcon: "trophy.fill",
+            icon1: "apple.logo",
+            icon2: "globe",
+            icon3: "FINAL",
+            notes: "Shipped!"
+        )
+        container.mainContext.insert(win)
+        return NavigationStack {
+            WinDetailView(win: win)
+                .modelContainer(container)
+        }
+    } catch {
+        return Text("Preview failed to load")
     }
 }
