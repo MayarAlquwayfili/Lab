@@ -10,9 +10,11 @@ import SwiftData
 
 struct SettingsView: View {
     @Environment(\.globalToastState) private var globalToastState
+    @Environment(\.hideTabBarBinding) private var hideTabBarBinding
 
     @Query(sort: \Experiment.createdAt, order: .reverse) private var experiments: [Experiment]
     @Query(sort: \Win.createdAt, order: .reverse) private var wins: [Win]
+    @Query(sort: \WinCollection.name, order: .forward) private var collections: [WinCollection]
     @Environment(\.modelContext) private var modelContext
     
     @AppStorage("userName") private var userName: String = ""
@@ -22,7 +24,7 @@ struct SettingsView: View {
     @State private var isResetting = false
     
     private var hasDataToReset: Bool {
-        !experiments.isEmpty || !wins.isEmpty
+        !experiments.isEmpty || !wins.isEmpty || !collections.isEmpty
     }
 
     private var appFooter: some View {
@@ -143,6 +145,7 @@ struct SettingsView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color.appBg)
+        .onAppear { hideTabBarBinding?.wrappedValue = false }
         .sheet(isPresented: $showLabStorySheet) {
             LabStorySheet()
         }
@@ -247,16 +250,21 @@ private struct LabStorySheet: View {
 // Reset Lab Data
 extension SettingsView {
     private func resetLabData() {
-        // Delete all experiments
-        for experiment in experiments {
-            modelContext.delete(experiment)
-        }
-        
+        // Delete all wins first (they may reference collections)
         for win in wins {
             modelContext.delete(win)
         }
-        
-        // Preserve userName — only clear data
+
+        // Delete all collections so gallery returns to "No Collections Yet"
+        for collection in collections {
+            modelContext.delete(collection)
+        }
+
+        // Delete all experiments (full factory reset)
+        for experiment in experiments {
+            modelContext.delete(experiment)
+        }
+
         try? modelContext.save()
     }
 }

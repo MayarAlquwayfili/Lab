@@ -45,12 +45,33 @@ struct CollectionDetailView: View {
 
     private var winsInCollection: [Win] {
         if showAllWins && collection == nil {
-            return Array(allWins)
+            return oneWinPerActivity(from: allWins)
         }
         if let collection = collection {
             return Array(collection.wins)
         }
         return allWins.filter { $0.collection == nil }
+    }
+
+    /// For "All": one card per activity (most recent win). Others show individually. Makes the gallery a clean library of skills.
+    private func oneWinPerActivity(from wins: [Win]) -> [Win] {
+        let sorted = wins.sorted { $0.date > $1.date }
+        var seenActivityIDs = Set<UUID>()
+        return sorted.filter { w in
+            if let id = w.activityID {
+                if seenActivityIDs.contains(id) { return false }
+                seenActivityIDs.insert(id)
+                return true
+            }
+            return true
+        }
+    }
+
+    /// Count of wins with the same activityID (for repeat badge). Uses full list: allWins for "All", collection.wins for a collection.
+    private func winCount(for win: Win) -> Int {
+        let list = collection.map { Array($0.wins) } ?? allWins
+        guard let id = win.activityID else { return 1 }
+        return list.filter { $0.activityID == id }.count
     }
 
     /// Filter by category (Indoor, Outdoor, etc.) then sort.
@@ -143,14 +164,13 @@ struct CollectionDetailView: View {
                     }
                 }
             }
+            .toolbar(.hidden, for: .tabBar)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color.appBg)
-        .toolbar(.hidden, for: .tabBar)
         .navigationBarHidden(true)
         .enableSwipeToBack()
         .onAppear { hideTabBarBinding?.wrappedValue = true }
-        .onDisappear { hideTabBarBinding?.wrappedValue = false }
         .sheet(isPresented: $showFilterSheet) {
             CollectionFilterSheetView(
                 allWins: winsInCollection,
@@ -198,7 +218,7 @@ struct CollectionDetailView: View {
                 ForEach(Array(leftItems.enumerated()), id: \.element.0.id) { _, pair in
                     let (win, h) = pair
                     NavigationLink(destination: WinDetailView(win: win)) {
-                        WinCard(win: win, cardHeight: h, cardWidth: cardWidth)
+                        WinCard(win: win, cardHeight: h, cardWidth: cardWidth, winCount: winCount(for: win))
                     }
                     .buttonStyle(.plain)
                     .contextMenu {
@@ -221,7 +241,7 @@ struct CollectionDetailView: View {
                             deleteWinAndShowToast(win)
                         }
                     } preview: {
-                        WinCard(win: win, cardHeight: h, cardWidth: cardWidth)
+                        WinCard(win: win, cardHeight: h, cardWidth: cardWidth, winCount: winCount(for: win))
                     }
                 }
             }
@@ -231,7 +251,7 @@ struct CollectionDetailView: View {
                 ForEach(Array(rightItems.enumerated()), id: \.element.0.id) { _, pair in
                     let (win, h) = pair
                     NavigationLink(destination: WinDetailView(win: win)) {
-                        WinCard(win: win, cardHeight: h, cardWidth: cardWidth)
+                        WinCard(win: win, cardHeight: h, cardWidth: cardWidth, winCount: winCount(for: win))
                     }
                     .buttonStyle(.plain)
                     .contextMenu {
@@ -254,7 +274,7 @@ struct CollectionDetailView: View {
                             deleteWinAndShowToast(win)
                         }
                     } preview: {
-                        WinCard(win: win, cardHeight: h, cardWidth: cardWidth)
+                        WinCard(win: win, cardHeight: h, cardWidth: cardWidth, winCount: winCount(for: win))
                     }
                 }
             }

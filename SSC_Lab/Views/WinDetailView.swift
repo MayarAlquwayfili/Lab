@@ -50,12 +50,15 @@ struct WinDetailView: View {
     private let dotSpacing: CGFloat = 6
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            winDetailHeader
+        ZStack {
+            Color.appBg.ignoresSafeArea(.all, edges: .bottom)
 
-            ScrollView {
-                VStack(alignment: .leading, spacing: 0) {
-                    carouselCard
+            VStack(alignment: .leading, spacing: 0) {
+                winDetailHeader
+
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 0) {
+                        carouselCard
                         .frame(height: DetailCardLayout.cardSize)
                         .frame(maxWidth: .infinity)
                         .padding(.top, DetailCardLayout.spacingHeaderToCard)
@@ -86,37 +89,46 @@ struct WinDetailView: View {
                             deleteWinAndDismiss()
                         }
                     }
-                    .padding(.top, DetailCardLayout.spacingContentToButtons)
-                    .padding(.bottom, Constants.WinDetail.scrollBottomPadding)
-                }
-                .padding(.horizontal, Constants.WinDetail.paddingHorizontal)
-            }
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color.appBg)
-        .toolbar(.hidden, for: .tabBar)
-        .navigationBarBackButtonHidden(true)
-        .enableSwipeToBack()
-        .onAppear {
-            hideTabBarBinding?.wrappedValue = true
-            if let idx = winsForCarousel.firstIndex(where: { $0.id == win.id }) {
-                carouselIndex = idx
-            }
-        }
-        .onDisappear {
-            hideTabBarBinding?.wrappedValue = false
-        }
-        .sheet(isPresented: $showEditSheet) {
-            QuickLogView(winToEdit: displayedWin)
-        }
-        .sheet(isPresented: $showDoItAgainSheet) {
-            if let exp = experimentForDoItAgain {
-                QuickLogView(experimentToLog: exp)
-                    .onDisappear {
-                        dismiss()
+                        .padding(.top, DetailCardLayout.spacingContentToButtons)
+                        .padding(.bottom, Constants.WinDetail.scrollBottomPadding)
                     }
+                    .padding(.horizontal, Constants.WinDetail.paddingHorizontal)
+                }
+                .scrollIndicators(.hidden)
+                .ignoresSafeArea(.all, edges: .bottom)
+            }
+            .ignoresSafeArea(.all, edges: .bottom)
+            .toolbar(.hidden, for: .tabBar)
+            .toolbarBackground(.hidden, for: .tabBar)
+            .persistentSystemOverlays(.hidden)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .background(Color.appBg.ignoresSafeArea(.all, edges: [.top, .bottom]))
+            .ignoresSafeArea(.keyboard, edges: .bottom)
+            .navigationBarBackButtonHidden(true)
+            .enableSwipeToBack()
+            .onAppear {
+                var t = Transaction()
+                t.disablesAnimations = true
+                withTransaction(t) {
+                    hideTabBarBinding?.wrappedValue = true
+                }
+                if let idx = winsForCarousel.firstIndex(where: { $0.id == win.id }) {
+                    carouselIndex = idx
+                }
+            }
+            .sheet(isPresented: $showEditSheet) {
+                QuickLogView(winToEdit: displayedWin)
+            }
+            .sheet(isPresented: $showDoItAgainSheet) {
+                if let exp = experimentForDoItAgain {
+                    QuickLogView(experimentToLog: exp)
+                        .onDisappear {
+                            dismiss()
+                        }
+                }
             }
         }
+        .ignoresSafeArea(.all, edges: .bottom)
     }
 
     // Header
@@ -175,13 +187,17 @@ struct WinDetailView: View {
     // Carousel
 
     private var carouselCard: some View {
-        TabView(selection: $carouselIndex) {
-            ForEach(Array(winsForCarousel.enumerated()), id: \.element.id) { index, w in
-                DetailCardFrame { detailCardContent(for: w) }
-                    .tag(index)
+        ZStack {
+            TabView(selection: $carouselIndex) {
+                ForEach(Array(winsForCarousel.enumerated()), id: \.element.id) { index, w in
+                    DetailCardFrame { detailCardContent(for: w) }
+                        .tag(index)
+                }
             }
+            .tabViewStyle(.page(indexDisplayMode: .never))
+            .toolbar(.hidden, for: .tabBar)
         }
-        .tabViewStyle(.page(indexDisplayMode: .never))
+        .toolbar(.hidden, for: .tabBar)
     }
 
     private var pageIndicator: some View {
@@ -224,12 +240,21 @@ struct WinDetailView: View {
 
             VStack {
                 HStack {
+                    if winsForCarousel.count > 1 {
+                        Text("x\(winsForCarousel.count)")
+                            .font(.appMicro)
+                            .foregroundStyle(Color.appSecondary)
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 4)
+                            .background(Capsule().fill(Color.appBg.opacity(0.9)))
+                    }
                     Spacer(minLength: 0)
                     if let topType = topBadgeType(for: w) {
                         StatusBadge(type: topType, size: .large, variant: .primary)
                     }
                 }
                 .padding(.top, padding)
+                .padding(.leading, padding)
                 .padding(.trailing, padding)
                 Spacer(minLength: 0)
                 HStack(alignment: .center, spacing: bottomRowBadgeSpacing) {

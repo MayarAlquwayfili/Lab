@@ -12,11 +12,13 @@ struct ExperimentDetailView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
     @Environment(\.globalToastState) private var globalToastState
+    @Environment(\.hideTabBarBinding) private var hideTabBarBinding
     @Query private var experiments: [Experiment]
     @Bindable var experiment: Experiment
     @State private var labViewModel = LabViewModel()
 
     @State private var showEditSheet = false
+    @State private var showLogSheet = false
     @State private var showDeleteAlert = false
 
     private let topRightIconPadding: CGFloat = 8
@@ -29,69 +31,87 @@ struct ExperimentDetailView: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            AppHeader(title: experiment.title, onBack: { dismiss() }) {
-                Button(Constants.ExperimentDetail.buttonEdit) { showEditSheet = true }
-                    .font(.appBodySmall)
-                    .foregroundStyle(Color.appFont)
-            }
+        ZStack {
+            Color.appBg.ignoresSafeArea(.all, edges: .bottom)
 
-            ScrollView {
-                VStack(alignment: .leading, spacing: 0) {
-                    DetailCardFrame { detailCardContent }
-                        .frame(maxWidth: .infinity)
-                        .padding(.top, DetailCardLayout.spacingHeaderToCard)
+            VStack(alignment: .leading, spacing: 0) {
+                AppHeader(title: experiment.title, onBack: { dismiss() }) {
+                    Button(Constants.ExperimentDetail.buttonEdit) { showEditSheet = true }
+                        .font(.appBodySmall)
+                        .foregroundStyle(Color.appFont)
+                }
 
-                    AppNoteEditor(text: $experiment.labNotes, placeholder: Constants.Lab.placeholderNote)
-                        .padding(.top, DetailCardLayout.spacingCardToContent)
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 0) {
+                        DetailCardFrame { detailCardContent }
+                            .frame(maxWidth: .infinity)
+                            .padding(.top, DetailCardLayout.spacingHeaderToCard)
 
-                    VStack(spacing: 12) {
-                        if experiment.isActive {
-                            primaryButton(title: Constants.ExperimentDetail.buttonLogWin) {
-                                dismiss()
-                            }
-                        } else {
-                            primaryButton(title: Constants.ExperimentDetail.buttonLetsDoIt) {
-                                labViewModel.toggleActive(experiment: experiment, allExperiments: experiments, context: modelContext) { previous in
-                                    globalToastState?.showActivationToast(previous: previous, undoRevert: { p in
-                                        labViewModel.toggleActive(experiment: p, allExperiments: experiments, context: modelContext, onActivated: nil)
-                                    })
+                        AppNoteEditor(text: $experiment.labNotes, placeholder: Constants.Lab.placeholderNote)
+                            .padding(.top, DetailCardLayout.spacingCardToContent)
+
+                        VStack(spacing: 12) {
+                            if experiment.isActive {
+                                primaryButton(title: Constants.ExperimentDetail.buttonLogWin) {
+                                    showLogSheet = true
+                                }
+                            } else {
+                                primaryButton(title: Constants.ExperimentDetail.buttonLetsDoIt) {
+                                    labViewModel.toggleActive(experiment: experiment, allExperiments: experiments, context: modelContext) { previous in
+                                        globalToastState?.showActivationToast(previous: previous, undoRevert: { p in
+                                            labViewModel.toggleActive(experiment: p, allExperiments: experiments, context: modelContext, onActivated: nil)
+                                        })
+                                    }
                                 }
                             }
+                            secondaryButton(title: Constants.ExperimentDetail.buttonDelete) {
+                                showDeleteAlert = true
+                            }
                         }
-                        secondaryButton(title: Constants.ExperimentDetail.buttonDelete) {
-                            showDeleteAlert = true
-                        }
+                        .padding(.top, DetailCardLayout.spacingContentToButtons)
+                        .padding(.bottom, Constants.ExperimentDetail.scrollBottomPadding)
                     }
-                    .padding(.top, DetailCardLayout.spacingContentToButtons)
-                    .padding(.bottom, Constants.ExperimentDetail.scrollBottomPadding)
+                    .padding(.horizontal, Constants.ExperimentDetail.paddingHorizontal)
                 }
-                .padding(.horizontal, Constants.ExperimentDetail.paddingHorizontal)
+                .scrollIndicators(.hidden)
+                .background(Color.appBg.ignoresSafeArea(.all, edges: .bottom))
+                .ignoresSafeArea(.all, edges: .bottom)
             }
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color.appBg)
-        .toolbar(.hidden, for: .tabBar)
-        .enableSwipeToBack()
-        .sheet(isPresented: $showEditSheet) {
-            AddNewExperimentView(experimentToEdit: experiment)
-        }
-        .showPopUp(
-            isPresented: $showDeleteAlert,
-            title: "Delete Experiment?",
-            message: "This action cannot be undone.",
-            primaryButtonTitle: "Delete",
-            secondaryButtonTitle: "Cancel",
-            primaryStyle: .destructive,
-            showCloseButton: false,
-            onPrimary: {
-                labViewModel.delete(experiment: experiment, context: modelContext)
-                dismiss()
-            },
-            onSecondary: {
-                showDeleteAlert = false
+            .ignoresSafeArea(.all, edges: .bottom)
+            .toolbar(.hidden, for: .tabBar)
+            .toolbarBackground(.hidden, for: .tabBar)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .ignoresSafeArea(.keyboard, edges: .bottom)
+            .enableSwipeToBack()
+            .onAppear {
+                var t = Transaction()
+                t.disablesAnimations = true
+                withTransaction(t) { hideTabBarBinding?.wrappedValue = true }
             }
-        )
+            .sheet(isPresented: $showEditSheet) {
+                AddNewExperimentView(experimentToEdit: experiment)
+            }
+            .sheet(isPresented: $showLogSheet) {
+                QuickLogView(experimentToLog: experiment)
+            }
+            .showPopUp(
+                isPresented: $showDeleteAlert,
+                title: "Delete Experiment?",
+                message: "This action cannot be undone.",
+                primaryButtonTitle: "Delete",
+                secondaryButtonTitle: "Cancel",
+                primaryStyle: .destructive,
+                showCloseButton: false,
+                onPrimary: {
+                    labViewModel.delete(experiment: experiment, context: modelContext)
+                    dismiss()
+                },
+                onSecondary: {
+                    showDeleteAlert = false
+                }
+            )
+        }
+        .ignoresSafeArea(.all, edges: .bottom)
     }
 
     // Detail Card  

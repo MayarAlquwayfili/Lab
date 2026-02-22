@@ -33,7 +33,7 @@ struct DetailCardFrame<Content: View>: View {
             .clipShape(RoundedRectangle(cornerRadius: DetailCardLayout.cardCornerRadius))
             .overlay(
                 RoundedRectangle(cornerRadius: DetailCardLayout.cardCornerRadius)
-                    .stroke(Color.appFont, lineWidth: DetailCardLayout.cardBorderWidth)
+                    .strokeBorder(Color.appFont, lineWidth: DetailCardLayout.cardBorderWidth)
             )
     }
 }

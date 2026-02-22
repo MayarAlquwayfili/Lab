@@ -14,6 +14,8 @@ struct WinCard: View {
     let cardHeight: CGFloat
     /// When set (e.g. from masonry grid), card and image are strictly constrained to this width to prevent overflow.
     var cardWidth: CGFloat? = nil
+    /// When > 1, shows a repeat badge (e.g. "x2") in the top-left corner.
+    var winCount: Int? = nil
 
     private let cornerRadius: CGFloat = 16
     private let size: BadgeSize = .small
@@ -47,6 +49,15 @@ struct WinCard: View {
             // 3. Content
             VStack(alignment: .leading, spacing: 0) {
                 HStack {
+                    if let count = winCount, count > 1 {
+                        Text("x\(count)")
+                            .font(.appMicro)
+                            .foregroundStyle(Color.appSecondary)
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 4)
+                            .background(Capsule().fill(Color.appBg.opacity(0.9)))
+                            .padding(8)
+                    }
                     Spacer(minLength: 0)
                     if let topIcon = topBadgeType {
                         StatusBadge(type: topIcon, size: size, variant: variant)

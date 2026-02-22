@@ -11,6 +11,7 @@ import SwiftData
 struct CollectionsGalleryView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.globalToastState) private var globalToastState
+    @Environment(\.hideTabBarBinding) private var hideTabBarBinding
     @Query(sort: \WinCollection.lastModified, order: .reverse) private var collections: [WinCollection]
     @Query(sort: \Win.date, order: .reverse) private var allWins: [Win]
 
@@ -164,7 +165,9 @@ struct CollectionsGalleryView: View {
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .background(Color.appBg)
+            .background(Color.appBg.ignoresSafeArea(.all, edges: .bottom))
+            .ignoresSafeArea(.all, edges: .bottom)
+            .onAppear { hideTabBarBinding?.wrappedValue = false }
             .onChange(of: showAddCollectionPopUp) { _, isShowing in
                 if !isShowing { newCollectionName = "" }
             }

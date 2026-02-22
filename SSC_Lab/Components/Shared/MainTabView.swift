@@ -41,25 +41,41 @@ struct MainTabView: View {
     @State private var appPopUpState = AppPopUpState()
 
     var body: some View {
-        VStack(spacing: 0) {
-            Group {
-                switch selectedTab {
-                case .home: HomeView()
-                case .lab: LabView(hideTabBar: $hideTabBar)
-                case .wins: CollectionsGalleryView()
-                case .settings: SettingsView()
+        ZStack(alignment: .bottom) {
+            // Full-screen content: layout never changes when tab bar hides
+            ZStack {
+                Color.appBg.ignoresSafeArea(.all, edges: .bottom)
+
+                NavigationStack {
+                    Group {
+                        switch selectedTab {
+                        case .home: HomeView()
+                        case .lab: LabView(hideTabBar: $hideTabBar)
+                        case .wins: CollectionsGalleryView()
+                        case .settings: SettingsView()
+                        }
+                    }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .toolbar(hideTabBar ? .hidden : .automatic, for: .tabBar)
                 }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .background(Color.appBg.ignoresSafeArea(.all, edges: .bottom))
+                .containerBackground(Color.appBg, for: .navigation)
+                .ignoresSafeArea(.all, edges: .bottom)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .ignoresSafeArea(.all, edges: .bottom)
             .environment(\.hideTabBarBinding, $hideTabBar)
             .environment(\.selectedTabBinding, $selectedTab)
 
+            // Tab bar as overlay so content size is stable; no layout recalculation when it hides
             if !hideTabBar {
                 customTabBar
             }
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .ignoresSafeArea(.keyboard)
-        .animation(.easeInOut(duration: 0.2), value: hideTabBar)
+        .ignoresSafeArea(.all, edges: .bottom)
         .environment(\.appPopUpState, appPopUpState)
         .environment(\.globalToastState, globalToast)
         .appToast(
@@ -127,6 +143,7 @@ struct MainTabView: View {
         )
         .padding(.horizontal, 16)
         .padding(.bottom, 8)
+        .padding(.bottom, 38)
         .background(Color.appBg)
     }
 

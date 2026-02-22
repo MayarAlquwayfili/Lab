@@ -167,17 +167,12 @@ struct LabView: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .background(Color.appBg)
             .navigationBarHidden(true)
+            .onAppear { hideTabBar = false }
             .navigationDestination(item: $selectedExperiment) { experiment in
                 ExperimentDetailView(experiment: experiment)
                     .navigationBarBackButtonHidden(true)
                     .onAppear { hideTabBar = true }
-                    .onDisappear {
-                        selectedExperiment = nil
-                        hideTabBar = false
-                    }
-            }
-            .onChange(of: selectedExperiment) { _, newValue in
-                hideTabBar = newValue != nil
+                    .onDisappear { selectedExperiment = nil }
             }
             .sheet(isPresented: $showAddSheet) {
                 AddNewExperimentView()
