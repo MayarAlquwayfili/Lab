@@ -321,9 +321,12 @@ struct WinDetailView: View {
 
     /// Updates the currently displayed win's collection and saves. Used by the header collection Menu.
     private func moveToCollection(_ collection: WinCollection?) {
-        guard viewModel.moveToCollection(displayedWin: displayedWin, collection: collection, context: modelContext) else { return }
-        let name = collection?.name ?? "All"
-        globalToastState?.show("Moved to \(name)")
+        if viewModel.moveToCollection(displayedWin: displayedWin, collection: collection, context: modelContext) {
+            let name = collection?.name ?? "All"
+            globalToastState?.show("Moved to \(name)")
+        } else {
+            globalToastState?.show("Failed to save changes. Please try again.", style: .destructive)
+        }
     }
 
     /// Same custom pop-up as QuickLogView: dimmed overlay, title, TextField, Create/Cancel. On Create: new collection, move win to it, toast.

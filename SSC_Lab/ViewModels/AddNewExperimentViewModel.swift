@@ -7,6 +7,7 @@
 
 import Foundation
 import SwiftData
+import os
 
 @Observable
 final class AddNewExperimentViewModel {
@@ -66,9 +67,9 @@ final class AddNewExperimentViewModel {
         }
     }
 
-    /// Creates or updates the experiment in the context. Caller should dismiss after.
-    func save(context: ModelContext) {
-        guard !isTitleEmpty else { return }
+    /// Creates or updates the experiment in the context. Returns true on success; caller should show toast and dismiss. Returns false on save failure; caller should show error toast.
+    func save(context: ModelContext) -> Bool {
+        guard !isTitleEmpty else { return false }
         let trimmedTitle = title.trimmingCharacters(in: .whitespacesAndNewlines)
         if let existing = experimentToEdit {
             existing.title = trimmedTitle
@@ -79,7 +80,6 @@ final class AddNewExperimentViewModel {
             existing.tools = tools.rawValue
             existing.timeframe = timeframe.rawValue
             existing.logType = nil // AddNewExperimentView doesn't show logType, so always nil
-            try? context.save()
         } else {
             let experiment = Experiment(
                 title: trimmedTitle,
@@ -92,7 +92,13 @@ final class AddNewExperimentViewModel {
                 labNotes: labNotes
             )
             context.insert(experiment)
-            try? context.save()
+        }
+        do {
+            try context.save()
+            return true
+        } catch {
+            Logger().error("SwiftData save failed: \(String(describing: error))")
+            return false
         }
     }
 }

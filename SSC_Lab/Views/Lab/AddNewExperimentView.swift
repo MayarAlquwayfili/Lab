@@ -13,6 +13,7 @@ struct AddNewExperimentView: View {
 
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
+    @Environment(\.globalToastState) private var globalToastState
     @State private var viewModel: AddNewExperimentViewModel
     @State private var showDiscardAlert = false
     @State private var showIconPicker = false
@@ -40,8 +41,12 @@ struct AddNewExperimentView: View {
                 } rightContent: {
                     Button(action: {
                         guard !viewModel.isTitleEmpty else { return }
-                        viewModel.save(context: modelContext)
-                        dismiss()
+                        if viewModel.save(context: modelContext) {
+                            globalToastState?.show("Experiment Saved")
+                            dismiss()
+                        } else {
+                            globalToastState?.show("Failed to save changes. Please try again.", style: .destructive)
+                        }
                     }) {
                         Image(systemName: "checkmark")
                             .font(.system(size: 15, weight: .semibold))
@@ -87,8 +92,12 @@ struct AddNewExperimentView: View {
                         Spacer()
                             .frame(height: 30)
                         AppButton(title: viewModel.isEditing ? Constants.Lab.buttonSaveChanges : Constants.Lab.buttonAddToLab, style: .primary) {
-                            viewModel.save(context: modelContext)
-                            dismiss()
+                            if viewModel.save(context: modelContext) {
+                                globalToastState?.show("Experiment Saved")
+                                dismiss()
+                            } else {
+                                globalToastState?.show("Failed to save changes. Please try again.", style: .destructive)
+                            }
                         }
                         .disabled(viewModel.isTitleEmpty)
                         .padding(.horizontal, horizontalMargin)

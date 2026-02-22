@@ -51,4 +51,22 @@ final class Experiment {
         self.createdAt = createdAt
         self.activityID = activityID ?? UUID()
     }
+
+    /// Creates a copy of the experiment for undo-after-delete. Caller must insert into context.
+    static func copy(from experiment: Experiment) -> Experiment {
+        Experiment(
+            title: experiment.title,
+            icon: experiment.icon,
+            environment: experiment.environment,
+            tools: experiment.tools,
+            timeframe: experiment.timeframe,
+            logType: experiment.logType,
+            referenceURL: experiment.referenceURL,
+            labNotes: experiment.labNotes,
+            isActive: experiment.isActive,
+            isCompleted: experiment.isCompleted,
+            createdAt: experiment.createdAt,
+            activityID: experiment.activityID
+        )
+    }
 }

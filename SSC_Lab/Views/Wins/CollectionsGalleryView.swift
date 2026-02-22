@@ -7,6 +7,7 @@
 
 import SwiftUI
 import SwiftData
+import os
 
 struct CollectionsGalleryView: View {
     @Environment(\.modelContext) private var modelContext
@@ -211,7 +212,6 @@ struct CollectionsGalleryView: View {
                     }
                     AppButton(title: "Create", style: .primary) {
                         createCollection()
-                        showAddCollectionPopUp = false
                     }
                     .disabled(!canCreate)
                 }
@@ -254,9 +254,19 @@ struct CollectionsGalleryView: View {
                                 showRenamePopUp = false
                             }
                             AppButton(title: "Save", style: .primary) {
-                                collection.name = renameText.trimmingCharacters(in: .whitespaces)
-                                try? modelContext.save()
-                                showRenamePopUp = false
+                                let trimmed = renameText.trimmingCharacters(in: .whitespaces)
+                                guard !trimmed.isEmpty else { return }
+                                collection.name = trimmed
+                                do {
+                                    try modelContext.save()
+                                    globalToastState?.show("Collection Renamed")
+                                    showRenamePopUp = false
+                                    collectionToRename = nil
+                                    renameText = ""
+                                } catch {
+                                    Logger().error("SwiftData save failed: \(String(describing: error))")
+                                    globalToastState?.show("Failed to save changes. Please try again.", style: .destructive)
+                                }
                             }
                             .disabled(renameText.trimmingCharacters(in: .whitespaces).isEmpty)
                         }
@@ -277,7 +287,15 @@ struct CollectionsGalleryView: View {
         guard !name.isEmpty, !collections.isDuplicateOrReservedCollectionName(name) else { return }
         let collection = WinCollection(name: name)
         modelContext.insert(collection)
-        try? modelContext.save()
+        do {
+            try modelContext.save()
+            globalToastState?.show("Collection Created")
+            showAddCollectionPopUp = false
+            newCollectionName = ""
+        } catch {
+            Logger().error("SwiftData save failed: \(String(describing: error))")
+            globalToastState?.show("Failed to save changes. Please try again.", style: .destructive)
+        }
     }
 
     private func deleteCollection(_ collection: WinCollection) {
