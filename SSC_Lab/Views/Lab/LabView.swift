@@ -11,6 +11,7 @@ import SwiftData
 struct LabView: View {
     @Binding var hideTabBar: Bool
     @Environment(\.globalToastState) private var globalToastState
+    @Environment(\.randomizerState) private var randomizerState
 
     @Query(filter: #Predicate<Experiment> { !$0.isCompleted }, sort: \Experiment.createdAt, order: .reverse) private var experiments: [Experiment]
     @Query(sort: \Win.date, order: .reverse) private var allWins: [Win]
@@ -23,8 +24,6 @@ struct LabView: View {
     @State private var showQuickLogSheet = false
     @State private var experimentForLog: Experiment?
     @State private var showNeedMoreExperimentsPopUp = false
-    @State private var showRandomResultPopUp = false
-    @State private var pickedRandomExperiment: Experiment?
     @State private var searchText = ""
     @State private var filterCriteria = FilterCriteria()
     @State private var showFilterSheet = false
@@ -196,34 +195,6 @@ struct LabView: View {
                 onPrimary: { showNeedMoreExperimentsPopUp = false },
                 onSecondary: {}
             )
-            .fullScreenCover(isPresented: $showRandomResultPopUp) {
-                RandomizerResultOverlay(
-                    experiment: pickedRandomExperiment,
-                    onLetsDoIt: {
-                        showRandomResultPopUp = false
-                        if let pick = pickedRandomExperiment {
-                            viewModel.toggleActive(experiment: pick, allExperiments: experiments, context: modelContext) { previous in
-                                globalToastState?.showActivationToast(previous: previous, undoRevert: { p in
-                                    viewModel.toggleActive(experiment: p, allExperiments: experiments, context: modelContext, onActivated: nil)
-                                })
-                            }
-                        }
-                        pickedRandomExperiment = nil
-                    },
-                    onSpinAgain: {
-                        if let current = pickedRandomExperiment, filteredExperiments.count > 1 {
-                            let others = filteredExperiments.filter { $0.id != current.id }
-                            pickedRandomExperiment = others.randomElement()
-                        } else {
-                            pickedRandomExperiment = filteredExperiments.randomElement()
-                        }
-                    },
-                    onClose: {
-                        showRandomResultPopUp = false
-                        pickedRandomExperiment = nil
-                    }
-                )
-            }
             .sheet(isPresented: $showOnboarding) {
                 OnboardingNameView(userName: $userName, hasOnboarded: $hasOnboarded)
                     .interactiveDismissDisabled()
@@ -236,9 +207,29 @@ struct LabView: View {
     }
     
     private func pickRandomAndShowResult() {
-        guard filteredExperiments.count >= 2 else { return }
-        pickedRandomExperiment = filteredExperiments.randomElement()
-        showRandomResultPopUp = true
+        guard filteredExperiments.count >= 2, let state = randomizerState else { return }
+        let pick = filteredExperiments.randomElement()!
+        showRandomizer(experiment: pick, state: state)
+    }
+
+    /// Presents the randomizer overlay at root (MainTabView). Recurses for "Spin Again".
+    private func showRandomizer(experiment pick: Experiment, state: RandomizerState) {
+        state.present(
+            experiment: pick,
+            onLetsDoIt: {
+                state.dismiss()
+                viewModel.toggleActive(experiment: pick, allExperiments: experiments, context: modelContext) { previous in
+                    globalToastState?.showActivationToast(previous: previous, undoRevert: { p in
+                        viewModel.toggleActive(experiment: p, allExperiments: experiments, context: modelContext, onActivated: nil)
+                    })
+                }
+            },
+            onSpinAgain: {
+                let others = filteredExperiments.filter { $0.id != pick.id }
+                let newPick = others.randomElement() ?? pick
+                showRandomizer(experiment: newPick, state: state)
+            }
+        )
     }
 
     // Search empty state (experiments exist but filter/search have no matches)
@@ -347,66 +338,6 @@ private struct CustomSearchBar: View {
                         .stroke(Color.appSecondary.opacity(0.3), lineWidth: 1)
                 )
         )
-    }
-}
-
-// MARK: - Randomizer full-screen overlay (covers tab bar; fade + scale transition)
-private struct RandomizerResultOverlay: View {
-    let experiment: Experiment?
-    let onLetsDoIt: () -> Void
-    let onSpinAgain: () -> Void
-    let onClose: () -> Void
-
-    var body: some View {
-        ZStack {
-            Color.appBg
-                .ignoresSafeArea(.all)
-
-            VStack(spacing: 0) {
-                Spacer()
-                ZStack(alignment: .topTrailing) {
-                    VStack(spacing: 0) {
-                        Spacer().frame(height: 40)
-                        Text(experiment?.title ?? "Next Experiment")
-                            .font(.appHeroSmall)
-                            .foregroundStyle(Color.appFont)
-                            .multilineTextAlignment(.center)
-                            .frame(maxWidth: .infinity)
-                            .padding(.horizontal, 32)
-                        Text("Your Next Experiment")
-                            .font(.appBodySmall)
-                            .foregroundStyle(Color.appSecondaryDark)
-                            .multilineTextAlignment(.center)
-                            .padding(.top, 12)
-                            .frame(maxWidth: .infinity)
-                        HStack(spacing: 12) {
-                            AppButton(title: "Spin Again", style: .secondary, action: onSpinAgain)
-                            AppButton(title: "Let's Do It!", style: .primary, action: onLetsDoIt)
-                        }
-                        .padding(.top, 24)
-                    }
-                    .frame(maxWidth: .infinity)
-                    .padding(24)
-                    .background(RoundedRectangle(cornerRadius: 26).fill(Color.white))
-                    .padding(.horizontal, 32)
-
-                    Button(action: onClose) {
-                        Image(systemName: "xmark")
-                            .font(.system(size: 14, weight: .semibold))
-                            .foregroundStyle(Color.appSecondary)
-                            .frame(width: 32, height: 32)
-                            .contentShape(Rectangle())
-                    }
-                    .buttonStyle(.plain)
-                    .padding(.top, 8)
-                    .padding(.trailing, 8)
-                }
-                .transition(.opacity.combined(with: .scale(scale: 0.95)))
-                Spacer()
-            }
-            .animation(.easeOut(duration: 0.3), value: experiment?.id)
-        }
-        .transition(.opacity)
     }
 }
 

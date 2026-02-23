@@ -8,6 +8,40 @@
 import SwiftUI
 import SwiftData
 
+/// Shared state for the randomizer overlay so it can be shown at root level (covering the tab bar).
+@MainActor
+@Observable
+final class RandomizerState {
+    var isPresented = false
+    var experiment: Experiment?
+    var onLetsDoIt: (() -> Void)?
+    var onSpinAgain: (() -> Void)?
+
+    func present(experiment: Experiment?, onLetsDoIt: @escaping () -> Void, onSpinAgain: @escaping () -> Void) {
+        self.experiment = experiment
+        self.onLetsDoIt = onLetsDoIt
+        self.onSpinAgain = onSpinAgain
+        isPresented = true
+    }
+
+    func dismiss() {
+        isPresented = false
+        experiment = nil
+        onLetsDoIt = nil
+        onSpinAgain = nil
+    }
+}
+
+private struct RandomizerStateKey: EnvironmentKey {
+    nonisolated(unsafe) static let defaultValue: RandomizerState? = nil
+}
+extension EnvironmentValues {
+    var randomizerState: RandomizerState? {
+        get { self[RandomizerStateKey.self] }
+        set { self[RandomizerStateKey.self] = newValue }
+    }
+}
+
 enum Tab: Int, CaseIterable {
     case home = 0
     case lab
@@ -39,10 +73,11 @@ struct MainTabView: View {
     @State private var hideTabBar = false
     @State private var globalToast = GlobalToastState()
     @State private var appPopUpState = AppPopUpState()
+    @State private var randomizerState = RandomizerState()
 
     var body: some View {
         ZStack(alignment: .bottom) {
-            // Full-screen content: layout never changes when tab bar hides
+            // Tab content + tab bar
             ZStack {
                 Color.appBg.ignoresSafeArea(.all, edges: .bottom)
 
@@ -64,10 +99,15 @@ struct MainTabView: View {
             .ignoresSafeArea(.all, edges: .bottom)
             .environment(\.hideTabBarBinding, $hideTabBar)
             .environment(\.selectedTabBinding, $selectedTab)
+            .environment(\.randomizerState, randomizerState)
 
-            // Tab bar as overlay so content size is stable; no layout recalculation when it hides
             if !hideTabBar {
                 customTabBar
+            }
+
+            // Randomizer overlay at root: covers entire screen including tab bar
+            if randomizerState.isPresented {
+                randomizerOverlay
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -93,6 +133,61 @@ struct MainTabView: View {
                 appPopUpOverlay
             }
         }
+    }
+
+    private var randomizerOverlay: some View {
+        ZStack {
+            Color.black.opacity(0.4)
+                .ignoresSafeArea(.all)
+                .contentShape(Rectangle())
+                .onTapGesture { randomizerState.dismiss() }
+
+            VStack(spacing: 0) {
+                Spacer().frame(height: 40)
+                Text(randomizerState.experiment?.title ?? "Next Experiment")
+                    .font(.appHeroSmall)
+                    .foregroundStyle(Color.appFont)
+                    .multilineTextAlignment(.center)
+                    .frame(maxWidth: .infinity)
+                    .padding(.horizontal, 32)
+                Text("Your Next Experiment")
+                    .font(.appBodySmall)
+                    .foregroundStyle(Color.appSecondaryDark)
+                    .multilineTextAlignment(.center)
+                    .padding(.top, 12)
+                    .frame(maxWidth: .infinity)
+                HStack(spacing: 12) {
+                    AppButton(title: "Spin Again", style: .secondary) {
+                        randomizerState.onSpinAgain?()
+                    }
+                    AppButton(title: "Let's Do It!", style: .primary) {
+                        randomizerState.onLetsDoIt?()
+                    }
+                }
+                .padding(.top, 24)
+            }
+            .frame(maxWidth: .infinity)
+            .padding(24)
+            .background(RoundedRectangle(cornerRadius: 26).fill(Color.white))
+            .padding(.horizontal, 32)
+            .overlay(alignment: .topTrailing) {
+                Button(action: { randomizerState.dismiss() }) {
+                    Image(systemName: "xmark")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundStyle(Color.appSecondary)
+                        .frame(width: 32, height: 32)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .padding(16)
+                .padding(.horizontal, 30)
+            }
+            .contentShape(Rectangle())
+            .onTapGesture { }
+            .transition(.scale(scale: 0.8).combined(with: .opacity))
+        }
+        .animation(.spring(response: 0.35, dampingFraction: 0.8), value: randomizerState.isPresented)
+        .animation(.easeOut(duration: 0.25), value: randomizerState.experiment?.id)
     }
 
     private var appPopUpOverlay: some View {
