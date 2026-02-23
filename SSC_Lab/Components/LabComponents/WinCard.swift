@@ -16,6 +16,8 @@ struct WinCard: View {
     var cardWidth: CGFloat? = nil
     /// When > 1, shows a repeat badge (e.g. "x2") in the top-left corner.
     var winCount: Int? = nil
+    /// When set, show this SF Symbol in the top-right badge (e.g. experiment icon). Otherwise fall back to status badge.
+    var experimentIcon: String? = nil
 
     private let cornerRadius: CGFloat = 16
     private let size: BadgeSize = .small
@@ -59,11 +61,19 @@ struct WinCard: View {
                             .padding(8)
                     }
                     Spacer(minLength: 0)
-                    if let topIcon = topBadgeType {
-                        StatusBadge(type: topIcon, size: size, variant: variant)
-                            .padding(.top, 8)
-                            .padding(.trailing, 8)
+                    // Always show experiment icon badge (same styling as Lab): solid appPrimary circle, appFont icon
+                    ZStack {
+                        Circle()
+                            .fill(Color.appPrimary)
+                        Image(systemName: experimentIcon ?? "star.fill")
+                            .font(.system(size: size.iconDimension, weight: .medium))
+                            .foregroundStyle(Color.appFont)
+                            .frame(width: size.circleDimension, height: size.circleDimension, alignment: .center)
                     }
+                    .frame(width: size.circleDimension, height: size.circleDimension)
+                    .padding(.top, 8)
+                    .padding(.trailing, 8)
+                    .zIndex(1)
                 }
 
                 Spacer(minLength: 0)

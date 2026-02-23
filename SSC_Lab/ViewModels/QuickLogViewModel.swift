@@ -42,12 +42,14 @@ final class QuickLogViewModel {
     func prefill(experiment: Experiment?, win: Win?, initialCollection: WinCollection?) {
         if let exp = experiment {
             winTitle = exp.title
+            selectedIcon = exp.icon
             environment = EnvironmentOption(rawValue: exp.environment) ?? .indoor
             tools = ToolsOption(rawValue: exp.tools) ?? .required
             timeframe = TimeframeOption(rawValue: exp.timeframe) ?? .oneD
             logType = LogTypeOption(rawValue: exp.logType ?? "oneTime") ?? .oneTime
         } else if let w = win {
             winTitle = w.title
+            selectedIcon = w.icon ?? "star.fill"
             quickNote = w.notes
             selectedUIImage = w.imageData.flatMap { UIImage(data: $0) }
             selectedCollection = w.collection
@@ -77,6 +79,7 @@ final class QuickLogViewModel {
             win.icon2 = icon2
             win.icon3 = icon3
             win.logTypeIcon = logTypeIcon
+            win.icon = selectedIcon
             win.collection = selectedCollection
             win.collectionName = selectedCollection?.name
             win.collection?.lastModified = Date()
@@ -98,7 +101,8 @@ final class QuickLogViewModel {
                 collectionName: selectedCollection?.name,
                 collection: selectedCollection,
                 notes: quickNote,
-                activityID: experimentToLog?.activityID
+                activityID: experimentToLog?.activityID,
+                icon: selectedIcon
             )
             context.insert(win)
             win.collection?.lastModified = Date()

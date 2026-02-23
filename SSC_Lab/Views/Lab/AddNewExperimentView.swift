@@ -124,6 +124,9 @@ struct AddNewExperimentView: View {
                 onPrimary: { dismiss() },
                 onSecondary: { showDiscardAlert = false }
             )
+            .sheet(isPresented: $showIconPicker) {
+                IconPickerView(selectedIcon: $viewModel.icon)
+            }
         }
     }
 

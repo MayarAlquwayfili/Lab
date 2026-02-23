@@ -26,6 +26,8 @@ final class Win {
     var notes: String = ""
     /// When set, links this win to an experiment for repeat count and "Do it again". Preserved even if user edits the title.
     var activityID: UUID?
+    /// SF Symbol for the win (experiment icon when created from Lab; user choice when editing). Used for the card badge.
+    var icon: String? = nil
 
     /// Relative date string for UI
     var relativeDateString: String { date.relativeString }
@@ -41,7 +43,8 @@ final class Win {
         collectionName: String? = nil,
         collection: WinCollection? = nil,
         notes: String = "",
-        activityID: UUID? = nil
+        activityID: UUID? = nil,
+        icon: String? = nil
     ) {
         self.title = title
         self.imageData = imageData
@@ -54,6 +57,7 @@ final class Win {
         self.collection = collection
         self.notes = notes
         self.activityID = activityID
+        self.icon = icon
     }
 
     /// Creates a new Win with the same property values (for undo-after-delete). Caller must insert into context.
@@ -69,7 +73,8 @@ final class Win {
             collectionName: win.collectionName,
             collection: win.collection,
             notes: win.notes,
-            activityID: win.activityID
+            activityID: win.activityID,
+            icon: win.icon
         )
     }
 }

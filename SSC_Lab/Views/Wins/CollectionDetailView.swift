@@ -78,6 +78,19 @@ struct CollectionDetailView: View {
         return list.filter { $0.activityID == id }.count
     }
 
+    /// Icon for the win: use win.icon when set, else resolve from linked experiment (activityID or title); fallback "star.fill".
+    private func experimentIcon(for win: Win) -> String {
+        if let icon = win.icon, !icon.isEmpty { return icon }
+        if let id = win.activityID,
+           let exp = experiments.first(where: { $0.activityID == id }) {
+            return exp.icon
+        }
+        if let exp = experiments.first(where: { $0.title == win.title }) {
+            return exp.icon
+        }
+        return "star.fill"
+    }
+
     /// Filter by category (Indoor, Outdoor, etc.) then sort.
     private var displayedWins: [Win] {
         var result = winsInCollection
@@ -227,7 +240,8 @@ struct CollectionDetailView: View {
                 ForEach(Array(leftItems.enumerated()), id: \.element.0.id) { _, pair in
                     let (win, h) = pair
                     NavigationLink(destination: WinDetailView(win: win)) {
-                        WinCard(win: win, cardHeight: h, cardWidth: cardWidth, winCount: winCount(for: win))
+                        WinCard(win: win, cardHeight: h, cardWidth: cardWidth, winCount: winCount(for: win), experimentIcon: experimentIcon(for: win))
+                            .id("\(win.id)-\(experimentIcon(for: win))")
                     }
                     .buttonStyle(.plain)
                     .contextMenu {
@@ -250,7 +264,7 @@ struct CollectionDetailView: View {
                             deleteWinAndShowToast(win)
                         }
                     } preview: {
-                        WinCard(win: win, cardHeight: h, cardWidth: cardWidth, winCount: winCount(for: win))
+                        WinCard(win: win, cardHeight: h, cardWidth: cardWidth, winCount: winCount(for: win), experimentIcon: experimentIcon(for: win))
                     }
                 }
             }
@@ -260,7 +274,8 @@ struct CollectionDetailView: View {
                 ForEach(Array(rightItems.enumerated()), id: \.element.0.id) { _, pair in
                     let (win, h) = pair
                     NavigationLink(destination: WinDetailView(win: win)) {
-                        WinCard(win: win, cardHeight: h, cardWidth: cardWidth, winCount: winCount(for: win))
+                        WinCard(win: win, cardHeight: h, cardWidth: cardWidth, winCount: winCount(for: win), experimentIcon: experimentIcon(for: win))
+                            .id("\(win.id)-\(experimentIcon(for: win))")
                     }
                     .buttonStyle(.plain)
                     .contextMenu {
@@ -283,7 +298,7 @@ struct CollectionDetailView: View {
                             deleteWinAndShowToast(win)
                         }
                     } preview: {
-                        WinCard(win: win, cardHeight: h, cardWidth: cardWidth, winCount: winCount(for: win))
+                        WinCard(win: win, cardHeight: h, cardWidth: cardWidth, winCount: winCount(for: win), experimentIcon: experimentIcon(for: win))
                     }
                 }
             }

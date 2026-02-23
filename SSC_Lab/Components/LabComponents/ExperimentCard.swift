@@ -9,6 +9,8 @@ import SwiftUI
 
 struct ExperimentCard: View {
     var title: String
+    /// SF Symbol name for the experiment (e.g. "star.fill"). Shown in the top-right badge.
+    var icon: String = "star.fill"
     var hasLink: Bool = false
     var topBadges: [BadgeType] = []
     var bottomBadges: [BadgeType] = []
@@ -33,13 +35,19 @@ struct ExperimentCard: View {
                 .stroke(Color.appSecondary, lineWidth: 1.5)
 
             VStack(spacing: 0) {
-                // Top row
+                // Top row: experiment icon in top-right badge
                 HStack {
                     Spacer(minLength: 0)
-                    if let topBadge = topBadges.first {
-                        StatusBadge(type: topBadge, size: size, variant: variant)
-                            .padding(8)
+                    ZStack {
+                        Circle()
+                            .fill(Color.appPrimary)
+                        Image(systemName: icon)
+                            .font(.system(size: size.iconDimension, weight: .medium))
+                            .foregroundStyle(Color.appFont)
+                            .frame(width: size.circleDimension, height: size.circleDimension, alignment: .center)
                     }
+                    .frame(width: size.circleDimension, height: size.circleDimension)
+                    .padding(8)
                 }
 
                 Spacer(minLength: 0)

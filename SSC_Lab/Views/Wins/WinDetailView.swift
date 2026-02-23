@@ -45,6 +45,19 @@ struct WinDetailView: View {
         displayedWin.collection?.name ?? "All"
     }
 
+    /// Icon for the win: use win.icon when set, else resolve from linked experiment (activityID or title); fallback "star.fill".
+    private func experimentIcon(for w: Win) -> String {
+        if let icon = w.icon, !icon.isEmpty { return icon }
+        if let id = w.activityID,
+           let exp = experiments.first(where: { $0.activityID == id }) {
+            return exp.icon
+        }
+        if let exp = experiments.first(where: { $0.title == w.title }) {
+            return exp.icon
+        }
+        return "star.fill"
+    }
+
     private let bottomRowBadgeSpacing: CGFloat = 8
     private let dotSize: CGFloat = 8
     private let dotSpacing: CGFloat = 6
@@ -254,9 +267,17 @@ struct WinDetailView: View {
                             .background(Capsule().fill(Color.appBg.opacity(0.9)))
                     }
                     Spacer(minLength: 0)
-                    if let topType = topBadgeType(for: w) {
-                        StatusBadge(type: topType, size: .large, variant: .primary)
+                    // Experiment icon badge (same as Lab): solid appPrimary circle, appFont icon
+                    ZStack {
+                        Circle()
+                            .fill(Color.appPrimary)
+                        Image(systemName: experimentIcon(for: w))
+                            .font(.system(size: BadgeSize.large.iconDimension, weight: .medium))
+                            .foregroundStyle(Color.appFont)
+                            .frame(width: BadgeSize.large.circleDimension, height: BadgeSize.large.circleDimension, alignment: .center)
                     }
+                    .frame(width: BadgeSize.large.circleDimension, height: BadgeSize.large.circleDimension)
+                    .zIndex(1)
                 }
                 .padding(.top, padding)
                 .padding(.leading, padding)

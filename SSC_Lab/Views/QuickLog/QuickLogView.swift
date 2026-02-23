@@ -123,6 +123,9 @@ struct QuickLogView: View {
             ImagePicker(sourceType: .photoLibrary, image: $viewModel.selectedUIImage)
                 .ignoresSafeArea()
         }
+        .sheet(isPresented: $showIconPicker) {
+            IconPickerView(selectedIcon: $viewModel.selectedIcon)
+        }
         .onChange(of: viewModel.showNewCollectionPopUp) { _, isShowing in
             if !isShowing { viewModel.newCollectionName = "" }
         }
