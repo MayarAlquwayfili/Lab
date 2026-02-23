@@ -168,11 +168,11 @@ struct StatusBadge: View {
 
 // MARK: - Previews
 #Preview("StatusBadge – Minimalist (Large + Small)") {
-    HStack(spacing: 24) {
+    HStack(spacing: AppSpacing.block) {
         StatusBadge(type: .indoor, size: .large, variant: .primary)
         StatusBadge(type: .indoor, size: .small, variant: .primary)
     }
-    .padding(40)
+    .padding(AppSpacing.xLarge)
     .frame(maxWidth: .infinity, maxHeight: .infinity)
     .background(Color(white: 0.96))
 }
@@ -184,26 +184,26 @@ struct StatusBadge: View {
 }
 
 #Preview("StatusBadge – Icons + Timeframes (all sizes × variants)") {
-    let columns = [GridItem(.adaptive(minimum: 56), spacing: 16)]
+    let columns = [GridItem(.adaptive(minimum: 56), spacing: AppSpacing.card)]
     let timeframeLabels = ["1D", "7D","30D","+30D"]
     return ScrollView {
         LazyVStack(alignment: .leading, spacing: 28) {
             // Icons section
-            VStack(alignment: .leading, spacing: 12) {
+            VStack(alignment: .leading, spacing: AppSpacing.small) {
                 Text("Icons")
-                    .font(.headline)
+                    .font(.appSubHeadline)
                     .foregroundStyle(Color.appFont)
                 ForEach([BadgeVariant.primary, .secondary], id: \.self) { variant in
                     Text(variant == .primary ? "Primary" : "Secondary")
-                        .font(.subheadline.weight(.medium))
+                        .font(.appBodySmall)
                         .foregroundStyle(Color.appFont.opacity(0.8))
-                    LazyVGrid(columns: columns, spacing: 16) {
+                    LazyVGrid(columns: columns, spacing: AppSpacing.card) {
                         ForEach(BadgeType.iconCases, id: \.self) { type in
                             VStack(spacing: 6) {
                                 StatusBadge(type: type, size: .large, variant: variant)
                                 StatusBadge(type: type, size: .small, variant: variant)
                                 Text(iconCaseLabel(type))
-                                    .font(.caption2)
+                                    .font(.appMicro)
                                     .foregroundStyle(Color.appFont)
                                     .lineLimit(1)
                             }
@@ -213,22 +213,22 @@ struct StatusBadge: View {
             }
 
             // Timeframes section
-            VStack(alignment: .leading, spacing: 12) {
+            VStack(alignment: .leading, spacing: AppSpacing.small) {
                 Text("Timeframes")
-                    .font(.headline)
+                    .font(.appSubHeadline)
                     .foregroundStyle(Color.appFont)
                 ForEach([BadgeVariant.primary, .secondary], id: \.self) { variant in
                     Text(variant == .primary ? "Primary" : "Secondary")
-                        .font(.subheadline.weight(.medium))
+                        .font(.appBodySmall)
                         .foregroundStyle(Color.appFont.opacity(0.8))
-                    LazyVGrid(columns: columns, spacing: 16) {
+                    LazyVGrid(columns: columns, spacing: AppSpacing.card) {
                         ForEach(timeframeLabels, id: \.self) { label in
                             let type = BadgeType.timeframe(label)
                             VStack(spacing: 6) {
                                 StatusBadge(type: type, size: .large, variant: variant)
                                 StatusBadge(type: type, size: .small, variant: variant)
                                 Text(label)
-                                    .font(.caption2)
+                                    .font(.appMicro)
                                     .foregroundStyle(Color.appFont)
                                     .lineLimit(1)
                             }
@@ -260,8 +260,8 @@ private func iconCaseLabel(_ type: BadgeType) -> String {
     let iconTypes = BadgeType.iconCases
     let timeframeLabels = ["1D", "7D","30D","+30D"]
     return ScrollView(.horizontal, showsIndicators: false) {
-        HStack(alignment: .top, spacing: 16) {
-            VStack(spacing: 8) {
+        HStack(alignment: .top, spacing: AppSpacing.card) {
+            VStack(spacing: AppSpacing.tight) {
                 Text("Icons").font(.caption.weight(.semibold)).foregroundStyle(Color.appFont)
                 ForEach(iconTypes, id: \.self) { type in
                     HStack(spacing: 6) {
@@ -270,7 +270,7 @@ private func iconCaseLabel(_ type: BadgeType) -> String {
                     }
                 }
             }
-            VStack(spacing: 8) {
+            VStack(spacing: AppSpacing.tight) {
                 Text("Timeframes").font(.caption.weight(.semibold)).foregroundStyle(Color.appFont)
                 ForEach(timeframeLabels, id: \.self) { label in
                     let type = BadgeType.timeframe(label)
@@ -281,7 +281,7 @@ private func iconCaseLabel(_ type: BadgeType) -> String {
                 }
             }
         }
-        .padding(24)
+        .padding(AppSpacing.block)
     }
     .frame(maxWidth: .infinity)
     .background(Color.appBg)

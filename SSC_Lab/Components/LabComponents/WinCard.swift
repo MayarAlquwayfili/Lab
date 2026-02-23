@@ -58,7 +58,7 @@ struct WinCard: View {
                             .padding(.horizontal, 6)
                             .padding(.vertical, 4)
                             .background(Capsule().fill(Color.appBg.opacity(0.9)))
-                            .padding(8)
+                            .padding(AppSpacing.tight)
                     }
                     Spacer(minLength: 0)
                     // Always show experiment icon badge (same styling as Lab): solid appPrimary circle, appFont icon
@@ -71,8 +71,8 @@ struct WinCard: View {
                             .frame(width: size.circleDimension, height: size.circleDimension, alignment: .center)
                     }
                     .frame(width: size.circleDimension, height: size.circleDimension)
-                    .padding(.top, 8)
-                    .padding(.trailing, 8)
+                    .padding(.top, AppSpacing.tight)
+                    .padding(.trailing, AppSpacing.tight)
                     .zIndex(1)
                 }
 
@@ -90,7 +90,7 @@ struct WinCard: View {
 
                 StatusGroup(items: bottomBadgeTypes, size: size, variant: variant)
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(.top, 8)
+                    .padding(.top, AppSpacing.tight)
             }
 
             // 4. Stroke border

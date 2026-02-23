@@ -28,7 +28,7 @@ struct WinsView: View {
                         )
                             .padding(.horizontal, horizontalMargin)
                     } else {
-                        LazyVStack(spacing: 16) {
+                        LazyVStack(spacing: AppSpacing.card) {
                             ForEach(wins) { win in
                                 NavigationLink(destination: WinDetailView(win: win)) {
                                     WinArchiveCard(win: win)
@@ -37,7 +37,7 @@ struct WinsView: View {
                             }
                         }
                         .padding(.horizontal, horizontalMargin)
-                        .padding(.vertical, 16)
+                        .padding(.vertical, AppSpacing.card)
                     }
                 }
             }
@@ -58,7 +58,7 @@ private struct WinArchiveCard: View {
     private let thumbnailSize: CGFloat = 56
 
     var body: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: AppSpacing.small) {
             Image(systemName: win.logTypeIcon)
                 .font(.system(size: 22, weight: .medium))
                 .foregroundStyle(Color.appPrimary)
@@ -75,7 +75,7 @@ private struct WinArchiveCard: View {
                     Text(collection)
                         .font(.appMicro)
                         .foregroundStyle(Color.appSecondary)
-                        .padding(.horizontal, 8)
+                        .padding(.horizontal, AppSpacing.tight)
                         .padding(.vertical, 4)
                         .background(Capsule().fill(Color.appSecondary.opacity(0.15)))
                 }
@@ -90,7 +90,7 @@ private struct WinArchiveCard: View {
                     .clipShape(RoundedRectangle(cornerRadius: 8))
             }
         }
-        .padding(16)
+        .padding(AppSpacing.card)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(Color.white)
         .clipShape(RoundedRectangle(cornerRadius: cardCornerRadius))

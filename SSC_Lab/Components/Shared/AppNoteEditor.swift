@@ -42,8 +42,8 @@ struct AppNoteEditor: View {
                 Text(placeholder)
                     .font(.appBodySmall)
                     .foregroundStyle(Color.appSecondary)
-                    .padding(.leading, 16)
-                    .padding(.top, 20)
+                    .padding(.leading, AppSpacing.card)
+                    .padding(.top, AppSpacing.section)
                     .frame(maxWidth: .infinity, alignment: .topLeading)
                     .allowsHitTesting(false)
             }
@@ -53,10 +53,10 @@ struct AppNoteEditor: View {
                 .foregroundStyle(Color.appFont)
                 .scrollContentBackground(.hidden)
                 .background(Color.clear)
-                .padding(12)
+                .padding(AppSpacing.small)
                 .padding(.horizontal, 4)
                 .padding(.trailing, 28)
-                .padding(.bottom, 12)
+                .padding(.bottom, AppSpacing.small)
                 .frame(maxWidth: .infinity, minHeight: minHeight, maxHeight: .infinity, alignment: .topLeading)
 
             Image(systemName: "line.3.horizontal")

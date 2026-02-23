@@ -9,7 +9,7 @@ import SwiftUI
 
 struct DatabaseErrorView: View {
     var body: some View {
-        VStack(spacing: 24) {
+        VStack(spacing: AppSpacing.block) {
             Image(systemName: "externaldrive.badge.exclamationmark")
                 .font(.system(size: 56, weight: .medium))
                 .foregroundStyle(Color.appSecondary)
@@ -18,15 +18,15 @@ struct DatabaseErrorView: View {
                 .font(.appBody)
                 .foregroundStyle(Color.appFont)
                 .multilineTextAlignment(.center)
-                .padding(.horizontal, 32)
+                .padding(.horizontal, AppSpacing.large)
 
             Text("Try closing and reopening the app. If the problem continues, try restarting your device.")
                 .font(.appBodySmall)
                 .foregroundStyle(Color.appSecondary)
                 .multilineTextAlignment(.center)
-                .padding(.horizontal, 32)
+                .padding(.horizontal, AppSpacing.large)
 
-            Spacer().frame(height: 16)
+            Spacer().frame(height: AppSpacing.card)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color.appBg)

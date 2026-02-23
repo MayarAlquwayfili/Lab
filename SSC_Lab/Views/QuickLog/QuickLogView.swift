@@ -44,7 +44,7 @@ struct QuickLogView: View {
             VStack(spacing: 0) {
                 quickLogHeader
 
-                Spacer().frame(height: 20)
+                Spacer().frame(height: AppSpacing.section)
 
                 ScrollView {
                     VStack(alignment: .leading, spacing: 0) {
@@ -76,11 +76,11 @@ struct QuickLogView: View {
                             .padding(.horizontal, horizontalMargin)
 
                         Spacer().frame(height: sectionSpacing)
-                        Spacer().frame(height: 16)
+                        Spacer().frame(height: AppSpacing.card)
 
                         AppButton(title: isEditMode ? "Save" : "Log a Win", style: .primary) { performSave() }
                             .padding(.horizontal, horizontalMargin)
-                            .padding(.bottom, 32)
+                            .padding(.bottom, AppSpacing.large)
                     }
                 }
                 .scrollIndicators(.hidden)
@@ -152,20 +152,20 @@ struct QuickLogView: View {
                     .foregroundStyle(Color.appFont)
                     .multilineTextAlignment(.center)
                     .frame(maxWidth: .infinity)
-                    .padding(.horizontal, 32)
+                    .padding(.horizontal, AppSpacing.large)
                 TextField("Collection Name", text: $viewModel.newCollectionName)
                     .textFieldStyle(.roundedBorder)
-                    .padding(.horizontal, 24)
-                    .padding(.top, 20)
+                    .padding(.horizontal, AppSpacing.block)
+                    .padding(.top, AppSpacing.section)
                 if isDuplicate {
                     Text("A collection with this name already exists.")
                         .font(.appBodySmall)
                         .foregroundStyle(Color.appAlert)
                         .multilineTextAlignment(.center)
-                        .padding(.top, 8)
-                        .padding(.horizontal, 24)
+                        .padding(.top, AppSpacing.tight)
+                        .padding(.horizontal, AppSpacing.block)
                 }
-                HStack(spacing: 12) {
+                HStack(spacing: AppSpacing.small) {
                     AppButton(title: "Cancel", style: .secondary) {
                         viewModel.showNewCollectionPopUp = false
                     }
@@ -176,12 +176,12 @@ struct QuickLogView: View {
                     }
                     .disabled(!canCreate)
                 }
-                .padding(.top, 24)
+                .padding(.top, AppSpacing.block)
             }
             .frame(maxWidth: .infinity)
-            .padding(24)
+            .padding(AppSpacing.block)
             .background(RoundedRectangle(cornerRadius: 26).fill(Color.white))
-            .padding(.horizontal, 32)
+            .padding(.horizontal, AppSpacing.large)
         }
         .animation(.spring(response: 0.35, dampingFraction: 0.8), value: viewModel.showNewCollectionPopUp)
     }
@@ -203,7 +203,7 @@ struct QuickLogView: View {
         ZStack(alignment: .top) {
             Color.appBg.ignoresSafeArea(edges: .top)
             VStack(spacing: 0) {
-                Spacer().frame(height: 20)
+                Spacer().frame(height: AppSpacing.section)
                 ZStack {
                     HStack(alignment: .center, spacing: 0) {
                         Button(action: { if viewModel.hasChanges { showDiscardAlert = true } else { dismiss() } }) {
@@ -234,7 +234,7 @@ struct QuickLogView: View {
                 .padding(.horizontal, horizontalMargin)
             }
         }
-        .frame(height: 20 + 44)
+        .frame(height: AppSpacing.section + 44)
     }
 
     //Entry Card
@@ -244,14 +244,14 @@ struct QuickLogView: View {
             TextField("Just tried...", text: $viewModel.winTitle)
                 .font(.appBodySmall)
                 .foregroundStyle(Color.appFont)
-                .padding(.horizontal, 16)
-                .padding(.vertical, 12)
+                .padding(.horizontal, AppSpacing.card)
+                .padding(.vertical, AppSpacing.small)
                 .frame(maxWidth: .infinity)
                 .frame(minHeight: minRowHeight)
 
             Divider()
                 .background(Color.appSecondary)
-                .padding(.horizontal, 16)
+                .padding(.horizontal, AppSpacing.card)
 
             HStack {
                 Text("Choose Icon")
@@ -266,14 +266,14 @@ struct QuickLogView: View {
                 }
                 .buttonStyle(.plain)
             }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 12)
+            .padding(.horizontal, AppSpacing.card)
+            .padding(.vertical, AppSpacing.small)
             .frame(maxWidth: .infinity)
             .frame(minHeight: minRowHeight)
 
             Divider()
                 .background(Color.appSecondary)
-                .padding(.horizontal, 16)
+                .padding(.horizontal, AppSpacing.card)
 
             HStack {
                 HStack(spacing: 6) {
@@ -310,14 +310,14 @@ struct QuickLogView: View {
                             .font(.system(size: 12, weight: .semibold))
                             .foregroundStyle(Color.appSecondary)
                     }
-                    .padding(.horizontal, 12)
+                    .padding(.horizontal, AppSpacing.small)
                     .padding(.vertical, 6)
                     .background(Capsule().fill(Color.appShade02))
                 }
                 .buttonStyle(.plain)
             }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 12)
+            .padding(.horizontal, AppSpacing.card)
+            .padding(.vertical, AppSpacing.small)
             .frame(maxWidth: .infinity)
             .frame(minHeight: minRowHeight)
         }
@@ -355,7 +355,7 @@ struct QuickLogView: View {
                         }
                         .buttonStyle(.plain)
                         .contentShape(Rectangle())
-                        .padding(12)
+                        .padding(AppSpacing.small)
                     }
                 }
             } else {

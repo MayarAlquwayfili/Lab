@@ -143,20 +143,20 @@ struct MainTabView: View {
                 .onTapGesture { randomizerState.dismiss() }
 
             VStack(spacing: 0) {
-                Spacer().frame(height: 40)
+                Spacer().frame(height: AppSpacing.xLarge)
                 Text(randomizerState.experiment?.title ?? "Next Experiment")
                     .font(.appHeroSmall)
                     .foregroundStyle(Color.appFont)
                     .multilineTextAlignment(.center)
                     .frame(maxWidth: .infinity)
-                    .padding(.horizontal, 32)
+                    .padding(.horizontal, AppSpacing.large)
                 Text("Your Next Experiment")
                     .font(.appBodySmall)
                     .foregroundStyle(Color.appSecondaryDark)
                     .multilineTextAlignment(.center)
-                    .padding(.top, 12)
+                    .padding(.top, AppSpacing.small)
                     .frame(maxWidth: .infinity)
-                HStack(spacing: 12) {
+                HStack(spacing: AppSpacing.small) {
                     AppButton(title: "Spin Again", style: .secondary) {
                         randomizerState.onSpinAgain?()
                     }
@@ -164,12 +164,12 @@ struct MainTabView: View {
                         randomizerState.onLetsDoIt?()
                     }
                 }
-                .padding(.top, 24)
+                .padding(.top, AppSpacing.block)
             }
             .frame(maxWidth: .infinity)
-            .padding(24)
+            .padding(AppSpacing.block)
             .background(RoundedRectangle(cornerRadius: 26).fill(Color.white))
-            .padding(.horizontal, 32)
+            .padding(.horizontal, AppSpacing.large)
             .overlay(alignment: .topTrailing) {
                 Button(action: { randomizerState.dismiss() }) {
                     Image(systemName: "xmark")
@@ -179,7 +179,7 @@ struct MainTabView: View {
                         .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
-                .padding(16)
+                .padding(AppSpacing.card)
                 .padding(.horizontal, 30)
             }
             .contentShape(Rectangle())
@@ -227,14 +227,14 @@ struct MainTabView: View {
                 tabButton(tab)
             }
         }
-        .padding(.vertical, 8)
-        .padding(.horizontal, 8)
+        .padding(.vertical, AppSpacing.tight)
+        .padding(.horizontal, AppSpacing.tight)
         .background(
             RoundedRectangle(cornerRadius: 100)
                 .fill(Color.appShade01)
         )
-        .padding(.horizontal, 16)
-        .padding(.bottom, 8)
+        .padding(.horizontal, AppSpacing.card)
+        .padding(.bottom, AppSpacing.tight)
         .padding(.bottom, 38)
         .background(Color.appBg)
     }

@@ -83,7 +83,7 @@ struct WinDetailView: View {
                         .font(.appBodySmall)
                         .foregroundStyle(Color.appSecondary)
                         .frame(maxWidth: .infinity, alignment: .trailing)
-                        .padding(.top, 12)
+                        .padding(.top, AppSpacing.small)
 
                     if !displayedWin.notes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
                         Text(displayedWin.notes)
@@ -91,14 +91,14 @@ struct WinDetailView: View {
                             .foregroundStyle(Color.appFont)
                             .multilineTextAlignment(.center)
                             .frame(maxWidth: .infinity)
-                            .padding(.top, 12)
+                            .padding(.top, AppSpacing.small)
                     }
 
-                    VStack(spacing: 12) {
-                        primaryButton(title: Constants.WinDetail.buttonDoItAgain) {
+                    VStack(spacing: AppSpacing.small) {
+                        AppButton(title: Constants.WinDetail.buttonDoItAgain, style: .primary) {
                             openDoItAgain()
                         }
-                        secondaryButton(title: Constants.WinDetail.buttonDelete) {
+                        AppButton(title: Constants.WinDetail.buttonDelete, style: .secondary) {
                             deleteWinAndDismiss()
                         }
                     }
@@ -199,7 +199,7 @@ struct WinDetailView: View {
                 .frame(width: 40, height: 40)
         }
         .padding(.horizontal, Constants.WinDetail.paddingHorizontal)
-        .padding(.top, 16)
+        .padding(.top, AppSpacing.card)
     }
 
     // Carousel
@@ -367,20 +367,20 @@ struct WinDetailView: View {
                     .foregroundStyle(Color.appFont)
                     .multilineTextAlignment(.center)
                     .frame(maxWidth: .infinity)
-                    .padding(.horizontal, 32)
+                    .padding(.horizontal, AppSpacing.large)
                 TextField("Collection Name", text: $newCollectionName)
                     .textFieldStyle(.roundedBorder)
-                    .padding(.horizontal, 24)
-                    .padding(.top, 20)
+                    .padding(.horizontal, AppSpacing.block)
+                    .padding(.top, AppSpacing.section)
                 if isDuplicate {
                     Text("A collection with this name already exists.")
                         .font(.appBodySmall)
                         .foregroundStyle(Color.appAlert)
                         .multilineTextAlignment(.center)
-                        .padding(.top, 8)
-                        .padding(.horizontal, 24)
+                        .padding(.top, AppSpacing.tight)
+                        .padding(.horizontal, AppSpacing.block)
                 }
-                HStack(spacing: 12) {
+                HStack(spacing: AppSpacing.small) {
                     AppButton(title: "Cancel", style: .secondary) {
                         showNewCollectionPopUp = false
                     }
@@ -400,12 +400,12 @@ struct WinDetailView: View {
                     }
                     .disabled(!canCreate)
                 }
-                .padding(.top, 24)
+                .padding(.top, AppSpacing.block)
             }
             .frame(maxWidth: .infinity)
-            .padding(24)
+            .padding(AppSpacing.block)
             .background(RoundedRectangle(cornerRadius: 26).fill(Color.white))
-            .padding(.horizontal, 32)
+            .padding(.horizontal, AppSpacing.large)
         }
         .animation(.spring(response: 0.35, dampingFraction: 0.8), value: showNewCollectionPopUp)
     }
@@ -415,34 +415,6 @@ struct WinDetailView: View {
         viewModel.openDoItAgain(win: win, experiments: experiments, context: modelContext) {
             selectedTabBinding?.wrappedValue = .home
         }
-    }
-
-    // Buttons
-
-    private func primaryButton(title: String, action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            Text(title)
-                .font(.system(size: 17, weight: .bold, design: .rounded))
-                .foregroundStyle(.white)
-                .frame(maxWidth: .infinity)
-                .frame(height: 50)
-                .background(Color.appPrimary)
-                .clipShape(RoundedRectangle(cornerRadius: 12))
-        }
-        .buttonStyle(.plain)
-    }
-
-    private func secondaryButton(title: String, action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            Text(title)
-                .font(.appSubHeadline)
-                .foregroundStyle(Color.appSecondaryDark)
-                .frame(maxWidth: .infinity)
-                .frame(height: 50)
-                .background(Color.appShade02)
-                .clipShape(RoundedRectangle(cornerRadius: 12))
-        }
-        .buttonStyle(.plain)
     }
 }
 

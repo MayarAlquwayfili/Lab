@@ -106,7 +106,7 @@ struct FilterSheetView: View {
                         Spacer()
                             .frame(height: 100)
                     }
-                    .padding(.bottom, 32)
+                    .padding(.bottom, AppSpacing.large)
                 }
                 .scrollIndicators(.hidden)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -127,7 +127,7 @@ struct FilterSheetView: View {
                             .clipShape(RoundedRectangle(cornerRadius: 12))
                     }
                     .buttonStyle(.plain)
-                    .padding(16)
+                    .padding(AppSpacing.card)
                     .background(Color.appBg)
                 }
             }
@@ -162,7 +162,7 @@ struct FilterSheetView: View {
                             .lineLimit(1)
                     }
                     .foregroundStyle(isSelected ? .white : Color.appSecondary)
-                    .padding(.horizontal, 16)
+                    .padding(.horizontal, AppSpacing.card)
                     .padding(.vertical, 6)
                     .background(
                         Capsule()
@@ -284,7 +284,7 @@ struct CollectionFilterSheetView: View {
 
                         Spacer().frame(height: 100)
                     }
-                    .padding(.bottom, 32)
+                    .padding(.bottom, AppSpacing.large)
                 }
                 .scrollIndicators(.hidden)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -305,7 +305,7 @@ struct CollectionFilterSheetView: View {
                             .clipShape(RoundedRectangle(cornerRadius: 12))
                     }
                     .buttonStyle(.plain)
-                    .padding(16)
+                    .padding(AppSpacing.card)
                     .background(Color.appBg)
                 }
             }
@@ -335,7 +335,7 @@ struct CollectionFilterSheetView: View {
                             .lineLimit(1)
                     }
                     .foregroundStyle(isSelected ? .white : Color.appSecondary)
-                    .padding(.horizontal, 16)
+                    .padding(.horizontal, AppSpacing.card)
                     .padding(.vertical, 6)
                     .background(Capsule().fill(isSelected ? Color.appPrimary : Color.white))
                     .overlay(Capsule().stroke(isSelected ? Color.appPrimary : Color.appSecondary, lineWidth: isSelected ? 1.5 : 1))
@@ -346,7 +346,7 @@ struct CollectionFilterSheetView: View {
     }
 
     private var sortRow: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: AppSpacing.small) {
             ForEach(CollectionSortOrder.allCases, id: \.self) { order in
                 Button {
                     selectedSortOrder = order

@@ -33,24 +33,24 @@ struct AppPopUp: View {
                     .foregroundStyle(Color.appFont)
                     .multilineTextAlignment(.center)
                     .frame(maxWidth: .infinity)
-                    .padding(.horizontal, 32)
+                    .padding(.horizontal, AppSpacing.large)
 
                 if !message.isEmpty {
                     Text(message)
                         .font(.appBodySmall)
                         .foregroundStyle(Color.appSecondaryDark)
                         .multilineTextAlignment(.center)
-                        .padding(.top, 12)
+                        .padding(.top, AppSpacing.small)
                         .frame(maxWidth: .infinity)
                 }
 
-                HStack(spacing: 12) {
+                HStack(spacing: AppSpacing.small) {
                     if !secondaryButtonTitle.isEmpty {
                         AppButton(title: secondaryButtonTitle, style: .secondary, action: onSecondary)
                     }
                     AppButton(title: primaryButtonTitle, style: primaryStyle, action: onPrimary)
                 }
-                .padding(.top, 24)
+                .padding(.top, AppSpacing.block)
             }
             .frame(maxWidth: .infinity)
             .padding(cardPadding)
@@ -72,7 +72,7 @@ struct AppPopUp: View {
             RoundedRectangle(cornerRadius: cornerRadius)
                 .fill(Color.white)
         )
-        .padding(.horizontal, 32)
+        .padding(.horizontal, AppSpacing.large)
     }
 }
 

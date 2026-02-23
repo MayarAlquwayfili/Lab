@@ -37,7 +37,7 @@ struct SettingsView: View {
                 .foregroundStyle(Color.appSecondary)
         }
         .frame(maxWidth: .infinity)
-        .padding(.top, 8)
+        .padding(.top, AppSpacing.tight)
     }
 
     var body: some View {
@@ -46,7 +46,7 @@ struct SettingsView: View {
 
             Form {
                 Section(header: Text("ACCOUNT")) {
-                    HStack(alignment: .center, spacing: 12) {
+                    HStack(alignment: .center, spacing: AppSpacing.small) {
                         Text("Username")
                             .font(.appBodySmall)
                             .fontWeight(.regular)
@@ -61,30 +61,30 @@ struct SettingsView: View {
                             if userName.isEmpty {
                                 Image(systemName: "exclamationmark.circle.fill")
                                     .font(.system(size: 16))
-                                    .foregroundStyle(Color.red.opacity(0.85))
+                                    .foregroundStyle(Color.appAlert.opacity(0.9))
                             }
                         }
                         .padding(.horizontal, 10)
                         .padding(.vertical, 6)
                         .background(
                             RoundedRectangle(cornerRadius: 8)
-                                .fill(userName.isEmpty ? Color.red.opacity(0.08) : Color.clear)
+                                .fill(userName.isEmpty ? Color.appAlert.opacity(0.08) : Color.clear)
                         )
                         .overlay(
                             RoundedRectangle(cornerRadius: 8)
-                                .stroke(userName.isEmpty ? Color.red.opacity(0.35) : Color.clear, lineWidth: 1)
+                                .stroke(userName.isEmpty ? Color.appAlert.opacity(0.35) : Color.clear, lineWidth: 1)
                         )
                     }
                 }
 
                 Section(header: Text("ABOUT")) {
-                    HStack(alignment: .center, spacing: 12) {
+                    HStack(alignment: .center, spacing: AppSpacing.small) {
                         Text("Developed by Mayar Alquwayfili")
                             .font(.appBodySmall)
                             .fontWeight(.regular)
                             .foregroundStyle(Color.appFont)
                         Spacer(minLength: 8)
-                        HStack(spacing: 12) {
+                        HStack(spacing: AppSpacing.small) {
                             Link(destination: URL(string: "https://github.com/MayarAlquwayfili")!) {
                                 Image(systemName: "link")
                                     .font(.system(size: 16, weight: .medium))
@@ -103,7 +103,7 @@ struct SettingsView: View {
                     Button {
                         showLabStorySheet = true
                     } label: {
-                        HStack(alignment: .center, spacing: 12) {
+                        HStack(alignment: .center, spacing: AppSpacing.small) {
                             Text("The Lab Story")
                                 .font(.appBodySmall)
                                 .fontWeight(.regular)
@@ -126,7 +126,7 @@ struct SettingsView: View {
                             .foregroundStyle(.white)
                             .frame(maxWidth: .infinity)
                             .frame(height: 50)
-                            .background(Color.red)
+                            .background(Color.appAlert)
                             .clipShape(RoundedRectangle(cornerRadius: 12))
                     }
                     .buttonStyle(.plain)
@@ -188,7 +188,7 @@ struct SettingsView: View {
             Rectangle()
                 .fill(.ultraThinMaterial)
                 .ignoresSafeArea()
-            VStack(spacing: 16) {
+            VStack(spacing: AppSpacing.card) {
                 ProgressView()
                     .scaleEffect(1.2)
                     .tint(Color.appFont)
@@ -236,8 +236,8 @@ private struct LabStorySheet: View {
                     .multilineTextAlignment(.leading)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.horizontal, horizontalMargin)
-                    .padding(.top, 16)
-                    .padding(.bottom, 32)
+                    .padding(.top, AppSpacing.card)
+                    .padding(.bottom, AppSpacing.large)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .background(Color.appBg)

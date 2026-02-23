@@ -49,7 +49,7 @@ struct HomeView: View {
                 // Section 1: Active Hero (top banner)
                 section1ActiveHero
                     .padding(.horizontal, horizontalMargin)
-                    .padding(.top, 24)
+                    .padding(.top, AppSpacing.block)
 
                 // Section 2: Action Grid (2 columns)
                 section2ActionGrid
@@ -58,7 +58,7 @@ struct HomeView: View {
                 // Section 3: Progress Summary (bottom strip)
                 section3ProgressSummary
                     .padding(.horizontal, horizontalMargin)
-                    .padding(.bottom, 32)
+                    .padding(.bottom, AppSpacing.large)
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -97,7 +97,7 @@ struct HomeView: View {
     }
 
     private var emptyStateHeroCard: some View {
-        VStack(alignment: .leading, spacing: 16) {
+        VStack(alignment: .leading, spacing: AppSpacing.card) {
             Text("Ready for a new experiment? Jump to the Lab!")
                 .font(.appSubHeadline)
                 .foregroundStyle(Color.appFont)
@@ -107,7 +107,7 @@ struct HomeView: View {
             Button {
                 selectedTabBinding?.wrappedValue = .lab
             } label: {
-                HStack(spacing: 8) {
+                HStack(spacing: AppSpacing.tight) {
                     Image(systemName: "viewfinder.circle.fill")
                         .font(.system(size: 18, weight: .semibold))
                     Text("Go to Lab")
@@ -156,7 +156,7 @@ struct HomeView: View {
 
     private func actionGridCard(icon: String, title: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
-            VStack(spacing: 12) {
+            VStack(spacing: AppSpacing.small) {
                 Image(systemName: icon)
                     .font(.system(size: 28, weight: .medium))
                     .foregroundStyle(Color.appPrimary)
@@ -188,13 +188,13 @@ struct HomeView: View {
     }
 
     private func randomPickSheet(experiment: Experiment) -> some View {
-        VStack(spacing: 20) {
+        VStack(spacing: AppSpacing.section) {
             Text("Random Pick")
                 .font(.appHeroSmall)
                 .foregroundStyle(Color.appFont)
-                .padding(.top, 24)
+                .padding(.top, AppSpacing.block)
 
-            VStack(alignment: .leading, spacing: 8) {
+            VStack(alignment: .leading, spacing: AppSpacing.tight) {
                 Text(experiment.title)
                     .font(.appCard)
                     .foregroundStyle(Color.appPrimary)
@@ -214,7 +214,7 @@ struct HomeView: View {
             .clipShape(RoundedRectangle(cornerRadius: 12))
             .padding(.horizontal, horizontalMargin)
 
-            HStack(spacing: 12) {
+            HStack(spacing: AppSpacing.small) {
                 Button {
                     viewModel.toggleActive(experiment: experiment, allExperiments: experiments, context: modelContext) { previous in
                         globalToastState?.showActivationToast(previous: previous, undoRevert: { p in
@@ -252,7 +252,7 @@ struct HomeView: View {
                 .buttonStyle(.plain)
             }
             .padding(.horizontal, horizontalMargin)
-            .padding(.bottom, 32)
+            .padding(.bottom, AppSpacing.large)
         }
         .frame(maxWidth: .infinity)
         .background(Color.appBg)
@@ -266,7 +266,7 @@ struct HomeView: View {
             Rectangle()
                 .fill(Color.appSecondary.opacity(0.3))
                 .frame(width: 1)
-                .padding(.vertical, 8)
+                .padding(.vertical, AppSpacing.tight)
             progressStat(label: "Ideas Waiting", value: inactiveCount)
         }
         .padding(cardPadding)
@@ -303,8 +303,8 @@ struct HomeView: View {
     private func activeExperimentCard(experiment: Experiment, winCount: Int = 0) -> some View {
         ZStack(alignment: .topTrailing) {
             VStack(alignment: .leading, spacing: 0) {
-                HStack(alignment: .center, spacing: 12) {
-                    VStack(alignment: .leading, spacing: 8) {
+                HStack(alignment: .center, spacing: AppSpacing.small) {
+                    VStack(alignment: .leading, spacing: AppSpacing.tight) {
                         Text(experiment.title)
                             .font(.appCard)
                             .foregroundStyle(Color.appPrimary)
@@ -384,7 +384,7 @@ struct HomeView: View {
                     .padding(.horizontal, 6)
                     .padding(.vertical, 4)
                     .background(Capsule().fill(Color.appBg.opacity(0.9)))
-                    .padding(8)
+                    .padding(AppSpacing.tight)
             }
         }
     }

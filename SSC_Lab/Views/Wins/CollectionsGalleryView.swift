@@ -62,7 +62,7 @@ struct CollectionsGalleryView: View {
 
     /// Shown when there are no user collections. No Create button — use '+' in header.
     private var emptyStateMessage: some View {
-        VStack(spacing: 16) {
+        VStack(spacing: AppSpacing.card) {
             Image(systemName: "folder.badge.plus")
                 .font(.system(size: 40, weight: .medium))
                 .foregroundStyle(Color.appSecondary)
@@ -73,7 +73,7 @@ struct CollectionsGalleryView: View {
                 .padding(.horizontal, horizontalPadding)
         }
         .frame(maxWidth: .infinity)
-        .padding(.vertical, 24)
+        .padding(.vertical, AppSpacing.block)
     }
 
     var body: some View {
@@ -108,7 +108,7 @@ struct CollectionsGalleryView: View {
                         ], spacing: gridSpacing) {
                             ForEach(galleryItems) { item in
                                 NavigationLink(destination: CollectionDetailView(collection: item.winCollection, showAllWins: item.isAllWins)) {
-                                    VStack(alignment: .center, spacing: 8) {
+                                    VStack(alignment: .center, spacing: AppSpacing.tight) {
                                         CollectionCoverCard(coverImageData: item.coverImageData)
                                         Text(item.title)
                                             .font(.appBody)
@@ -145,8 +145,8 @@ struct CollectionsGalleryView: View {
                             }
                         }
                         .padding(.horizontal, horizontalPadding)
-                        .padding(.top, 16)
-                        .padding(.bottom, 32)
+                        .padding(.top, AppSpacing.card)
+                        .padding(.bottom, AppSpacing.large)
                     }
                 }
             }
@@ -196,17 +196,17 @@ struct CollectionsGalleryView: View {
                     .font(.appBody)
                     .foregroundStyle(Color.appFont)
                     .textFieldStyle(.roundedBorder)
-                    .padding(.horizontal, 20)
-                    .padding(.top, 20)
+                    .padding(.horizontal, AppSpacing.section)
+                    .padding(.top, AppSpacing.section)
                 if isDuplicate {
                     Text("A collection with this name already exists.")
                         .font(.appBodySmall)
                         .foregroundStyle(Color.appAlert)
                         .multilineTextAlignment(.center)
-                        .padding(.top, 8)
-                        .padding(.horizontal, 20)
+                        .padding(.top, AppSpacing.tight)
+                        .padding(.horizontal, AppSpacing.section)
                 }
-                HStack(spacing: 12) {
+                HStack(spacing: AppSpacing.small) {
                     AppButton(title: "Cancel", style: .secondary) {
                         showAddCollectionPopUp = false
                     }
@@ -215,7 +215,7 @@ struct CollectionsGalleryView: View {
                     }
                     .disabled(!canCreate)
                 }
-                .padding(.top, 24)
+                .padding(.top, AppSpacing.block)
             }
             .frame(maxWidth: .infinity)
             .padding(28)
@@ -224,7 +224,7 @@ struct CollectionsGalleryView: View {
                 RoundedRectangle(cornerRadius: 20)
                     .stroke(Color.appSecondary.opacity(0.4), lineWidth: 1)
             )
-            .padding(.horizontal, 40)
+            .padding(.horizontal, AppSpacing.xLarge)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color.clear)
@@ -244,12 +244,12 @@ struct CollectionsGalleryView: View {
                             .foregroundStyle(Color.appFont)
                             .multilineTextAlignment(.center)
                             .frame(maxWidth: .infinity)
-                            .padding(.horizontal, 32)
+                            .padding(.horizontal, AppSpacing.large)
                         TextField("Name", text: $renameText)
                             .textFieldStyle(.roundedBorder)
-                            .padding(.horizontal, 24)
-                            .padding(.top, 20)
-                        HStack(spacing: 12) {
+                            .padding(.horizontal, AppSpacing.block)
+                            .padding(.top, AppSpacing.section)
+                        HStack(spacing: AppSpacing.small) {
                             AppButton(title: "Cancel", style: .secondary) {
                                 showRenamePopUp = false
                             }
@@ -270,12 +270,12 @@ struct CollectionsGalleryView: View {
                             }
                             .disabled(renameText.trimmingCharacters(in: .whitespaces).isEmpty)
                         }
-                        .padding(.top, 24)
+                        .padding(.top, AppSpacing.block)
                     }
                     .frame(maxWidth: .infinity)
-                    .padding(24)
+                    .padding(AppSpacing.block)
                     .background(RoundedRectangle(cornerRadius: 26).fill(Color.white))
-                    .padding(.horizontal, 32)
+                    .padding(.horizontal, AppSpacing.large)
                 }
             }
         }

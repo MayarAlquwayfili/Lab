@@ -27,7 +27,7 @@ struct OnboardingNameView: View {
                 
                 VStack(spacing: 0) {
 
-                    VStack(spacing: 8) {
+                    VStack(spacing: AppSpacing.tight) {
                         Text("Welcome to SSC Lab! 🧪")
                             .font(.appHeroSmall)
                             .foregroundStyle(Color.appFont)
@@ -43,8 +43,8 @@ struct OnboardingNameView: View {
                         .font(.appTitle)
                         .foregroundStyle(Color.appFont)
                         .multilineTextAlignment(.center)
-                        .padding(.horizontal, 20)
-                        .padding(.vertical, 16)
+                        .padding(.horizontal, AppSpacing.section)
+                        .padding(.vertical, AppSpacing.card)
                         .background(
                             RoundedRectangle(cornerRadius: 16)
                                 .fill(Color.white)
@@ -70,7 +70,7 @@ struct OnboardingNameView: View {
                 .disabled(isNameEmpty)
                 .opacity(isNameEmpty ? 0.5 : 1)
                 .padding(.horizontal, horizontalMargin)
-                .padding(.bottom, 32)
+                .padding(.bottom, AppSpacing.large)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .background(Color.appBg)

@@ -102,7 +102,7 @@ struct AddNewExperimentView: View {
                         .disabled(viewModel.isTitleEmpty)
                         .padding(.horizontal, horizontalMargin)
                     }
-                    .padding(.bottom, 32)
+                    .padding(.bottom, AppSpacing.large)
                 }
                 .scrollIndicators(.hidden)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -135,7 +135,7 @@ struct AddNewExperimentView: View {
         TextField(Constants.Lab.placeholderReference, text: $viewModel.referenceURL)
             .font(.appBodySmall)
             .foregroundStyle(Color.appFont)
-            .padding(.horizontal, 16)
+            .padding(.horizontal, AppSpacing.card)
             .frame(height: 35)
             .background(Capsule().fill(Color.white))
             .overlay(Capsule().stroke(Color.appSecondary, lineWidth: 1))

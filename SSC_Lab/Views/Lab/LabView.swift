@@ -63,10 +63,10 @@ struct LabView: View {
                 }
 
                 Spacer()
-                    .frame(height: 12)
+                    .frame(height: AppSpacing.small)
 
                 // Tools: Search (leading), Filter (trailing)
-                HStack(spacing: 12) {
+                HStack(spacing: AppSpacing.small) {
                     CustomSearchBar(text: $searchText)
                         .frame(maxWidth: .infinity)
 
@@ -93,7 +93,7 @@ struct LabView: View {
                 .padding(.horizontal, horizontalMargin)
 
                 Spacer()
-                    .frame(height: 16)
+                    .frame(height: AppSpacing.card)
 
                 if experiments.isEmpty {
                     Text("Tap + to start your first experiment.")
@@ -151,7 +151,7 @@ struct LabView: View {
                             }
                         }
                         .padding(.horizontal, horizontalMargin)
-                        .padding(.top, 8)
+                        .padding(.top, AppSpacing.tight)
                         .animation(.spring(response: 0.35, dampingFraction: 0.8), value: filteredExperiments.count)
                     }
                     .scrollDismissesKeyboard(.immediately)
@@ -252,7 +252,7 @@ struct LabView: View {
     private var searchEmptyState: some View {
         VStack(spacing: 0) {
             Spacer()
-            VStack(spacing: 16) {
+            VStack(spacing: AppSpacing.card) {
                 Image(systemName: searchEmptyStateIcon)
                     .font(.system(size: 44, weight: .medium))
                     .foregroundStyle(Color.appSecondary)
@@ -311,7 +311,7 @@ private struct CustomSearchBar: View {
     @Binding var text: String
     
     var body: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: AppSpacing.small) {
             Image(systemName: "magnifyingglass")
                 .font(.system(size: 16))
                 .foregroundStyle(Color.appSecondary)
@@ -328,7 +328,7 @@ private struct CustomSearchBar: View {
                 }
             }
         }
-        .padding(.horizontal, 12)
+        .padding(.horizontal, AppSpacing.small)
         .padding(.vertical, 10)
         .background(
             RoundedRectangle(cornerRadius: 12)

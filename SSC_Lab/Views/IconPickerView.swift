@@ -12,7 +12,7 @@ struct IconPickerView: View {
     @Binding var selectedIcon: String
     @Environment(\.dismiss) private var dismiss
 
-    private let columns = Array(repeating: GridItem(.flexible(), spacing: 12), count: 5)
+    private let columns = Array(repeating: GridItem(.flexible(), spacing: AppSpacing.small), count: 5)
     private let iconSize: CGFloat = 30
     private let cellPadding: CGFloat = 12
     private let horizontalMargin: CGFloat = 20
@@ -34,13 +34,13 @@ struct IconPickerView: View {
         VStack(spacing: 0) {
             header
             ScrollView {
-                LazyVGrid(columns: columns, spacing: 12) {
+                LazyVGrid(columns: columns, spacing: AppSpacing.small) {
                     ForEach(IconPickerView.curatedIcons, id: \.self) { name in
                         iconCell(systemName: name)
                     }
                 }
                 .padding(horizontalMargin)
-                .padding(.bottom, 24)
+                .padding(.bottom, AppSpacing.block)
             }
             .scrollIndicators(.hidden)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -68,7 +68,7 @@ struct IconPickerView: View {
             .buttonStyle(.plain)
         }
         .padding(.horizontal, horizontalMargin)
-        .padding(.vertical, 16)
+        .padding(.vertical, AppSpacing.card)
         .background(Color.appBg)
     }
 
@@ -80,7 +80,7 @@ struct IconPickerView: View {
         } label: {
             Image(systemName: systemName)
                 .font(.system(size: iconSize))
-                .foregroundStyle(isSelected ? Color.appPrimary : Color.secondary)
+                .foregroundStyle(isSelected ? Color.appPrimary : Color.appSecondary)
                 .frame(width: iconSize + cellPadding * 2, height: iconSize + cellPadding * 2)
         }
         .buttonStyle(.plain)

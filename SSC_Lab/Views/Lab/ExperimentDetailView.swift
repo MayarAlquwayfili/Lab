@@ -50,13 +50,13 @@ struct ExperimentDetailView: View {
                         AppNoteEditor(text: $experiment.labNotes, placeholder: Constants.Lab.placeholderNote)
                             .padding(.top, DetailCardLayout.spacingCardToContent)
 
-                        VStack(spacing: 12) {
+                        VStack(spacing: AppSpacing.small) {
                             if experiment.isActive {
-                                primaryButton(title: Constants.ExperimentDetail.buttonLogWin) {
+                                AppButton(title: Constants.ExperimentDetail.buttonLogWin, style: .primary) {
                                     showLogSheet = true
                                 }
                             } else {
-                                primaryButton(title: Constants.ExperimentDetail.buttonLetsDoIt) {
+                                AppButton(title: Constants.ExperimentDetail.buttonLetsDoIt, style: .primary) {
                                     labViewModel.toggleActive(experiment: experiment, allExperiments: experiments, context: modelContext) { previous in
                                         globalToastState?.showActivationToast(previous: previous, undoRevert: { p in
                                             labViewModel.toggleActive(experiment: p, allExperiments: experiments, context: modelContext, onActivated: nil)
@@ -64,7 +64,7 @@ struct ExperimentDetailView: View {
                                     }
                                 }
                             }
-                            secondaryButton(title: Constants.ExperimentDetail.buttonDelete) {
+                            AppButton(title: Constants.ExperimentDetail.buttonDelete, style: .secondary) {
                                 showDeleteAlert = true
                             }
                         }
@@ -192,34 +192,6 @@ struct ExperimentDetailView: View {
     private var bottomBadgeTypes: [BadgeType] {
         LabViewModel.bottomBadges(for: experiment)
     }
-
-    // Buttons
-    private func primaryButton(title: String, action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            Text(title)
-                .font(.system(size: 17, weight: .bold, design: .rounded))
-                .foregroundStyle(.white)
-                .frame(maxWidth: .infinity)
-                .frame(height: 50)
-                .background(Color.appPrimary)
-                .clipShape(RoundedRectangle(cornerRadius: 12))
-        }
-        .buttonStyle(.plain)
-    }
-
-    private func secondaryButton(title: String, action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            Text(title)
-                .font(.appSubHeadline)
-                .foregroundStyle(Color.appSecondaryDark)
-                .frame(maxWidth: .infinity)
-                .frame(height: 50)
-                .background(Color.appShade02)
-                .clipShape(RoundedRectangle(cornerRadius: 12))
-        }
-        .buttonStyle(.plain)
-    }
-
 }
 
 // MARK: - Preview

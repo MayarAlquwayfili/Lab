@@ -84,7 +84,7 @@ private struct ToastOverlayContent: View {
                     .padding(.bottom, geo.safeAreaInsets.bottom + toastAboveSafeArea)
             }
             .frame(maxWidth: .infinity)
-            .padding(.horizontal, 24)
+            .padding(.horizontal, AppSpacing.block)
         }
         .ignoresSafeArea(.container, edges: .bottom)
         .onAppear { scheduleAutoHide() }
@@ -110,8 +110,8 @@ private struct ToastOverlayContent: View {
     }
 
     private var pillContent: some View {
-        HStack(spacing: 12) {
-            HStack(spacing: 8) {
+        HStack(spacing: AppSpacing.small) {
+            HStack(spacing: AppSpacing.tight) {
                 Image(systemName: style.iconName)
                     .font(.system(size: 18, weight: .medium))
                     .foregroundStyle(style.iconColor)

@@ -47,7 +47,7 @@ struct ExperimentCard: View {
                             .frame(width: size.circleDimension, height: size.circleDimension, alignment: .center)
                     }
                     .frame(width: size.circleDimension, height: size.circleDimension)
-                    .padding(8)
+                    .padding(AppSpacing.tight)
                 }
 
                 Spacer(minLength: 0)
@@ -58,7 +58,7 @@ struct ExperimentCard: View {
                     .lineLimit(2)
                     .truncationMode(.tail)
                     .multilineTextAlignment(.center)
-                    .padding(.horizontal, 16)
+                    .padding(.horizontal, AppSpacing.card)
 
                 Spacer(minLength: 0)
 
@@ -75,7 +75,7 @@ struct ExperimentCard: View {
                     .padding(.horizontal, 6)
                     .padding(.vertical, 4)
                     .background(Capsule().fill(Color.appBg.opacity(0.9)))
-                    .padding(8)
+                    .padding(AppSpacing.tight)
             }
         }
         .frame(maxWidth: .infinity)

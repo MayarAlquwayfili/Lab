@@ -305,8 +305,8 @@ struct CollectionDetailView: View {
             .frame(width: cardWidth)
         }
         .padding(.horizontal, horizontalPadding)
-        .padding(.top, 16)
-        .padding(.bottom, 32)
+        .padding(.top, AppSpacing.card)
+        .padding(.bottom, AppSpacing.large)
         .frame(width: availableWidth, alignment: .leading)
     }
 
@@ -314,7 +314,7 @@ struct CollectionDetailView: View {
     private var collectionDetailEmptyState: some View {
         VStack(spacing: 0) {
             Spacer()
-            VStack(spacing: 16) {
+            VStack(spacing: AppSpacing.card) {
                 Image(systemName: "sparkles")
                     .font(.system(size: 40, weight: .medium))
                     .foregroundStyle(Color.appSecondary)
@@ -346,7 +346,7 @@ struct CollectionDetailView: View {
     private var filterEmptyState: some View {
         VStack(spacing: 0) {
             Spacer()
-            VStack(spacing: 16) {
+            VStack(spacing: AppSpacing.card) {
                 Image(systemName: "line.3.horizontal.decrease.circle")
                     .font(.system(size: 44, weight: .medium))
                     .foregroundStyle(Color.appSecondary)
@@ -438,7 +438,7 @@ struct WinMasonryCard: View {
                 strokedTitle(text: win.title)
                     .multilineTextAlignment(.center)
                     .lineLimit(2)
-                    .padding(.horizontal, 8)
+                    .padding(.horizontal, AppSpacing.tight)
                     .padding(.bottom, 6)
                 HStack(spacing: 6) {
                     ForEach(bottomBadgeTypes, id: \.self) { type in
@@ -446,11 +446,11 @@ struct WinMasonryCard: View {
                     }
                 }
                 .padding(.horizontal, 10)
-                .padding(.vertical, 8)
+                .padding(.vertical, AppSpacing.tight)
                 .background(Color.black.opacity(0.4))
                 .clipShape(RoundedRectangle(cornerRadius: 20))
-                .padding(.horizontal, 8)
-                .padding(.bottom, 8)
+                .padding(.horizontal, AppSpacing.tight)
+                .padding(.bottom, AppSpacing.tight)
             }
             .frame(width: cardWidth, height: cardHeight)
             .clipShape(RoundedRectangle(cornerRadius: cornerRadius))
@@ -487,7 +487,7 @@ struct WinRowView: View {
     private let cornerRadius: CGFloat = 12
 
     var body: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: AppSpacing.small) {
             Image(systemName: win.logTypeIcon)
                 .font(.system(size: 22, weight: .medium))
                 .foregroundStyle(Color.appPrimary)
@@ -509,7 +509,7 @@ struct WinRowView: View {
                 .font(.system(size: 14, weight: .medium))
                 .foregroundStyle(Color.appSecondary)
         }
-        .padding(16)
+        .padding(AppSpacing.card)
         .background(Color.white)
         .clipShape(RoundedRectangle(cornerRadius: cornerRadius))
         .overlay(

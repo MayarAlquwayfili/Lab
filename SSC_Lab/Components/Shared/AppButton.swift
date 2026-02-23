@@ -47,7 +47,7 @@ struct AppButton: View {
                 .font(.appSubHeadline)
                 .foregroundStyle(style.foregroundColor)
                 .frame(maxWidth: .infinity)
-                .padding(.vertical, 16)
+                .padding(.vertical, AppSpacing.card)
                 .background(
                     RoundedRectangle(cornerRadius: cornerRadius)
                         .fill(style.backgroundColor)
@@ -60,32 +60,32 @@ struct AppButton: View {
 // MARK: - Previews
 #Preview("AppButton – Primary") {
     AppButton(title: "Primary Button", style: .primary) {}
-        .padding(.horizontal, 24)
-        .padding(.vertical, 20)
+        .padding(.horizontal, AppSpacing.block)
+        .padding(.vertical, AppSpacing.section)
         .background(Color.appBg)
 }
 
 #Preview("AppButton – Secondary") {
     AppButton(title: "Secondary Button", style: .secondary) {}
-        .padding(.horizontal, 24)
-        .padding(.vertical, 20)
+        .padding(.horizontal, AppSpacing.block)
+        .padding(.vertical, AppSpacing.section)
         .background(Color.appBg)
 }
 
 #Preview("AppButton – Destructive") {
     AppButton(title: "Destructive Button", style: .destructive) {}
-        .padding(.horizontal, 24)
-        .padding(.vertical, 20)
+        .padding(.horizontal, AppSpacing.block)
+        .padding(.vertical, AppSpacing.section)
         .background(Color.appBg)
 }
 
 #Preview("AppButton – Both styles") {
-    VStack(spacing: 16) {
+    VStack(spacing: AppSpacing.card) {
         AppButton(title: "Primary", style: .primary) {}
         AppButton(title: "Secondary", style: .secondary) {}
         AppButton(title: "Destructive", style: .destructive) {}
 
     }
-    .padding(24)
+    .padding(AppSpacing.block)
     .background(Color.appBg)
 }
