@@ -103,8 +103,18 @@ struct ExperimentDetailView: View {
                 primaryStyle: .destructive,
                 showCloseButton: false,
                 onPrimary: {
-                    labViewModel.delete(experiment: experiment, context: modelContext)
-                    dismiss()
+                    showDeleteAlert = false
+                    if let undo = labViewModel.deleteExperiment(experiment: experiment, context: modelContext) {
+                        globalToastState?.show(
+                            "Experiment Removed",
+                            style: .destructive,
+                            undoTitle: "Undo",
+                            onUndo: undo
+                        )
+                        dismiss()
+                    } else {
+                        globalToastState?.show("Failed to save changes. Please try again.", style: .destructive)
+                    }
                 },
                 onSecondary: {
                     showDeleteAlert = false

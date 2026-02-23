@@ -89,27 +89,21 @@ struct QuickLogView: View {
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .background(Color.appBg.ignoresSafeArea())
-
-            if showDiscardAlert {
-                Color.black.opacity(0.4)
-                    .ignoresSafeArea()
-                    .transition(.opacity)
-
-                AppPopUp(
-                    title: Constants.Lab.discardAlertTitle,
-                    message: Constants.Lab.discardAlertMessage,
-                    primaryButtonTitle: Constants.Lab.discardAlertPrimary,
-                    secondaryButtonTitle: Constants.Lab.discardAlertSecondary,
-                    primaryStyle: .destructive,
-                    onClose: nil,
-                    onPrimary: { dismiss() },
-                    onSecondary: { showDiscardAlert = false }
-                )
-                .transition(.opacity.combined(with: .scale(scale: 0.92)))
-            }
+            .showPopUp(
+                isPresented: $showDiscardAlert,
+                title: Constants.Lab.discardAlertTitle,
+                message: Constants.Lab.discardAlertMessage,
+                primaryButtonTitle: Constants.Lab.discardAlertPrimary,
+                secondaryButtonTitle: Constants.Lab.discardAlertSecondary,
+                primaryStyle: .destructive,
+                useGlobal: false,
+                showCloseButton: false,
+                onPrimary: { dismiss() },
+                onSecondary: { showDiscardAlert = false }
+            )
         }
-        .animation(.easeInOut(duration: 0.25), value: showDiscardAlert)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .interactiveDismissDisabled(viewModel.hasChanges, onAttemptToDismiss: { showDiscardAlert = true })
         .confirmationDialog("Add Media", isPresented: $showMediaOptions, titleVisibility: .visible) {
             Button("Take Photo") {
                 showCamera = true
@@ -210,7 +204,7 @@ struct QuickLogView: View {
                 ZStack {
                     HStack(alignment: .center, spacing: 0) {
                         Button(action: { if viewModel.hasChanges { showDiscardAlert = true } else { dismiss() } }) {
-                            Image(systemName: "chevron.left")
+                            Image(systemName: "xmark")
                                 .font(.system(size: 15, weight: .semibold))
                                 .foregroundStyle(Color.appFont)
                                 .frame(width: 40, height: 40)
@@ -335,25 +329,31 @@ struct QuickLogView: View {
         Group {
             if let uiImage = viewModel.selectedUIImage {
                 imageMenuContainer {
-                    Menu {
-                        Button {
-                            showMediaOptions = true
-                        } label: {
-                            Label("Change Photo", systemImage: "photo.on.rectangle")
-                        }
-                        Button(role: .destructive) {
-                            viewModel.selectedUIImage = nil
-                        } label: {
-                            Label("Remove Photo", systemImage: "trash")
-                        }
-                    } label: {
+                    ZStack(alignment: .topTrailing) {
+                        imageView(uiImage: uiImage)
                         Color.clear
                             .frame(width: mediaBoxSize, height: mediaBoxSize)
-                            .overlay(imageView(uiImage: uiImage))
-                            .compositingGroup()
                             .contentShape(Rectangle())
+                            .onTapGesture { showMediaOptions = true }
+                        Button {
+                            DispatchQueue.main.async {
+                                withAnimation(.easeInOut(duration: 0.2)) { viewModel.selectedUIImage = nil }
+                            }
+                        } label: {
+                            ZStack {
+                                Circle()
+                                    .fill(Color.white.opacity(0.2))
+                                    .overlay(Circle().strokeBorder(Color.white.opacity(0.8), lineWidth: 1))
+                                Image(systemName: "xmark")
+                                    .font(.system(size: 12, weight: .semibold))
+                                    .foregroundStyle(.white)
+                            }
+                            .frame(width: 28, height: 28)
+                        }
+                        .buttonStyle(.plain)
+                        .contentShape(Rectangle())
+                        .padding(12)
                     }
-                    .buttonStyle(.plain)
                 }
             } else {
                 imagePlaceholderButton

@@ -8,6 +8,13 @@
 import SwiftUI
 import UIKit
 
+// Button style that shows no press feedback (no opacity, scale, or color change)
+struct NoHighlightButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+    }
+}
+
 // Nav toolbar button
 extension View {
     func navButton(icon: String, color: Color = .appFont, action: @escaping () -> Void) -> some View {
@@ -265,6 +272,83 @@ extension View {
         .animation(.spring(response: 0.35, dampingFraction: 0.8), value: isPresented.wrappedValue)
     }
 
+}
+
+// Interactive dismiss: disable swipe when condition is true, and call onAttemptToDismiss when user tries to swipe
+@MainActor
+private final class SheetDismissDelegate: NSObject, UIAdaptivePresentationControllerDelegate {
+    var isDisabled: Bool
+    var onAttemptToDismiss: (() -> Void)?
+
+    init(isDisabled: Bool, onAttempt: @escaping () -> Void) {
+        self.isDisabled = isDisabled
+        self.onAttemptToDismiss = onAttempt
+    }
+
+    func presentationControllerShouldDismiss(_ presentationController: UIPresentationController) -> Bool {
+        !isDisabled
+    }
+
+    func presentationControllerDidAttemptToDismiss(_ presentationController: UIPresentationController) {
+        onAttemptToDismiss?()
+    }
+}
+
+private struct SheetDismissDelegateView: UIViewRepresentable {
+    var isDisabled: Bool
+    var onAttempt: () -> Void
+
+    func makeUIView(context: Context) -> UIView { UIView() }
+
+    func updateUIView(_ uiView: UIView, context: Context) {
+        let delegate = context.coordinator.delegate
+        delegate.isDisabled = isDisabled
+        delegate.onAttemptToDismiss = onAttempt
+        DispatchQueue.main.async {
+            // Walk up to find the presented VC (sheet root); its presentationController is the one we need
+            var vc = uiView.parentViewController
+            while let v = vc {
+                if v.presentationController != nil {
+                    v.presentationController?.delegate = delegate
+                    break
+                }
+                vc = v.parent
+            }
+            if vc == nil {
+                uiView.parentViewController?.presentationController?.delegate = delegate
+            }
+        }
+    }
+
+    func makeCoordinator() -> Coordinator {
+        Coordinator(isDisabled: isDisabled, onAttempt: onAttempt)
+    }
+
+    @MainActor
+    final class Coordinator {
+        let delegate: SheetDismissDelegate
+        init(isDisabled: Bool, onAttempt: @escaping () -> Void) {
+            self.delegate = SheetDismissDelegate(isDisabled: isDisabled, onAttempt: onAttempt)
+        }
+    }
+}
+
+private extension UIView {
+    var parentViewController: UIViewController? {
+        var r: UIResponder? = next
+        while let next = r {
+            if let vc = next as? UIViewController { return vc }
+            r = next.next
+        }
+        return nil
+    }
+}
+
+extension View {
+    /// Disables interactive sheet dismiss when `isDisabled` is true; when user attempts to swipe dismiss, calls `onAttemptToDismiss`.
+    func interactiveDismissDisabled(_ isDisabled: Bool, onAttemptToDismiss: @escaping () -> Void) -> some View {
+        background(SheetDismissDelegateView(isDisabled: isDisabled, onAttempt: onAttemptToDismiss))
+    }
 }
 
 // Dismiss keyboard

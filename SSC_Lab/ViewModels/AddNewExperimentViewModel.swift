@@ -41,6 +41,7 @@ final class AddNewExperimentViewModel {
                 || logType.rawValue != (exp.logType ?? "")
         }
         return !title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            || icon != "star.fill"
             || !referenceURL.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
             || !labNotes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
