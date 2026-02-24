@@ -106,12 +106,14 @@ final class GlobalToastState {
     var isShowing = false
     var message = ""
     var style: AppToastStyle = .primary
+    var autoHideSeconds: Double = 3
     var undoTitle: String? = nil
     var onUndo: (() -> Void)? = nil
 
-    func show(_ message: String, style: AppToastStyle = .primary, undoTitle: String? = nil, onUndo: (() -> Void)? = nil) {
+    func show(_ message: String, style: AppToastStyle = .primary, autoHideSeconds: Double? = nil, undoTitle: String? = nil, onUndo: (() -> Void)? = nil) {
         self.message = message
         self.style = style
+        self.autoHideSeconds = autoHideSeconds ?? 3
         self.undoTitle = undoTitle
         self.onUndo = onUndo
         self.isShowing = true
