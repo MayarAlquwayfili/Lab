@@ -31,8 +31,15 @@ struct QuickLogView: View {
     @State private var showMediaOptions: Bool = false
     @State private var showCamera: Bool = false
     @State private var showPhotoLibrarySheet: Bool = false
+    @State private var imageBeforePicker: UIImage?
 
     private var isEditMode: Bool { winToEdit != nil }
+    /// Save enabled only when image is set (required) and, for add mode, title is non-empty.
+    private var canSave: Bool {
+        let hasImage = viewModel.selectedUIImage != nil
+        let hasTitle = !viewModel.winTitle.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        return hasImage && (isEditMode || hasTitle)
+    }
     private let horizontalMargin: CGFloat = 16
     private let sectionSpacing: CGFloat = 30
     private let mediaBoxSize: CGFloat = 254
@@ -79,6 +86,8 @@ struct QuickLogView: View {
                         Spacer().frame(height: AppSpacing.card)
 
                         AppButton(title: isEditMode ? "Save" : "Log a Win", style: .primary) { performSave() }
+                            .disabled(!canSave)
+                            .opacity(canSave ? 1 : 0.5)
                             .padding(.horizontal, horizontalMargin)
                             .padding(.bottom, AppSpacing.large)
                     }
@@ -103,23 +112,39 @@ struct QuickLogView: View {
             )
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .interactiveDismissDisabled(viewModel.hasChanges, onAttemptToDismiss: { showDiscardAlert = true })
+        .interactiveDismissDisabled(viewModel.hasChanges(winToEdit: winToEdit), onAttemptToDismiss: { showDiscardAlert = true })
         .confirmationDialog("Add Media", isPresented: $showMediaOptions, titleVisibility: .visible) {
             Button("Take Photo") {
+                imageBeforePicker = viewModel.selectedUIImage
                 showCamera = true
             }
             Button("Photo Library") {
+                imageBeforePicker = viewModel.selectedUIImage
                 showPhotoLibrarySheet = true
             }
             Button("Cancel", role: .cancel) {}
         } message: {
             Text("Choose a source for your media.")
         }
-        .sheet(isPresented: $showCamera) {
+        .sheet(isPresented: $showCamera, onDismiss: {
+            let changed: Bool = switch (viewModel.selectedUIImage, imageBeforePicker) {
+            case (nil, nil): false
+            case (nil, _), (_, nil): true
+            case (let a?, let b?): a !== b
+            }
+            if changed { viewModel.markImageAsNew() }
+        }) {
             ImagePicker(sourceType: .camera, image: $viewModel.selectedUIImage)
                 .ignoresSafeArea()
         }
-        .sheet(isPresented: $showPhotoLibrarySheet) {
+        .sheet(isPresented: $showPhotoLibrarySheet, onDismiss: {
+            let changed: Bool = switch (viewModel.selectedUIImage, imageBeforePicker) {
+            case (nil, nil): false
+            case (nil, _), (_, nil): true
+            case (let a?, let b?): a !== b
+            }
+            if changed { viewModel.markImageAsNew() }
+        }) {
             ImagePicker(sourceType: .photoLibrary, image: $viewModel.selectedUIImage)
                 .ignoresSafeArea()
         }
@@ -206,7 +231,7 @@ struct QuickLogView: View {
                 Spacer().frame(height: AppSpacing.section)
                 ZStack {
                     HStack(alignment: .center, spacing: 0) {
-                        Button(action: { if viewModel.hasChanges { showDiscardAlert = true } else { dismiss() } }) {
+                        Button(action: { if viewModel.hasChanges(winToEdit: winToEdit) { showDiscardAlert = true } else { dismiss() } }) {
                             Image(systemName: "xmark")
                                 .font(.system(size: 15, weight: .semibold))
                                 .foregroundStyle(Color.appFont)
@@ -225,6 +250,8 @@ struct QuickLogView: View {
                                 .contentShape(Circle())
                         }
                         .buttonStyle(.plain)
+                        .disabled(!canSave)
+                        .opacity(canSave ? 1 : 0.5)
                     }
                     Text(isEditMode ? "Edit Win" : "LOG A WIN")
                         .font(.appHeroSmall)

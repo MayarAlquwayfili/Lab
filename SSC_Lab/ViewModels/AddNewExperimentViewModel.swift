@@ -28,22 +28,22 @@ final class AddNewExperimentViewModel {
         title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
 
-    /// If adding: true when any field is non-empty. If editing: true when form differs from experimentToEdit.
+    /// If adding: true when any field is non-empty. If editing: true only when form actually differs from experimentToEdit (compare directly to original).
     var hasChanges: Bool {
-        if let exp = experimentToEdit {
-            return title != exp.title
-                || icon != exp.icon
-                || referenceURL != exp.referenceURL
-                || labNotes != exp.labNotes
-                || environment.rawValue != exp.environment
-                || tools.rawValue != exp.tools
-                || timeframe.rawValue != exp.timeframe
-                || logType.rawValue != (exp.logType ?? "")
+        guard let exp = experimentToEdit else {
+            return !title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                || icon != "star.fill"
+                || !referenceURL.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                || !labNotes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
         }
-        return !title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-            || icon != "star.fill"
-            || !referenceURL.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-            || !labNotes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        return title != exp.title
+            || icon != exp.icon
+            || referenceURL != exp.referenceURL
+            || labNotes != exp.labNotes
+            || environment.rawValue != exp.environment
+            || tools.rawValue != exp.tools
+            || timeframe.rawValue != exp.timeframe
+            || logType.rawValue != (exp.logType ?? "oneTime")
     }
 
     init(experimentToEdit: Experiment? = nil) {

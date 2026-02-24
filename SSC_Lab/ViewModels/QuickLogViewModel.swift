@@ -34,8 +34,35 @@ final class QuickLogViewModel {
     var showNewCollectionPopUp: Bool = false
     var newCollectionName: String = ""
 
-    var hasChanges: Bool {
-        !winTitle.isEmpty || !quickNote.isEmpty || selectedUIImage != nil
+    /// Set to true only when the user picks a new image from gallery/camera. Reset in prefill. Used so hasChanges doesn't false-positive on image Data comparison.
+    private(set) var isImageNew: Bool = false
+
+    /// Call when the user has picked a new image from camera or photo library.
+    func markImageAsNew() {
+        isImageNew = true
+    }
+
+    /// True only when user actually modified something. Compare current state directly to the original win when editing; when adding, true if any field is non-empty. Image "changed" only if isImageNew (user picked new photo).
+    func hasChanges(winToEdit: Win?) -> Bool {
+        guard let win = winToEdit else {
+            return !winTitle.isEmpty || !quickNote.isEmpty || selectedUIImage != nil
+        }
+        let imageChanged = isImageNew || (win.imageData != nil && selectedUIImage == nil)
+        let collectionChanged = (selectedCollection?.id != win.collection?.id)
+        let iconSame = (selectedIcon == (win.icon ?? "star.fill"))
+        let envSame = (environment == ((win.icon1 == Constants.Icons.outdoor) ? .outdoor : .indoor))
+        let toolsSame = (tools == ((win.icon2 == Constants.Icons.toolsNone) ? .none : .required))
+        let timeframeSame = (timeframe == (TimeframeOption(rawValue: win.icon3 ?? "1D") ?? .oneD))
+        let logTypeSame = (logType == ((win.logTypeIcon == Constants.Icons.newInterest) ? .newInterest : .oneTime))
+        return winTitle != win.title
+            || quickNote != win.notes
+            || imageChanged
+            || collectionChanged
+            || !iconSame
+            || !envSame
+            || !toolsSame
+            || !timeframeSame
+            || !logTypeSame
     }
 
     /// Prefill form from experiment (Log Win from Lab), win (Edit), or initial collection.
@@ -48,6 +75,7 @@ final class QuickLogViewModel {
             timeframe = TimeframeOption(rawValue: exp.timeframe) ?? .oneD
             logType = LogTypeOption(rawValue: exp.logType ?? "oneTime") ?? .oneTime
         } else if let w = win {
+            isImageNew = false
             winTitle = w.title
             selectedIcon = w.icon ?? "star.fill"
             quickNote = w.notes
