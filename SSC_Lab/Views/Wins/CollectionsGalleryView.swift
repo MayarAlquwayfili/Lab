@@ -16,8 +16,7 @@ struct CollectionsGalleryView: View {
     @Query(sort: \WinCollection.lastModified, order: .reverse) private var collections: [WinCollection]
     @Query(sort: \Win.date, order: .reverse) private var allWins: [Win]
 
-    @State private var showAddCollectionPopUp = false
-    @State private var newCollectionName = ""
+    @Environment(\.rootPopUpState) private var rootPopUpState
     @State private var showRenamePopUp = false
     @State private var collectionToRename: WinCollection?
     @State private var renameText = ""
@@ -77,11 +76,20 @@ struct CollectionsGalleryView: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
+        ZStack {
+            VStack(alignment: .leading, spacing: 0) {
                 AppHeader(title: "Wins Collections") {
                     Button {
-                        newCollectionName = ""
-                        showAddCollectionPopUp = true
+                        guard let state = rootPopUpState else { return }
+                        let data = AddCollectionPopUpData(
+                            name: "",
+                            isDuplicate: { name in collections.isDuplicateOrReservedCollectionName(name) },
+                            onCreate: { name in
+                                createCollection(named: name)
+                                state.dismiss()
+                            }
+                        )
+                        state.presentAddCollection(data)
                     } label: {
                         Image(systemName: "plus")
                             .font(.system(size: 15, weight: .semibold))
@@ -153,81 +161,19 @@ struct CollectionsGalleryView: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .background(Color.appBg.ignoresSafeArea(.all, edges: .bottom))
             .ignoresSafeArea(.all, edges: .bottom)
-            .onAppear { hideTabBarBinding?.wrappedValue = false }
-            .onChange(of: showAddCollectionPopUp) { _, isShowing in
-                if !isShowing { newCollectionName = "" }
-            }
-            .onChange(of: showRenamePopUp) { _, isShowing in
-                if !isShowing {
-                    collectionToRename = nil
-                    renameText = ""
-                }
-            }
-            .fullScreenCover(isPresented: $showAddCollectionPopUp) {
-                addCollectionFullScreenOverlay
-                    .presentationBackground(.clear)
-            }
-            .overlay {
-                if showRenamePopUp { renamePopUpOverlay }
-            }
-            .navigationBarHidden(true)
-    }
 
-    // Add collection
-    private var addCollectionFullScreenOverlay: some View {
-        let trimmed = newCollectionName.trimmingCharacters(in: .whitespacesAndNewlines)
-        let isEmpty = trimmed.isEmpty
-        let isDuplicate = !isEmpty && collections.isDuplicateOrReservedCollectionName(newCollectionName)
-        let canCreate = !isEmpty && !isDuplicate
-
-        return ZStack {
-
-            Color.black.opacity(0.4)
-                .ignoresSafeArea(.all)
-                .onTapGesture { showAddCollectionPopUp = false }
-
-            VStack(spacing: 0) {
-                Text("New Collection")
-                    .font(.appHeroSmall)
-                    .foregroundStyle(Color.appFont)
-                    .multilineTextAlignment(.center)
-                    .frame(maxWidth: .infinity)
-                TextField("Collection Name", text: $newCollectionName)
-                    .font(.appBody)
-                    .foregroundStyle(Color.appFont)
-                    .textFieldStyle(.roundedBorder)
-                    .padding(.horizontal, AppSpacing.section)
-                    .padding(.top, AppSpacing.section)
-                if isDuplicate {
-                    Text("A collection with this name already exists.")
-                        .font(.appBodySmall)
-                        .foregroundStyle(Color.appAlert)
-                        .multilineTextAlignment(.center)
-                        .padding(.top, AppSpacing.tight)
-                        .padding(.horizontal, AppSpacing.section)
-                }
-                HStack(spacing: AppSpacing.small) {
-                    AppButton(title: "Cancel", style: .secondary) {
-                        showAddCollectionPopUp = false
-                    }
-                    AppButton(title: "Create", style: .primary) {
-                        createCollection()
-                    }
-                    .disabled(!canCreate)
-                }
-                .padding(.top, AppSpacing.block)
-            }
-            .frame(maxWidth: .infinity)
-            .padding(28)
-            .background(RoundedRectangle(cornerRadius: 20).fill(Color.white))
-            .overlay(
-                RoundedRectangle(cornerRadius: 20)
-                    .stroke(Color.appSecondary.opacity(0.4), lineWidth: 1)
-            )
-            .padding(.horizontal, AppSpacing.xLarge)
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color.clear)
+        .onAppear { hideTabBarBinding?.wrappedValue = false }
+        .onChange(of: showRenamePopUp) { _, isShowing in
+            if !isShowing {
+                collectionToRename = nil
+                renameText = ""
+            }
+        }
+        .overlay {
+            if showRenamePopUp { renamePopUpOverlay }
+        }
+        .navigationBarHidden(true)
     }
 
     // Rename popup
@@ -282,16 +228,15 @@ struct CollectionsGalleryView: View {
         .animation(.spring(response: 0.35, dampingFraction: 0.8), value: showRenamePopUp)
     }
 
-    private func createCollection() {
-        let name = newCollectionName.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !name.isEmpty, !collections.isDuplicateOrReservedCollectionName(name) else { return }
-        let collection = WinCollection(name: name)
+    /// Creates a collection with the given name. Call from root Add Collection pop-up; dismiss is handled by the caller.
+    private func createCollection(named name: String) {
+        let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty, !collections.isDuplicateOrReservedCollectionName(trimmed) else { return }
+        let collection = WinCollection(name: trimmed)
         modelContext.insert(collection)
         do {
             try modelContext.save()
             globalToastState?.show("Collection Created")
-            showAddCollectionPopUp = false
-            newCollectionName = ""
         } catch {
             Logger().error("SwiftData save failed: \(String(describing: error))")
             globalToastState?.show("Failed to save changes. Please try again.", style: .destructive)
