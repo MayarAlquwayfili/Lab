@@ -108,7 +108,6 @@ struct AddNewExperimentView: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .background(Color.appBg.ignoresSafeArea())
             }
-            .interactiveDismissDisabled(viewModel.hasChanges, onAttemptToDismiss: { showDiscardAlert = true })
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .background(Color.appBg.ignoresSafeArea())
             .navigationBarHidden(true)
@@ -128,6 +127,7 @@ struct AddNewExperimentView: View {
                 IconPickerView(selectedIcon: $viewModel.icon)
             }
         }
+        .interactiveDismissDisabled(viewModel.hasChanges, onAttemptToDismiss: { showDiscardAlert = true })
     }
 
  
