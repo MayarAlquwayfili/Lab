@@ -74,6 +74,7 @@ struct MainTabView: View {
     @State private var globalToast = GlobalToastState()
     @State private var appPopUpState = AppPopUpState()
     @State private var randomizerState = RandomizerState()
+    @State private var rootPopUpState = RootPopUpState()
 
     var body: some View {
         ZStack(alignment: .bottom) {
@@ -100,9 +101,15 @@ struct MainTabView: View {
             .environment(\.hideTabBarBinding, $hideTabBar)
             .environment(\.selectedTabBinding, $selectedTab)
             .environment(\.randomizerState, randomizerState)
+            .environment(\.rootPopUpState, rootPopUpState)
 
             if !hideTabBar {
                 customTabBar
+            }
+
+            // Root pop-ups: dimmed background covers tab bar; centered card with scale+opacity
+            if rootPopUpState.hasActivePopUp {
+                rootPopUpOverlay
             }
 
             // Randomizer overlay at root: covers entire screen including tab bar
@@ -125,6 +132,7 @@ struct MainTabView: View {
             ),
             message: globalToast.message,
             style: globalToast.style,
+            autoHideSeconds: globalToast.autoHideSeconds,
             undoTitle: globalToast.undoTitle,
             onUndo: globalToast.onUndo
         )
@@ -133,6 +141,25 @@ struct MainTabView: View {
                 appPopUpOverlay
             }
         }
+    }
+
+    /// Unified root pop-up: dimmed background (covers tab bar), tap-outside to dismiss, centered card with scale+opacity transition.
+    private var rootPopUpOverlay: some View {
+        ZStack {
+            Color.black.opacity(0.4)
+                .ignoresSafeArea(.all)
+                .contentShape(Rectangle())
+                .onTapGesture { rootPopUpState.dismiss() }
+
+            switch rootPopUpState.activePopUp {
+            case .none:
+                EmptyView()
+            case .addCollection(let data):
+                AddCollectionCardView(data: data, onDismiss: { rootPopUpState.dismiss() })
+                    .transition(.scale.combined(with: .opacity))
+            }
+        }
+        .animation(.spring(response: 0.35, dampingFraction: 0.8), value: rootPopUpState.activePopUp)
     }
 
     private var randomizerOverlay: some View {
@@ -147,6 +174,8 @@ struct MainTabView: View {
                 Text(randomizerState.experiment?.title ?? "Next Experiment")
                     .font(.appHeroSmall)
                     .foregroundStyle(Color.appFont)
+                    .lineLimit(1)
+                    .truncationMode(.tail)
                     .multilineTextAlignment(.center)
                     .frame(maxWidth: .infinity)
                     .padding(.horizontal, AppSpacing.large)
@@ -170,6 +199,7 @@ struct MainTabView: View {
             .padding(AppSpacing.block)
             .background(RoundedRectangle(cornerRadius: 26).fill(Color.white))
             .padding(.horizontal, AppSpacing.large)
+            .aspectRatio(1, contentMode: .fit)
             .overlay(alignment: .topTrailing) {
                 Button(action: { randomizerState.dismiss() }) {
                     Image(systemName: "xmark")
@@ -186,8 +216,8 @@ struct MainTabView: View {
             .onTapGesture { }
             .transition(.scale(scale: 0.8).combined(with: .opacity))
         }
-        .animation(.spring(response: 0.35, dampingFraction: 0.8), value: randomizerState.isPresented)
-        .animation(.easeOut(duration: 0.25), value: randomizerState.experiment?.id)
+        .animation(.spring(response: 0.2, dampingFraction: 0.85), value: randomizerState.isPresented)
+        .animation(.easeOut(duration: 0.15), value: randomizerState.experiment?.id)
     }
 
     private var appPopUpOverlay: some View {
