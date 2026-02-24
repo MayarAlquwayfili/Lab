@@ -438,8 +438,10 @@ struct WinMasonryCard: View {
                 strokedTitle(text: win.title)
                     .multilineTextAlignment(.center)
                     .lineLimit(2)
-                    .padding(.horizontal, AppSpacing.tight)
-                    .padding(.bottom, 6)
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 16)
+
+                    
                 HStack(spacing: 6) {
                     ForEach(bottomBadgeTypes, id: \.self) { type in
                         StatusBadge(type: type, size: badgeSize, variant: badgeVariant)

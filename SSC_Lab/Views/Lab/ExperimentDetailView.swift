@@ -140,12 +140,19 @@ struct ExperimentDetailView: View {
 
                 Spacer(minLength: 0)
 
-                Text(experiment.title)
-                    .font(.appDetailCard)
-                    .foregroundStyle(Color.appPrimary)
-                    .lineLimit(2)
-                    .frame(maxWidth: .infinity)
-                    .multilineTextAlignment(.center)
+                VStack {
+                    Text(experiment.title)
+                        .font(.appDetailCard)
+                        .foregroundStyle(Color.appPrimary)
+                        .lineLimit(2)
+                        .truncationMode(.tail)
+                        .minimumScaleFactor(0.9)
+                        .lineSpacing(-2)
+                        .multilineTextAlignment(.center)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                .frame(height: 50, alignment: .center)
+                .frame(maxWidth: .infinity)
 
                 Spacer(minLength: 0)
 

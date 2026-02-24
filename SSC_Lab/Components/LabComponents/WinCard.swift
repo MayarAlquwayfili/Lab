@@ -74,13 +74,20 @@ struct WinCard: View {
 
                 Spacer(minLength: 0)
 
-                Text(win.title)
-                    .font(.appWin)
-                    .foregroundStyle(Color.appBg)
-                    .lineLimit(1)
-                    .truncationMode(.tail)
-                    .frame(maxWidth: .infinity)
-                    .multilineTextAlignment(.center)
+                VStack {
+                    Text(win.title)
+                        .font(.appWin)
+                        .foregroundStyle(Color.appBg)
+                        .lineLimit(2)
+                        .truncationMode(.tail)
+                        .minimumScaleFactor(0.9)
+                        .lineSpacing(-2)
+                        .multilineTextAlignment(.center)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                .padding(.horizontal, 12)
+                .frame(height: 50, alignment: .center)
+                .frame(maxWidth: .infinity)
 
                 Spacer(minLength: 0)
 

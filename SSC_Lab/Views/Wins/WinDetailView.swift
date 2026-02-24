@@ -251,12 +251,20 @@ struct WinDetailView: View {
             RoundedRectangle(cornerRadius: DetailCardLayout.cardCornerRadius)
                 .fill(Color.black.opacity(0.4))
 
-            Text(w.title)
-                .font(.appHeroOutline)
-                .foregroundStyle(Color.appBg)
-                .lineLimit(2)
-                .multilineTextAlignment(.center)
-                .padding(.horizontal, padding)
+            VStack {
+                Text(w.title)
+                    .font(.appHeroOutline)
+                    .foregroundStyle(Color.appBg)
+                    .lineLimit(2)
+                    .truncationMode(.tail)
+                    .minimumScaleFactor(0.9)
+                    .lineSpacing(-2)
+                    .multilineTextAlignment(.center)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            .frame(height: 50, alignment: .center)
+            .frame(maxWidth: .infinity)
+            .padding(.horizontal, padding)
 
             VStack {
                 HStack {

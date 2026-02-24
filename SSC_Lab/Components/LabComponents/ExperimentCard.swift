@@ -46,13 +46,20 @@ struct ExperimentCard: View {
 
                 Spacer(minLength: 0)
 
-                Text(title)
-                    .font(.appCard)
-                    .foregroundStyle(Color.appPrimary)
-                    .lineLimit(2)
-                    .truncationMode(.tail)
-                    .multilineTextAlignment(.center)
-                    .frame(maxWidth: .infinity)
+                VStack {
+                    Text(title)
+                        .font(.appCard)
+                        .foregroundStyle(Color.appPrimary)
+                        .lineLimit(2)
+                        .truncationMode(.tail)
+                        .minimumScaleFactor(0.9)
+                        .lineSpacing(-2)
+                        .multilineTextAlignment(.center)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                .padding(.horizontal, 12)
+                .frame(height: 50, alignment: .center)
+                .frame(maxWidth: .infinity)
 
                 Spacer(minLength: 0)
 
@@ -74,8 +81,8 @@ struct ExperimentCard: View {
                 Text("x\(count)")
                     .font(.appMicro)
                     .foregroundStyle(Color.appSecondary)
-                    .padding(.top, 4)
-                    .padding(.leading, 4)
+                    .padding(.top, 8)
+                    .padding(.leading, 8)
             }
         }
         .frame(maxWidth: .infinity)
