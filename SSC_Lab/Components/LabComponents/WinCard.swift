@@ -26,12 +26,18 @@ struct WinCard: View {
     /// When cardWidth is set, fixes width; otherwise allows flexible width (e.g. in detail view).
     private var fixedWidth: CGFloat? { cardWidth }
 
+    /// Downsampled image for display (max 400×400) to avoid memory warnings. Falls back to full decode if downsampling fails.
+    private var displayImage: UIImage? {
+        guard let data = win.imageData else { return nil }
+        return UIImage.downsampled(data: data, maxDimension: 400) ?? UIImage(data: data)
+    }
+
     var body: some View {
         ZStack {
-            // 1. Background: Image
+            // 1. Background: Image (downsampled to limit memory)
             ZStack {
                 Color.clear
-                if let data = win.imageData, let uiImage = UIImage(data: data) {
+                if let uiImage = displayImage {
                     Image(uiImage: uiImage)
                         .resizable()
                         .scaledToFill()
@@ -48,20 +54,10 @@ struct WinCard: View {
             RoundedRectangle(cornerRadius: cornerRadius)
                 .fill(Color.black.opacity(0.3))
 
-            // 3. Content
+            // 3. Content: element-specific padding (badges near edges/corners)
             VStack(alignment: .leading, spacing: 0) {
                 HStack {
-                    if let count = winCount, count > 1 {
-                        Text("x\(count)")
-                            .font(.appMicro)
-                            .foregroundStyle(Color.appSecondary)
-                            .padding(.horizontal, 6)
-                            .padding(.vertical, 4)
-                            .background(Capsule().fill(Color.appBg.opacity(0.9)))
-                            .padding(AppSpacing.tight)
-                    }
                     Spacer(minLength: 0)
-                    // Always show experiment icon badge (same styling as Lab): solid appPrimary circle, appFont icon
                     ZStack {
                         Circle()
                             .fill(Color.appPrimary)
@@ -80,7 +76,7 @@ struct WinCard: View {
 
                 Text(win.title)
                     .font(.appWin)
-                    .foregroundStyle(.white)
+                    .foregroundStyle(Color.appBg)
                     .lineLimit(1)
                     .truncationMode(.tail)
                     .frame(maxWidth: .infinity)
@@ -92,6 +88,7 @@ struct WinCard: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.top, AppSpacing.tight)
             }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
 
             // 4. Stroke border
             RoundedRectangle(cornerRadius: cornerRadius)
@@ -99,6 +96,15 @@ struct WinCard: View {
         }
         .frame(minWidth: fixedWidth ?? 0, maxWidth: fixedWidth ?? .infinity, minHeight: cardHeight, maxHeight: cardHeight)
         .clipShape(RoundedRectangle(cornerRadius: cornerRadius))
+        .overlay(alignment: .topLeading) {
+            if let count = winCount, count > 1 {
+                Text("x\(count)")
+                    .font(.appMicro)
+                    .foregroundStyle(Color.appBg)
+                    .padding(.top, 8)
+                    .padding(.leading, 8)
+            }
+        }
         .contentShape(Rectangle())
         .contentShape(.contextMenuPreview, RoundedRectangle(cornerRadius: cornerRadius))
         .layoutPriority(1)

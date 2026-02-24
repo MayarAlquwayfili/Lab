@@ -19,23 +19,16 @@ struct ExperimentCard: View {
     /// When non-nil and > 1, show a small repeat badge (e.g. "x2", "x3"). First win is standard; we only show repeats.
     var winCount: Int? = nil
 
-    private var allBottomBadges: [BadgeType] {
-        var badges = bottomBadges
-        if hasLink {
-            badges.append(.link)
-        }
-        return badges
-    }
-
     var body: some View {
         ZStack(alignment: .topLeading) {
+            // Background and stroke (behind content)
             RoundedRectangle(cornerRadius: 16)
                 .fill(Color.white)
             RoundedRectangle(cornerRadius: 16)
                 .stroke(Color.appSecondary, lineWidth: 1.5)
 
-            VStack(spacing: 0) {
-                // Top row: experiment icon in top-right badge
+            // Content: same element-specific padding as WinCard (badges near edges/corners)
+            VStack(alignment: .leading, spacing: 0) {
                 HStack {
                     Spacer(minLength: 0)
                     ZStack {
@@ -47,7 +40,8 @@ struct ExperimentCard: View {
                             .frame(width: size.circleDimension, height: size.circleDimension, alignment: .center)
                     }
                     .frame(width: size.circleDimension, height: size.circleDimension)
-                    .padding(AppSpacing.tight)
+                    .padding(.top, AppSpacing.tight)
+                    .padding(.trailing, AppSpacing.tight)
                 }
 
                 Spacer(minLength: 0)
@@ -58,13 +52,21 @@ struct ExperimentCard: View {
                     .lineLimit(2)
                     .truncationMode(.tail)
                     .multilineTextAlignment(.center)
-                    .padding(.horizontal, AppSpacing.card)
+                    .frame(maxWidth: .infinity)
 
                 Spacer(minLength: 0)
 
-                // Bottom row
-                StatusGroup(items: allBottomBadges, size: size, variant: variant)
-                    .frame(maxWidth: .infinity, alignment: .leading)
+                // Bottom row: StatusGroup (like WinCard), Link badge in bottom-right corner (same position as WinCard’s status area)
+                HStack(alignment: .center, spacing: 0) {
+                    StatusGroup(items: bottomBadges, size: size, variant: variant)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                    if hasLink {
+                        StatusBadge(type: .link, size: size, variant: variant)
+                            .padding(.trailing, AppSpacing.tight)
+                            .padding(.bottom, AppSpacing.tight)
+                    }
+                }
+                .padding(.top, AppSpacing.tight)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
 
@@ -72,10 +74,8 @@ struct ExperimentCard: View {
                 Text("x\(count)")
                     .font(.appMicro)
                     .foregroundStyle(Color.appSecondary)
-                    .padding(.horizontal, 6)
-                    .padding(.vertical, 4)
-                    .background(Capsule().fill(Color.appBg.opacity(0.9)))
-                    .padding(AppSpacing.tight)
+                    .padding(.top, 4)
+                    .padding(.leading, 4)
             }
         }
         .frame(maxWidth: .infinity)

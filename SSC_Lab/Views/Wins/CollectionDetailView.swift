@@ -52,12 +52,12 @@ struct CollectionDetailView: View {
             return oneWinPerActivity(from: allWins)
         }
         if let collection = collection {
-            return Array(collection.wins)
+            return oneWinPerActivity(from: Array(collection.wins))
         }
         return allWins.filter { $0.collection == nil }
     }
 
-    /// For "All": one card per activity (most recent win). Others show individually. Makes the gallery a clean library of skills.
+    /// One card per experiment (activityID): most recent win in the group. Image = latest; winCount = total in group. Used for "All" and for collections.
     private func oneWinPerActivity(from wins: [Win]) -> [Win] {
         let sorted = wins.sorted { $0.date > $1.date }
         var seenActivityIDs = Set<UUID>()

@@ -76,8 +76,10 @@ struct WinDetailView: View {
                         .frame(maxWidth: .infinity)
                         .padding(.top, DetailCardLayout.spacingHeaderToCard)
 
-                    pageIndicator
-                        .padding(.top, DetailCardLayout.spacingCardToContent)
+                    if winsForCarousel.count > 1 {
+                        pageIndicator
+                            .padding(.top, DetailCardLayout.spacingCardToContent)
+                    }
 
                     Text(displayedWin.date.formatted(date: .abbreviated, time: .omitted))
                         .font(.appBodySmall)
@@ -251,21 +253,13 @@ struct WinDetailView: View {
 
             Text(w.title)
                 .font(.appHeroOutline)
-                .foregroundStyle(.white)
+                .foregroundStyle(Color.appBg)
                 .lineLimit(2)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, padding)
 
             VStack {
                 HStack {
-                    if winsForCarousel.count > 1 {
-                        Text("x\(winsForCarousel.count)")
-                            .font(.appMicro)
-                            .foregroundStyle(Color.appSecondary)
-                            .padding(.horizontal, 6)
-                            .padding(.vertical, 4)
-                            .background(Capsule().fill(Color.appBg.opacity(0.9)))
-                    }
                     Spacer(minLength: 0)
                     // Experiment icon badge (same as Lab): solid appPrimary circle, appFont icon
                     ZStack {
@@ -296,6 +290,15 @@ struct WinDetailView: View {
                 .padding(.bottom, padding)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
+        }
+        .overlay(alignment: .topLeading) {
+            if winsForCarousel.count > 1 {
+                Text("x\(winsForCarousel.count)")
+                    .font(.appBodySmall)
+                    .foregroundStyle(Color.appBg)
+                    .padding(.top, 12)
+                    .padding(.leading, 12)
+            }
         }
     }
 
@@ -342,9 +345,12 @@ struct WinDetailView: View {
 
     /// Updates the currently displayed win's collection and saves. Used by the header collection Menu.
     private func moveToCollection(_ collection: WinCollection?) {
+        if displayedWin.collection?.id == collection?.id {
+            return
+        }
         if viewModel.moveToCollection(displayedWin: displayedWin, collection: collection, context: modelContext) {
             let name = collection?.name ?? "All"
-            globalToastState?.show("Moved to \(name)")
+            globalToastState?.show("Moved to \(name)", autoHideSeconds: 1.5)
         } else {
             globalToastState?.show("Failed to save changes. Please try again.", style: .destructive)
         }
@@ -393,7 +399,7 @@ struct WinDetailView: View {
                         ) {
                             showNewCollectionPopUp = false
                             newCollectionName = ""
-                            globalToastState?.show("Moved to \(name)")
+                            globalToastState?.show("Moved to \(name)", autoHideSeconds: 1.5)
                         } else {
                             globalToastState?.show("Failed to save changes. Please try again.", style: .destructive)
                         }
