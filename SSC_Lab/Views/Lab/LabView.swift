@@ -207,8 +207,9 @@ struct LabView: View {
     }
     
     private func pickRandomAndShowResult() {
-        guard filteredExperiments.count >= 2, let state = randomizerState else { return }
-        let pick = filteredExperiments.randomElement()!
+        guard filteredExperiments.count >= 2,
+              let state = randomizerState,
+              let pick = filteredExperiments.randomElement() else { return }
         showRandomizer(experiment: pick, state: state)
     }
 
