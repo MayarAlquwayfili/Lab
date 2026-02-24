@@ -26,6 +26,8 @@ struct WinDetailView: View {
     @State private var carouselIndex: Int = 0
     @State private var showNewCollectionPopUp = false
     @State private var newCollectionName = ""
+    @AccessibilityFocusState private var detailFocused: Bool
+    @State private var hasAnnouncedDuplicateInNewCollection = false
 
     /// Carousel: all wins with the same activityID (only). If no activityID, single card.
     private var winsForCarousel: [Win] {
@@ -75,6 +77,7 @@ struct WinDetailView: View {
                         .frame(height: DetailCardLayout.cardSize)
                         .frame(maxWidth: .infinity)
                         .padding(.top, DetailCardLayout.spacingHeaderToCard)
+                        .accessibilityFocused($detailFocused)
 
                     if winsForCarousel.count > 1 {
                         pageIndicator
@@ -94,15 +97,19 @@ struct WinDetailView: View {
                             .multilineTextAlignment(.center)
                             .frame(maxWidth: .infinity)
                             .padding(.top, AppSpacing.small)
+                            .accessibilityElement(children: .combine)
+                            .accessibilityLabel("Notes. \(displayedWin.notes)")
                     }
 
                     VStack(spacing: AppSpacing.small) {
                         AppButton(title: Constants.WinDetail.buttonDoItAgain, style: .primary) {
                             openDoItAgain()
                         }
+                        .accessibilityHint("Double tap to do this again and switch to Lab")
                         AppButton(title: Constants.WinDetail.buttonDelete, style: .secondary) {
                             deleteWinAndDismiss()
                         }
+                        .accessibilityHint("Double tap to delete this win")
                     }
                         .padding(.top, DetailCardLayout.spacingContentToButtons)
                         .padding(.bottom, Constants.WinDetail.scrollBottomPadding)
@@ -130,12 +137,24 @@ struct WinDetailView: View {
                 if let idx = winsForCarousel.firstIndex(where: { $0.id == win.id }) {
                     carouselIndex = idx
                 }
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) { detailFocused = true }
             }
             .sheet(isPresented: $showEditSheet) {
                 QuickLogView(winToEdit: displayedWin)
             }
             .onChange(of: showNewCollectionPopUp) { _, isShowing in
-                if !isShowing { newCollectionName = "" }
+                if !isShowing { newCollectionName = ""; hasAnnouncedDuplicateInNewCollection = false }
+            }
+            .onChange(of: newCollectionName) { _, _ in
+                let dup = !newCollectionName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && collections.isDuplicateOrReservedCollectionName(newCollectionName)
+                if dup {
+                    if !hasAnnouncedDuplicateInNewCollection {
+                        UIAccessibility.post(notification: .announcement, argument: "A collection with this name already exists.")
+                        hasAnnouncedDuplicateInNewCollection = true
+                    }
+                } else {
+                    hasAnnouncedDuplicateInNewCollection = false
+                }
             }
             .overlay {
                 if showNewCollectionPopUp { newCollectionPopUpOverlay }
@@ -192,6 +211,8 @@ struct WinDetailView: View {
                 }
                 .buttonStyle(.plain)
                 .animation(.easeInOut(duration: 0.2), value: collectionDisplayName)
+                .accessibilityLabel("Collection, \(collectionDisplayName)")
+                .accessibilityHint("Double tap to move this win to a different collection")
             }
             .frame(maxWidth: .infinity)
 
@@ -210,7 +231,7 @@ struct WinDetailView: View {
         ZStack {
             TabView(selection: $carouselIndex) {
                 ForEach(Array(winsForCarousel.enumerated()), id: \.element.id) { index, w in
-                    DetailCardFrame { detailCardContent(for: w) }
+                    DetailCardFrame { detailCardContent(for: w, carouselIndex: index) }
                         .tag(index)
                 }
             }
@@ -229,17 +250,22 @@ struct WinDetailView: View {
             }
         }
         .frame(maxWidth: .infinity)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("Page \(carouselIndex + 1) of \(winsForCarousel.count)")
+        .accessibilityHint("Swipe left or right with three fingers to change win")
     }
 
     /// Card content
-    private func detailCardContent(for w: Win) -> some View {
+    private func detailCardContent(for w: Win, carouselIndex index: Int) -> some View {
         let padding = DetailCardLayout.cardInternalPadding
+        let total = winsForCarousel.count
         return ZStack(alignment: .center) {
             Group {
                 if let data = w.imageData, let uiImage = UIImage(data: data) {
                     Image(uiImage: uiImage)
                         .resizable()
                         .scaledToFill()
+                        .accessibilityHidden(true)
                 } else {
                     Rectangle()
                         .fill(Color.appSecondary.opacity(0.25))
@@ -257,7 +283,7 @@ struct WinDetailView: View {
                     .foregroundStyle(Color.appBg)
                     .lineLimit(2)
                     .truncationMode(.tail)
-                    .minimumScaleFactor(0.9)
+                    .minimumScaleFactor(0.7)
                     .lineSpacing(-2)
                     .multilineTextAlignment(.center)
                     .fixedSize(horizontal: false, vertical: true)
@@ -308,6 +334,35 @@ struct WinDetailView: View {
                     .padding(.leading, 12)
             }
         }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(detailCardAccessibilityLabel(for: w, carouselIndex: index))
+    }
+
+    /// VoiceOver label for the detail card: "[Title]. Win. [Date]. Tags: [badge list]. [X] of [Y]" (X of Y only when multiple).
+    private func detailCardAccessibilityLabel(for w: Win, carouselIndex index: Int) -> String {
+        let dateStr = w.date.formatted(date: .abbreviated, time: .omitted)
+        let tags = detailCardTagsAccessibilityLabel(for: w)
+        let pagePart = winsForCarousel.count > 1 ? " \(index + 1) of \(winsForCarousel.count)" : ""
+        return "\(w.title). Win. \(dateStr). Tags: \(tags).\(pagePart)"
+    }
+
+    /// Human-readable badge list for VoiceOver (same mapping as ExperimentDetailView / WinCard).
+    private func detailCardTagsAccessibilityLabel(for w: Win) -> String {
+        var types = bottomBadgeTypes(for: w)
+        if let logType = logTypeBadgeType(for: w) { types.append(logType) }
+        let fromBadges = types.map { type in
+            switch type {
+            case .indoor: return "Indoor"
+            case .outdoor: return "Outdoor"
+            case .tools: return "Tools"
+            case .noTools: return "No tools"
+            case .oneTime: return "One time"
+            case .newInterest: return "New interest"
+            case .link: return "Link"
+            case .timeframe(let label): return TimeframeAccessibilityLabel.spoken(for: label)
+            }
+        }
+        return fromBadges.isEmpty ? "(none)" : fromBadges.joined(separator: ", ")
     }
 
      private func topBadgeType(for w: Win) -> BadgeType? {

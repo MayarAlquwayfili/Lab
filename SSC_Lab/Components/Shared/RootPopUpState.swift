@@ -8,6 +8,7 @@
 //
 
 import SwiftUI
+import UIKit
 
 // MARK: - Add Collection pop-up data
 
@@ -74,6 +75,7 @@ extension EnvironmentValues {
 struct AddCollectionCardView: View {
     @Bindable var data: AddCollectionPopUpData
     var onDismiss: () -> Void
+    @State private var hasAnnouncedDuplicateInNewCollection = false
 
     var body: some View {
         let trimmed = data.name.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -122,5 +124,17 @@ struct AddCollectionCardView: View {
         .padding(.horizontal, AppSpacing.xLarge)
         .contentShape(Rectangle())
         .onTapGesture { }
+        .onChange(of: data.name) { _, _ in
+            let t = data.name.trimmingCharacters(in: .whitespacesAndNewlines)
+            let dup = !t.isEmpty && data.isDuplicate(data.name)
+            if dup {
+                if !hasAnnouncedDuplicateInNewCollection {
+                    UIAccessibility.post(notification: .announcement, argument: "A collection with this name already exists.")
+                    hasAnnouncedDuplicateInNewCollection = true
+                }
+            } else {
+                hasAnnouncedDuplicateInNewCollection = false
+            }
+        }
     }
 }

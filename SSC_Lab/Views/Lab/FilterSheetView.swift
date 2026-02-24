@@ -44,6 +44,8 @@ struct FilterSheetView: View {
                             .contentShape(Circle())
                     }
                     .buttonStyle(.plain)
+                    .accessibilityLabel("Close")
+                    .accessibilityHint("Double tap to close without applying")
                 }, rightContent: {
                     Button(action: {
                         selectedBadges.removeAll()
@@ -55,6 +57,8 @@ struct FilterSheetView: View {
                     .buttonStyle(.plain)
                     .disabled(selectedBadges.isEmpty)
                     .opacity(selectedBadges.isEmpty ? 0.5 : 1)
+                    .accessibilityLabel("Reset")
+                    .accessibilityHint(selectedBadges.isEmpty ? "No filters applied" : "")
                 })
                 
                 ScrollView {
@@ -127,6 +131,7 @@ struct FilterSheetView: View {
                             .clipShape(RoundedRectangle(cornerRadius: 12))
                     }
                     .buttonStyle(.plain)
+                    .accessibilityHint("Double tap to apply filters and close")
                     .padding(AppSpacing.card)
                     .background(Color.appBg)
                 }
@@ -143,6 +148,7 @@ struct FilterSheetView: View {
             ForEach(Array(options.enumerated()), id: \.offset) { _, option in
                 let (badgeType, label, iconName) = option
                 let isSelected = selectedBadges.contains(badgeType)
+                let a11yLabel: String = { if case .timeframe = badgeType { return TimeframeAccessibilityLabel.spoken(for: label) }; return label }()
                 
                 Button {
                     withAnimation(.snappy(duration: 0.2)) {
@@ -174,6 +180,8 @@ struct FilterSheetView: View {
                     )
                 }
                 .buttonStyle(.plain)
+                .accessibilityLabel(a11yLabel)
+                .accessibilitySelected(isSelected)
             }
         }
     }
@@ -219,6 +227,8 @@ struct CollectionFilterSheetView: View {
                             .contentShape(Circle())
                     }
                     .buttonStyle(.plain)
+                    .accessibilityLabel("Close")
+                    .accessibilityHint("Double tap to close without applying")
                 }, rightContent: {
                     Button(action: {
                         selectedBadges.removeAll()
@@ -231,6 +241,8 @@ struct CollectionFilterSheetView: View {
                     .buttonStyle(.plain)
                     .disabled(selectedBadges.isEmpty && selectedSortOrder == .newestFirst)
                     .opacity((selectedBadges.isEmpty && selectedSortOrder == .newestFirst) ? 0.5 : 1)
+                    .accessibilityLabel("Reset")
+                    .accessibilityHint((selectedBadges.isEmpty && selectedSortOrder == .newestFirst) ? "No filters applied" : "")
                 })
 
                 ScrollView {
@@ -305,6 +317,7 @@ struct CollectionFilterSheetView: View {
                             .clipShape(RoundedRectangle(cornerRadius: 12))
                     }
                     .buttonStyle(.plain)
+                    .accessibilityHint("Double tap to apply filters and close")
                     .padding(AppSpacing.card)
                     .background(Color.appBg)
                 }
@@ -320,6 +333,7 @@ struct CollectionFilterSheetView: View {
             ForEach(Array(options.enumerated()), id: \.offset) { _, option in
                 let (badgeType, label, iconName) = option
                 let isSelected = selectedBadges.contains(badgeType)
+                let a11yLabel: String = { if case .timeframe = badgeType { return TimeframeAccessibilityLabel.spoken(for: label) }; return label }()
                 Button {
                     withAnimation(.snappy(duration: 0.2)) {
                         if isSelected { selectedBadges.remove(badgeType) }
@@ -341,6 +355,8 @@ struct CollectionFilterSheetView: View {
                     .overlay(Capsule().stroke(isSelected ? Color.appPrimary : Color.appSecondary, lineWidth: isSelected ? 1.5 : 1))
                 }
                 .buttonStyle(.plain)
+                .accessibilityLabel(a11yLabel)
+                .accessibilitySelected(isSelected)
             }
         }
     }
@@ -365,6 +381,8 @@ struct CollectionFilterSheetView: View {
                     .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
+                .accessibilityLabel(order.rawValue)
+                .accessibilitySelected(selectedSortOrder == order)
             }
         }
     }

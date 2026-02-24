@@ -7,6 +7,7 @@
 
 import SwiftUI
 import SwiftData
+import UIKit
 
 /// Shared state for the randomizer overlay so it can be shown at root level (covering the tab bar).
 @MainActor
@@ -70,6 +71,7 @@ enum Tab: Int, CaseIterable {
 struct MainTabView: View {
     @Namespace private var animation
     @State private var selectedTab: Tab = .lab
+    @AccessibilityFocusState private var randomizerFirstButtonFocused: Bool
     @State private var hideTabBar = false
     @State private var globalToast = GlobalToastState()
     @State private var appPopUpState = AppPopUpState()
@@ -189,6 +191,7 @@ struct MainTabView: View {
                     AppButton(title: "Spin Again", style: .secondary) {
                         randomizerState.onSpinAgain?()
                     }
+                    .accessibilityFocused($randomizerFirstButtonFocused)
                     AppButton(title: "Let's Do It!", style: .primary) {
                         randomizerState.onLetsDoIt?()
                     }
@@ -215,6 +218,15 @@ struct MainTabView: View {
             .contentShape(Rectangle())
             .onTapGesture { }
             .transition(.scale(scale: 0.8).combined(with: .opacity))
+        }
+        .makeAccessibilityModal(if: true)
+        .onChange(of: randomizerState.experiment?.id) { _, newId in
+            if newId != nil, let exp = randomizerState.experiment {
+                UIAccessibility.post(notification: .announcement, argument: exp.title)
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
+                    randomizerFirstButtonFocused = true
+                }
+            }
         }
         .animation(.spring(response: 0.2, dampingFraction: 0.85), value: randomizerState.isPresented)
         .animation(.easeOut(duration: 0.15), value: randomizerState.experiment?.id)
@@ -248,6 +260,7 @@ struct MainTabView: View {
             )
             .transition(.scale(scale: 0.8).combined(with: .opacity))
         }
+        .makeAccessibilityModal(if: true)
         .animation(.spring(response: 0.35, dampingFraction: 0.8), value: appPopUpState.isPresented)
     }
 
@@ -271,6 +284,7 @@ struct MainTabView: View {
 
     private func tabButton(_ tab: Tab) -> some View {
         let isSelected = selectedTab == tab
+        let tabAccessibilityLabel = tab == .wins ? "Wins Collections" : tab.label
         return Button {
             withAnimation(.snappy(duration: 0.3)) {
                 selectedTab = tab
@@ -297,6 +311,9 @@ struct MainTabView: View {
             )
         }
         .buttonStyle(.plain)
+        .accessibilityLabel(tabAccessibilityLabel)
+        .accessibilityAddTraits(isSelected ? .isSelected : [])
+        .accessibilityHint("Double tap to switch to \(tabAccessibilityLabel)")
     }
 }
 

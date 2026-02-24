@@ -164,6 +164,8 @@ struct CollectionDetailView: View {
                         .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
+                    .accessibilityLabel(hasActiveFilter ? "Filter, active" : "Filter")
+                    .accessibilityHint("Double tap to filter wins by category or sort order")
                 }
 
                 if displayedWins.isEmpty {
@@ -332,6 +334,8 @@ struct CollectionDetailView: View {
                         .padding(.horizontal, horizontalPadding)
                 }
                 .buttonStyle(.plain)
+                .accessibilityLabel("Log a new win and add it here")
+                .accessibilityHint("Double tap to log a win and add it to this collection")
             }
             .frame(maxWidth: .infinity)
             Spacer()
@@ -362,6 +366,8 @@ struct CollectionDetailView: View {
                 }
                 .buttonStyle(.plain)
                 .padding(.top, 4)
+                .accessibilityLabel("Clear filter")
+                .accessibilityHint("Double tap to show all wins again")
             }
             .frame(maxWidth: .infinity)
             .padding(.horizontal, horizontalPadding)
@@ -438,9 +444,8 @@ struct WinMasonryCard: View {
                 strokedTitle(text: win.title)
                     .multilineTextAlignment(.center)
                     .lineLimit(2)
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 16)
-
+                    .padding(.horizontal, 12)
+                    .padding(.bottom, 6)
                     
                 HStack(spacing: 6) {
                     ForEach(bottomBadgeTypes, id: \.self) { type in

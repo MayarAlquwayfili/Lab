@@ -117,6 +117,9 @@ final class GlobalToastState {
         self.undoTitle = undoTitle
         self.onUndo = onUndo
         self.isShowing = true
+        DispatchQueue.main.async {
+            UIAccessibility.post(notification: .announcement, argument: message)
+        }
     }
 
     func clearUndo() {
@@ -238,6 +241,7 @@ private struct GlobalPopUpSyncView: View {
                         onSecondary: onSecondary
                     )
                 }
+                .makeAccessibilityModal(if: true)
             }
         }
     }
@@ -379,6 +383,48 @@ extension View {
         .padding(.top, topSpacing)
         .padding(.bottom, bottomSpacing)
         .padding(.horizontal, horizontalPadding)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(title)
+        .accessibilityAddTraits(.isHeader)
+    }
+}
+
+// Timeframe spoken labels for VoiceOver (e.g. "1D" → "1 Day")
+enum TimeframeAccessibilityLabel {
+    static func spoken(for raw: String) -> String {
+        switch raw {
+        case "1D": return "1 Day"
+        case "7D": return "7 Days"
+        case "30D": return "30 Days"
+        case "+30D": return "Over 30 Days"
+        default: return raw
+        }
+    }
+}
+
+// Optional selected trait for segments/pickers (VoiceOver)
+extension View {
+    @ViewBuilder
+    func accessibilitySelected(_ isSelected: Bool) -> some View {
+        if isSelected {
+            self.accessibilityAddTraits(.isSelected)
+        } else {
+            self
+        }
+    }
+}
+
+// Modal trait for popups (iOS 16–compatible; accessibilityViewIsModal is iOS 17+)
+extension View {
+    @ViewBuilder
+    func makeAccessibilityModal(if isPresenting: Bool) -> some View {
+        if isPresenting {
+            self
+                .accessibilityAddTraits(.isModal)
+                .accessibilityElement(children: .contain)
+        } else {
+            self
+        }
     }
 }
 

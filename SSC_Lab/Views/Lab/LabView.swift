@@ -7,6 +7,7 @@
 
 import SwiftUI
 import SwiftData
+import UIKit
 
 struct LabView: View {
     @Binding var hideTabBar: Bool
@@ -58,7 +59,11 @@ struct LabView: View {
                                 pickRandomAndShowResult()
                             }
                         }
+                        .accessibilityLabel("Random experiment")
+                        .accessibilityHint("Double tap to randomly select an experiment from your lab")
                         EmptyView().navButton(icon: "plus") { showAddSheet = true }
+                        .accessibilityLabel("Add experiment")
+                        .accessibilityHint("Double tap to create a new experiment")
                     }
                 }
 
@@ -89,6 +94,8 @@ struct LabView: View {
                         .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
+                    .accessibilityLabel(filterCriteria.isEmpty ? "Filter" : "Filter, active")
+                    .accessibilityHint("Double tap to filter experiments by category")
                 }
                 .padding(.horizontal, horizontalMargin)
 
@@ -96,11 +103,13 @@ struct LabView: View {
                     .frame(height: AppSpacing.card)
 
                 if experiments.isEmpty {
-                    Text("Tap + to start your first experiment.")
+                    Text("No experiments yet. Tap Add experiment to start your first one.")
                         .font(.appBody)
                         .foregroundStyle(Color.appSecondary)
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
                         .multilineTextAlignment(.center)
+                        .accessibilityElement(children: .combine)
+                        .accessibilityLabel("No experiments yet. Tap Add experiment to start your first one.")
                 } else if filteredExperiments.isEmpty {
                     searchEmptyState
                 } else {
@@ -161,6 +170,10 @@ struct LabView: View {
             .background(Color.appBg)
             .navigationBarHidden(true)
             .onAppear { hideTabBar = false }
+            .onChange(of: filteredExperiments.count) { _, count in
+                let msg = count == 0 ? "No results found" : "\(count) results found"
+                UIAccessibility.post(notification: .announcement, argument: msg)
+            }
             .navigationDestination(item: $selectedExperiment) { experiment in
                 ExperimentDetailView(experiment: experiment)
                     .navigationBarBackButtonHidden(true)
@@ -257,9 +270,12 @@ struct LabView: View {
                 Image(systemName: searchEmptyStateIcon)
                     .font(.system(size: 44, weight: .medium))
                     .foregroundStyle(Color.appSecondary)
+                    .accessibilityHidden(true)
                 Text("No matches found")
                     .font(.appBody)
                     .foregroundStyle(Color.appFont)
+                    .accessibilityElement(children: .combine)
+                    .accessibilityLabel("No matches found")
                 Button { clearSearchAndFilter() } label: {
                     Text(searchEmptyStateButtonTitle)
                         .font(.appSubHeadline)
@@ -327,6 +343,7 @@ private struct CustomSearchBar: View {
                     Image(systemName: "xmark.circle.fill")
                         .foregroundStyle(Color.appSecondary)
                 }
+                .accessibilityLabel("Clear search")
             }
         }
         .padding(.horizontal, AppSpacing.small)
@@ -339,6 +356,8 @@ private struct CustomSearchBar: View {
                         .stroke(Color.appSecondary.opacity(0.3), lineWidth: 1)
                 )
         )
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel("Search experiments")
     }
 }
 

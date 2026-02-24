@@ -41,6 +41,7 @@ struct WinCard: View {
                     Image(uiImage: uiImage)
                         .resizable()
                         .scaledToFill()
+                        .accessibilityHidden(true)
                 } else {
                     Rectangle()
                         .fill(Color.appSecondary.opacity(0.25))
@@ -80,7 +81,7 @@ struct WinCard: View {
                         .foregroundStyle(Color.appBg)
                         .lineLimit(2)
                         .truncationMode(.tail)
-                        .minimumScaleFactor(0.9)
+                        .minimumScaleFactor(0.7)
                         .lineSpacing(-2)
                         .multilineTextAlignment(.center)
                         .fixedSize(horizontal: false, vertical: true)
@@ -115,6 +116,32 @@ struct WinCard: View {
         .contentShape(Rectangle())
         .contentShape(.contextMenuPreview, RoundedRectangle(cornerRadius: cornerRadius))
         .layoutPriority(1)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(winCardAccessibilityLabel)
+        .accessibilityHint("Double tap to open win")
+    }
+
+    /// Full VoiceOver label: title, Win, tags, and optional entry count when > 1.
+    private var winCardAccessibilityLabel: String {
+        let countPart: String = (winCount ?? 0) > 1 ? " \(winCount!) entries." : ""
+        return "\(win.title). Win. Tags: \(winTagsAccessibilityLabel).\(countPart)"
+    }
+
+    /// Human-readable badge list for VoiceOver (same mapping as ExperimentCard).
+    private var winTagsAccessibilityLabel: String {
+        let fromBadges = bottomBadgeTypes.map { type in
+            switch type {
+            case .indoor: return "Indoor"
+            case .outdoor: return "Outdoor"
+            case .tools: return "Tools"
+            case .noTools: return "No tools"
+            case .oneTime: return "One time"
+            case .newInterest: return "New interest"
+            case .link: return "Link"
+            case .timeframe(let label): return TimeframeAccessibilityLabel.spoken(for: label)
+            }
+        }
+        return fromBadges.isEmpty ? "(none)" : fromBadges.joined(separator: ", ")
     }
 
     /// Top badge.

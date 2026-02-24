@@ -52,7 +52,7 @@ struct ExperimentCard: View {
                         .foregroundStyle(Color.appPrimary)
                         .lineLimit(2)
                         .truncationMode(.tail)
-                        .minimumScaleFactor(0.9)
+                        .minimumScaleFactor(0.7)
                         .lineSpacing(-2)
                         .multilineTextAlignment(.center)
                         .fixedSize(horizontal: false, vertical: true)
@@ -87,6 +87,27 @@ struct ExperimentCard: View {
         }
         .frame(maxWidth: .infinity)
         .aspectRatio(1, contentMode: .fit)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("Experiment: \(title). Tags: \(experimentTagsAccessibilityLabel).")
+        .accessibilityHint("Double tap to open experiment")
+    }
+
+    /// Human-readable badge list for VoiceOver (e.g. "Indoor, Tools, 7D").
+    private var experimentTagsAccessibilityLabel: String {
+        let fromBadges = bottomBadges.map { type in
+            switch type {
+            case .indoor: return "Indoor"
+            case .outdoor: return "Outdoor"
+            case .tools: return "Tools"
+            case .noTools: return "No tools"
+            case .oneTime: return "One time"
+            case .newInterest: return "New interest"
+            case .link: return "Link"
+            case .timeframe(let label): return TimeframeAccessibilityLabel.spoken(for: label)
+            }
+        }
+        let withLink = hasLink ? fromBadges + ["Link"] : fromBadges
+        return withLink.isEmpty ? "(none)" : withLink.joined(separator: ", ")
     }
 }
 

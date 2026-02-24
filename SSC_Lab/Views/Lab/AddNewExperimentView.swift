@@ -58,13 +58,15 @@ struct AddNewExperimentView: View {
                     .buttonStyle(.plain)
                     .disabled(viewModel.isTitleEmpty)
                     .opacity(viewModel.isTitleEmpty ? 0.5 : 1)
+                    .accessibilityLabel("Save experiment")
+                    .accessibilityHint(viewModel.isTitleEmpty ? "Enter an experiment title to enable saving" : "")
                 }
 
                 ScrollView {
                     VStack(alignment: .leading, spacing: 0) {
                         // Section 1: Experiments
                         EmptyView().sectionHeader(title: Constants.Lab.sectionExperiments, topSpacing: 10, horizontalPadding: horizontalMargin)
-                        AppExperimentInputCard(title: $viewModel.title, icon: $viewModel.icon, onIconTap: { showIconPicker = true })
+                        AppExperimentInputCard(title: $viewModel.title, icon: $viewModel.icon, onIconTap: { showIconPicker = true }, initialFocus: true)
                             .padding(.horizontal, horizontalMargin)
 
                         // Section 2: Setup
@@ -100,6 +102,7 @@ struct AddNewExperimentView: View {
                             }
                         }
                         .disabled(viewModel.isTitleEmpty)
+                        .accessibilityHint(viewModel.isTitleEmpty ? "Enter an experiment title to enable saving" : "")
                         .padding(.horizontal, horizontalMargin)
                     }
                     .padding(.bottom, AppSpacing.large)
@@ -139,6 +142,7 @@ struct AddNewExperimentView: View {
             .frame(height: 35)
             .background(Capsule().fill(Color.white))
             .overlay(Capsule().stroke(Color.appSecondary, lineWidth: 1))
+            .accessibilityLabel("Reference link, optional")
     }
 
 }

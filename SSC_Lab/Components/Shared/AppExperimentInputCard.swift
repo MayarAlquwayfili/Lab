@@ -10,7 +10,9 @@ struct AppExperimentInputCard: View {
     @Binding var title: String
     @Binding var icon: String
     var onIconTap: () -> Void
+    var initialFocus: Bool = false
 
+    @FocusState private var isTitleFocused: Bool
     private let placeholder = "Want to try something New?"
     private let cornerRadius: CGFloat = 16
     private let minRowHeight: CGFloat = 44
@@ -24,6 +26,9 @@ struct AppExperimentInputCard: View {
                 .padding()
                 .frame(maxWidth: .infinity)
                 .frame(minHeight: minRowHeight)
+                .focused($isTitleFocused)
+                .accessibilityLabel("Experiment title, required")
+                .onAppear { if initialFocus { isTitleFocused = true } }
 
             Divider()
                 .background(Color.appSecondary)
@@ -41,6 +46,8 @@ struct AppExperimentInputCard: View {
                         .frame(width: 22, height: 22)
                 }
                 .buttonStyle(.plain)
+                .accessibilityLabel("Icon, \(IconAccessibilityLabel.humanReadable(for: icon)). Double tap to change.")
+                .accessibilityHint("Double tap to choose a different icon")
             }
             .padding()
             .frame(maxWidth: .infinity)

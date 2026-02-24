@@ -91,12 +91,14 @@ struct SettingsView: View {
                                     .foregroundStyle(Color.appSecondary)
                             }
                             .buttonStyle(.plain)
+                            .accessibilityLabel("GitHub")
                             Link(destination: URL(string: "https://www.linkedin.com/in/mayar-alquwayfili-2b8214331/")!) {
                                 Image(systemName: "globe")
                                     .font(.system(size: 16, weight: .medium))
                                     .foregroundStyle(Color.appSecondary)
                             }
                             .buttonStyle(.plain)
+                            .accessibilityLabel("LinkedIn")
                         }
                     }
 
@@ -118,26 +120,35 @@ struct SettingsView: View {
                 }
 
                 Section(header: Text("DANGER ZONE"), footer: appFooter) {
-                    Button {
-                        showResetAlert = true
-                    } label: {
-                        Text("Reset Lab")
-                            .font(.appSubHeadline)
-                            .foregroundStyle(.white)
-                            .frame(maxWidth: .infinity)
-                            .frame(height: 50)
-                            .background(Color.appAlert)
-                            .clipShape(RoundedRectangle(cornerRadius: 12))
-                    }
-                    .buttonStyle(.plain)
-                    .disabled(!hasDataToReset)
-                    .opacity(hasDataToReset ? 1 : 0.5)
+                    VStack(spacing: AppSpacing.tight) {
+                        Button {
+                            showResetAlert = true
+                        } label: {
+                            Text("Reset Lab")
+                                .font(.appSubHeadline)
+                                .foregroundStyle(.white)
+                                .frame(maxWidth: .infinity)
+                                .frame(height: 50)
+                                .background(Color.appAlert)
+                                .clipShape(RoundedRectangle(cornerRadius: 12))
+                        }
+                        .buttonStyle(.plain)
+                        .disabled(!hasDataToReset)
+                        .opacity(hasDataToReset ? 1 : 0.5)
+                        .accessibilityHidden(true)
 
-                    Text("Permanently deletes all experiments and wins. This action cannot be undone.")
-                        .font(.appMicro)
-                        .foregroundStyle(Color.appSecondary)
-                        .multilineTextAlignment(.center)
-                        .frame(maxWidth: .infinity)
+                        Text("Permanently deletes all experiments and wins. This action cannot be undone.")
+                            .font(.appMicro)
+                            .foregroundStyle(Color.appSecondary)
+                            .multilineTextAlignment(.center)
+                            .frame(maxWidth: .infinity)
+                            .accessibilityHidden(true)
+                    }
+                    .accessibilityElement(children: .combine)
+                    .accessibilityLabel("Reset Lab. Permanently deletes all experiments and wins. This action cannot be undone.")
+                    .accessibilityAddTraits(.isButton)
+                    .accessibilityHint(hasDataToReset ? "Double tap to reset lab data" : "No data to reset")
+                    .accessibilityAction(.activate) { if hasDataToReset { showResetAlert = true } }
                 }
             }
             .scrollContentBackground(.hidden)

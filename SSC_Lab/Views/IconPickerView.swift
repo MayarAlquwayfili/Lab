@@ -7,6 +7,32 @@
 
 import SwiftUI
 
+/// Maps SF Symbol names to human-readable labels for VoiceOver. Shared by IconPickerView and AppExperimentInputCard.
+enum IconAccessibilityLabel {
+    private static let map: [String: String] = [
+        "target": "Target", "scope": "Scope", "heart.fill": "Heart", "star.fill": "Star", "flame.fill": "Flame",
+        "bolt.fill": "Bolt", "drop.fill": "Drop", "leaf.fill": "Leaf", "sun.max.fill": "Sun", "moon.stars.fill": "Moon and stars",
+        "sparkles": "Sparkles", "brain.head.profile": "Brain", "figure.run": "Running", "figure.walk": "Walking",
+        "figure.mind.and.body": "Mind and body", "bed.double.fill": "Bed", "book.fill": "Book", "pencil.circle.fill": "Pencil",
+        "graduationcap.fill": "Graduation cap", "lightbulb.fill": "Light bulb", "trophy.fill": "Trophy", "medal.fill": "Medal",
+        "flag.fill": "Flag", "checklist": "Checklist", "clock.fill": "Clock", "timer": "Timer", "hourglass": "Hourglass",
+        "calendar": "Calendar", "house.fill": "House", "cart.fill": "Cart", "bag.fill": "Bag", "creditcard.fill": "Credit card",
+        "gift.fill": "Gift", "music.note": "Music", "camera.fill": "Camera", "envelope.fill": "Envelope", "phone.fill": "Phone",
+        "pin.fill": "Pin", "location.fill": "Location", "cup.and.saucer.fill": "Cup and saucer", "fork.knife": "Fork and knife",
+        "pills.fill": "Pills", "cross.case.fill": "Medical case", "pawprint.fill": "Paw print", "bird.fill": "Bird", "tree.fill": "Tree",
+    ]
+
+    static func humanReadable(for symbolName: String) -> String {
+        if let label = map[symbolName] { return label }
+        return symbolName
+            .replacingOccurrences(of: ".fill", with: "")
+            .replacingOccurrences(of: ".", with: " ")
+            .split(separator: " ")
+            .map { $0.prefix(1).uppercased() + $0.dropFirst().lowercased() }
+            .joined(separator: " ")
+    }
+}
+
 /// Curated SF Symbols (~50–60) for experiments and wins. User taps to select and sheet dismisses.
 struct IconPickerView: View {
     @Binding var selectedIcon: String
@@ -56,6 +82,7 @@ struct IconPickerView: View {
             Text("Choose Icon")
                 .font(.appSubHeadline)
                 .foregroundStyle(Color.appFont)
+                .accessibilityAddTraits(.isHeader)
             Spacer(minLength: 0)
             Button(action: { dismiss() }) {
                 Image(systemName: "xmark")
@@ -66,6 +93,7 @@ struct IconPickerView: View {
                     .contentShape(Circle())
             }
             .buttonStyle(.plain)
+            .accessibilityLabel("Close")
         }
         .padding(.horizontal, horizontalMargin)
         .padding(.vertical, AppSpacing.card)
@@ -84,6 +112,9 @@ struct IconPickerView: View {
                 .frame(width: iconSize + cellPadding * 2, height: iconSize + cellPadding * 2)
         }
         .buttonStyle(.plain)
+        .accessibilityLabel(IconAccessibilityLabel.humanReadable(for: systemName))
+        .accessibilityHint("Double tap to select")
+        .accessibilitySelected(isSelected)
     }
 }
 

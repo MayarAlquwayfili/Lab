@@ -68,6 +68,7 @@ private struct SetupPickerView<Option: Hashable & Equatable>: View {
     var namespace: Namespace.ID
     let options: [Option]
     let label: (Option) -> String
+    var accessibilityLabelOverride: ((Option) -> String)? = nil
     let icon: (Option) -> String?
 
     private let trackHeight: CGFloat = 36
@@ -87,6 +88,7 @@ private struct SetupPickerView<Option: Hashable & Equatable>: View {
                     HStack(spacing: 4) {
                         if let iconName = icon(option) {
                             Group { }.experimentSetupIcon(iconName: iconName, size: iconSize)
+                                .accessibilityHidden(true)
                         }
                         Text(label(option))
                             .font(.appBodySmall)
@@ -99,6 +101,8 @@ private struct SetupPickerView<Option: Hashable & Equatable>: View {
                     .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
+                .accessibilityLabel((accessibilityLabelOverride ?? label)(option))
+                .accessibilitySelected(isSelected)
                 .background(
                     Group {
                         if isSelected {
@@ -179,13 +183,14 @@ struct ExperimentSetupCard: View {
             Divider()
                 .background(Color.gray.opacity(0.2))
 
-            EmptyView()
+                EmptyView()
                 .experimentSetupRow(label: Constants.Setup.timeframeLabel, pickerWidth: 240, rowHeight: rowHeight) {
                     SetupPickerView(
                         selection: $timeframe,
                         namespace: namespaceTimeframe,
                         options: Array(TimeframeOption.allCases),
                         label: { $0.label },
+                        accessibilityLabelOverride: { TimeframeAccessibilityLabel.spoken(for: $0.rawValue) },
                         icon: { _ in nil }
                     )
                 }

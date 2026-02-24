@@ -16,6 +16,7 @@ struct ExperimentDetailView: View {
     @Query private var experiments: [Experiment]
     @Bindable var experiment: Experiment
     @State private var labViewModel = LabViewModel()
+    @AccessibilityFocusState private var detailFocused: Bool
 
     @State private var showEditSheet = false
     @State private var showLogSheet = false
@@ -40,21 +41,28 @@ struct ExperimentDetailView: View {
                         .font(.appBodySmall)
                         .foregroundStyle(Color.appFont)
                 }
+                .accessibilityLabel(experiment.title)
 
                 ScrollView {
                     VStack(alignment: .leading, spacing: 0) {
                         DetailCardFrame { detailCardContent }
                             .frame(maxWidth: .infinity)
                             .padding(.top, DetailCardLayout.spacingHeaderToCard)
+                            .accessibilityElement(children: .ignore)
+                            .accessibilityLabel(detailCardAccessibilityLabel)
+                            .accessibilityFocused($detailFocused)
 
                         AppNoteEditor(text: $experiment.labNotes, placeholder: Constants.Lab.placeholderNote)
                             .padding(.top, DetailCardLayout.spacingCardToContent)
+                            .accessibilityElement(children: .combine)
+                            .accessibilityLabel(experiment.labNotes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? "Note" : "Note. \(experiment.labNotes)")
 
                         VStack(spacing: AppSpacing.small) {
                             if experiment.isActive {
                                 AppButton(title: Constants.ExperimentDetail.buttonLogWin, style: .primary) {
                                     showLogSheet = true
                                 }
+                                .accessibilityHint("Double tap to log a win for this experiment")
                             } else {
                                 AppButton(title: Constants.ExperimentDetail.buttonLetsDoIt, style: .primary) {
                                     labViewModel.toggleActive(experiment: experiment, allExperiments: experiments, context: modelContext) { previous in
@@ -63,10 +71,12 @@ struct ExperimentDetailView: View {
                                         })
                                     }
                                 }
+                                .accessibilityHint("Double tap to set as active experiment")
                             }
                             AppButton(title: Constants.ExperimentDetail.buttonDelete, style: .secondary) {
                                 showDeleteAlert = true
                             }
+                            .accessibilityHint("Double tap to delete this experiment")
                         }
                         .padding(.top, DetailCardLayout.spacingContentToButtons)
                         .padding(.bottom, Constants.ExperimentDetail.scrollBottomPadding)
@@ -87,6 +97,7 @@ struct ExperimentDetailView: View {
                 var t = Transaction()
                 t.disablesAnimations = true
                 withTransaction(t) { hideTabBarBinding?.wrappedValue = true }
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) { detailFocused = true }
             }
             .sheet(isPresented: $showEditSheet) {
                 AddNewExperimentView(experimentToEdit: experiment)
@@ -146,7 +157,7 @@ struct ExperimentDetailView: View {
                         .foregroundStyle(Color.appPrimary)
                         .lineLimit(2)
                         .truncationMode(.tail)
-                        .minimumScaleFactor(0.9)
+                        .minimumScaleFactor(0.7)
                         .lineSpacing(-2)
                         .multilineTextAlignment(.center)
                         .fixedSize(horizontal: false, vertical: true)
@@ -170,6 +181,30 @@ struct ExperimentDetailView: View {
             }
             .padding(DetailCardLayout.cardInternalPadding)
         }
+    }
+
+    /// VoiceOver label for the detail card: title, Experiment, tags, optional reference link.
+    private var detailCardAccessibilityLabel: String {
+        let tags = detailCardTagsAccessibilityLabel
+        let refPart = hasReferenceURL ? " Reference link available." : ""
+        return "\(experiment.title). Experiment. Tags: \(tags).\(refPart)"
+    }
+
+    /// Human-readable badge list for VoiceOver (same mapping as ExperimentCard).
+    private var detailCardTagsAccessibilityLabel: String {
+        let fromBadges = bottomBadgeTypes.map { type in
+            switch type {
+            case .indoor: return "Indoor"
+            case .outdoor: return "Outdoor"
+            case .tools: return "Tools"
+            case .noTools: return "No tools"
+            case .oneTime: return "One time"
+            case .newInterest: return "New interest"
+            case .link: return "Link"
+            case .timeframe(let label): return TimeframeAccessibilityLabel.spoken(for: label)
+            }
+        }
+        return fromBadges.isEmpty ? "(none)" : fromBadges.joined(separator: ", ")
     }
 
     private var experimentIconBadge: some View {

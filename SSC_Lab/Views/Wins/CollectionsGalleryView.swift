@@ -99,6 +99,7 @@ struct CollectionsGalleryView: View {
                             .contentShape(Circle())
                     }
                     .buttonStyle(.plain)
+                    .accessibilityLabel("Add new collection")
                 }
 
                 if showEmptyStateOnly {
@@ -118,6 +119,7 @@ struct CollectionsGalleryView: View {
                                 NavigationLink(destination: CollectionDetailView(collection: item.winCollection, showAllWins: item.isAllWins)) {
                                     VStack(alignment: .center, spacing: AppSpacing.tight) {
                                         CollectionCoverCard(coverImageData: item.coverImageData)
+                                            .accessibilityHidden(true)
                                         Text(item.title)
                                             .font(.appBody)
                                             .foregroundStyle(Color.appFont)
@@ -134,6 +136,8 @@ struct CollectionsGalleryView: View {
                                     }
                                 }
                                 .buttonStyle(.plain)
+                                .accessibilityElement(children: .ignore)
+                                .accessibilityLabel("\(item.title) Collection with \(item.winCount) wins")
                                 .contextMenu {
                                     if let collection = item.winCollection, !item.isAllWins {
                                         Button {
