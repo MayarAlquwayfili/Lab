@@ -323,7 +323,7 @@ private struct LabStorySheet: View {
     }
 }
 
-/   /// Reset Lab Data
+/// Reset Lab Data
 extension SettingsView {
     private func resetLabData() {
         // Delete all wins first (they may reference collections)
