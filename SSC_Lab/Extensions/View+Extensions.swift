@@ -8,14 +8,14 @@
 import SwiftUI
 import UIKit
 
-// Button style that shows no press feedback (no opacity, scale, or color change)
+/// Button style that shows no press feedback (no opacity, scale, or color change)
 struct NoHighlightButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
     }
 }
 
-// Nav toolbar button
+/// Nav toolbar button
 extension View {
     func navButton(icon: String, color: Color = .appFont, action: @escaping () -> Void) -> some View {
         Button(action: action) {
@@ -32,7 +32,7 @@ extension View {
     }
 }
 
-// Discard changes alert
+/// Discard changes alert
 extension View {
     func discardAlert(isPresented: Binding<Bool>, onDiscard: @escaping () -> Void) -> some View {
         alert("Unsaved Changes", isPresented: isPresented) {
@@ -44,7 +44,7 @@ extension View {
     }
 }
 
-// Global popup state
+/// Global popup state
 @Observable
 final class AppPopUpState {
     var isPresented = false
@@ -100,7 +100,7 @@ extension EnvironmentValues {
     }
 }
 
-// Global toast state
+/// Global toast state
 @Observable
 final class GlobalToastState {
     var isShowing = false
@@ -117,8 +117,11 @@ final class GlobalToastState {
         self.undoTitle = undoTitle
         self.onUndo = onUndo
         self.isShowing = true
-        DispatchQueue.main.async {
-            UIAccessibility.post(notification: .announcement, argument: message)
+        switch style {
+        case .destructive:
+            UINotificationFeedbackGenerator().notificationOccurred(.error)
+        case .primary, .secondary:
+            UINotificationFeedbackGenerator().notificationOccurred(.success)
         }
     }
 
@@ -280,7 +283,7 @@ extension View {
 
 }
 
-// Interactive dismiss: disable swipe when condition is true, and call onAttemptToDismiss when user tries to swipe
+/// Interactive dismiss
 @MainActor
 private final class SheetDismissDelegate: NSObject, UIAdaptivePresentationControllerDelegate {
     var isDisabled: Bool
@@ -357,14 +360,14 @@ extension View {
     }
 }
 
-// Dismiss keyboard
+/// Dismiss keyboard
 extension View {
     func dismissKeyboard() {
         UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
     }
 }
 
-// Section header
+/// Section header
 extension View {
     func sectionHeader(
         title: String,
@@ -389,7 +392,7 @@ extension View {
     }
 }
 
-// Timeframe spoken labels for VoiceOver (e.g. "1D" → "1 Day")
+/// Timeframe spoken labels for VoiceOver (e.g. "1D" → "1 Day")
 enum TimeframeAccessibilityLabel {
     static func spoken(for raw: String) -> String {
         switch raw {
@@ -402,7 +405,7 @@ enum TimeframeAccessibilityLabel {
     }
 }
 
-// Optional selected trait for segments/pickers (VoiceOver)
+/// Optional selected trait for segments/pickers (VoiceOver)
 extension View {
     @ViewBuilder
     func accessibilitySelected(_ isSelected: Bool) -> some View {
@@ -414,7 +417,7 @@ extension View {
     }
 }
 
-// Modal trait for popups (iOS 16–compatible; accessibilityViewIsModal is iOS 17+)
+/// Modal trait for popups
 extension View {
     @ViewBuilder
     func makeAccessibilityModal(if isPresenting: Bool) -> some View {
@@ -428,7 +431,7 @@ extension View {
     }
 }
 
-// Experiment setup icon
+/// Experiment setup icon
 extension View {
     @ViewBuilder
     func experimentSetupIcon(iconName: String, size: CGFloat = 16) -> some View {
@@ -445,7 +448,7 @@ extension View {
     }
 }
 
-// Experiment setup row (label + picker)
+/// Experiment setup row (label + picker)
 extension View {
 
     func experimentSetupRow<Content: View>(
@@ -472,14 +475,14 @@ extension View {
     }
 }
 
-// Enable Swipe to Back Gesture
+/// Enable Swipe to Back Gesture
 extension View {
     func enableSwipeToBack() -> some View {
         self.background(SwipeToBackEnabler())
     }
 }
 
-//  Swipe to Back Enabler
+///  Swipe to Back Enabler
 private struct SwipeToBackEnabler: UIViewControllerRepresentable {
     func makeUIViewController(context: Context) -> UIViewController {
         let viewController = UIViewController()

@@ -74,6 +74,7 @@ private struct ToastOverlayContent: View {
     var undoTitle: String?
     var onUndo: (() -> Void)?
 
+    @AccessibilityFocusState private var isToastFocused: Bool
     @State private var hideTask: Task<Void, Never>?
 
     var body: some View {
@@ -87,7 +88,21 @@ private struct ToastOverlayContent: View {
             .padding(.horizontal, AppSpacing.block)
         }
         .ignoresSafeArea(.container, edges: .bottom)
-        .onAppear { scheduleAutoHide() }
+        .onAppear {
+            scheduleAutoHide()
+            
+
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
+                isToastFocused = true
+            }
+        }
+        .onChange(of: message) { _, _ in
+            isToastFocused = false
+            
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
+                isToastFocused = true
+            }
+        }
         .onDisappear {
             hideTask?.cancel()
             hideTask = nil
@@ -115,10 +130,12 @@ private struct ToastOverlayContent: View {
                 Image(systemName: style.iconName)
                     .font(.system(size: 18, weight: .medium))
                     .foregroundStyle(style.iconColor)
+                    .accessibilityHidden(true)
                 Text(message)
                     .font(.appSubHeadline)
                     .foregroundStyle(.white)
                     .lineLimit(1)
+                    .accessibilityHidden(true)
             }
             if let onUndo {
                 Button {
@@ -131,6 +148,7 @@ private struct ToastOverlayContent: View {
                         .foregroundStyle(style.undoButtonColor)
                 }
                 .buttonStyle(.plain)
+                .accessibilityHidden(true)
             }
         }
         .padding(.horizontal, toastHorizontalPadding)
@@ -139,6 +157,14 @@ private struct ToastOverlayContent: View {
         .shadow(color: .black.opacity(0.15), radius: 8, x: 0, y: 2)
         .contentShape(Capsule())
         .onTapGesture { dismissWithAnimation() }
+ 
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(onUndo != nil ? "\(message), double tap to undo." : message)
+        .accessibilityAddTraits(onUndo != nil ? .isButton : .isStaticText)
+        .accessibilityFocused($isToastFocused)
+        .accessibilityAction {
+            onUndo?()
+        }
     }
 }
 

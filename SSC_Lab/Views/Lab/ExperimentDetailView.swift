@@ -7,6 +7,7 @@
 
 import SwiftUI
 import SwiftData
+import UIKit
 
 struct ExperimentDetailView: View {
     @Environment(\.dismiss) private var dismiss
@@ -40,8 +41,8 @@ struct ExperimentDetailView: View {
                     Button(Constants.ExperimentDetail.buttonEdit) { showEditSheet = true }
                         .font(.appBodySmall)
                         .foregroundStyle(Color.appFont)
+                        .accessibilityLabel("Edit \(experiment.title)")
                 }
-                .accessibilityLabel(experiment.title)
 
                 ScrollView {
                     VStack(alignment: .leading, spacing: 0) {
@@ -88,6 +89,7 @@ struct ExperimentDetailView: View {
                 .ignoresSafeArea(.all, edges: .bottom)
             }
             .ignoresSafeArea(.all, edges: .bottom)
+            .accessibilityHidden(showDeleteAlert)
             .toolbar(.hidden, for: .tabBar)
             .toolbarBackground(.hidden, for: .tabBar)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -116,6 +118,7 @@ struct ExperimentDetailView: View {
                 onPrimary: {
                     showDeleteAlert = false
                     if let undo = labViewModel.deleteExperiment(experiment: experiment, context: modelContext) {
+                        UINotificationFeedbackGenerator().notificationOccurred(.warning)
                         globalToastState?.show(
                             "Experiment Removed",
                             style: .destructive,
@@ -135,7 +138,7 @@ struct ExperimentDetailView: View {
         .ignoresSafeArea(.all, edges: .bottom)
     }
 
-    // Detail Card  
+    /// Detail Card  
     private var detailCardContent: some View {
         ZStack(alignment: .topTrailing) {
             RoundedRectangle(cornerRadius: DetailCardLayout.cardCornerRadius)
@@ -190,7 +193,7 @@ struct ExperimentDetailView: View {
         return "\(experiment.title). Experiment. Tags: \(tags).\(refPart)"
     }
 
-    /// Human-readable badge list for VoiceOver (same mapping as ExperimentCard).
+    /// Badge list for VoiceOver (same as ExperimentCard).
     private var detailCardTagsAccessibilityLabel: String {
         let fromBadges = bottomBadgeTypes.map { type in
             switch type {

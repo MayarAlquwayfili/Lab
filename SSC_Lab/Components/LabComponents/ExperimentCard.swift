@@ -9,25 +9,24 @@ import SwiftUI
 
 struct ExperimentCard: View {
     var title: String
-    /// SF Symbol name for the experiment (e.g. "star.fill"). Shown in the top-right badge.
     var icon: String = "star.fill"
     var hasLink: Bool = false
     var topBadges: [BadgeType] = []
     var bottomBadges: [BadgeType] = []
     var size: BadgeSize = .small
     var variant: BadgeVariant = .primary
-    /// When non-nil and > 1, show a small repeat badge (e.g. "x2", "x3"). First win is standard; we only show repeats.
+    /// When non-nil and > 1, show a small repeat badge (e.g. "x2", "x3").  
     var winCount: Int? = nil
 
     var body: some View {
         ZStack(alignment: .topLeading) {
-            // Background and stroke (behind content)
+
             RoundedRectangle(cornerRadius: 16)
                 .fill(Color.white)
             RoundedRectangle(cornerRadius: 16)
                 .stroke(Color.appSecondary, lineWidth: 1.5)
 
-            // Content: same element-specific padding as WinCard (badges near edges/corners)
+
             VStack(alignment: .leading, spacing: 0) {
                 HStack {
                     Spacer(minLength: 0)
@@ -63,7 +62,7 @@ struct ExperimentCard: View {
 
                 Spacer(minLength: 0)
 
-                // Bottom row: StatusGroup (like WinCard), Link badge in bottom-right corner (same position as WinCard’s status area)
+                /// Bottom row
                 HStack(alignment: .center, spacing: 0) {
                     StatusGroup(items: bottomBadges, size: size, variant: variant)
                         .frame(maxWidth: .infinity, alignment: .leading)
@@ -92,7 +91,7 @@ struct ExperimentCard: View {
         .accessibilityHint("Double tap to open experiment")
     }
 
-    /// Human-readable badge list for VoiceOver (e.g. "Indoor, Tools, 7D").
+
     private var experimentTagsAccessibilityLabel: String {
         let fromBadges = bottomBadges.map { type in
             switch type {
@@ -102,11 +101,11 @@ struct ExperimentCard: View {
             case .noTools: return "No tools"
             case .oneTime: return "One time"
             case .newInterest: return "New interest"
-            case .link: return "Link"
+            case .link: return "Reference link available"
             case .timeframe(let label): return TimeframeAccessibilityLabel.spoken(for: label)
             }
         }
-        let withLink = hasLink ? fromBadges + ["Link"] : fromBadges
+        let withLink = hasLink ? fromBadges + ["Reference link available"] : fromBadges
         return withLink.isEmpty ? "(none)" : withLink.joined(separator: ", ")
     }
 }

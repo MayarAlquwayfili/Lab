@@ -46,6 +46,7 @@ struct AppNoteEditor: View {
                     .padding(.top, AppSpacing.section)
                     .frame(maxWidth: .infinity, alignment: .topLeading)
                     .allowsHitTesting(false)
+                    .accessibilityHidden(true)
             }
 
             TextEditor(text: $text)
@@ -53,6 +54,7 @@ struct AppNoteEditor: View {
                 .foregroundStyle(Color.appFont)
                 .scrollContentBackground(.hidden)
                 .background(Color.clear)
+                .accessibilityLabel("Note")
                 .padding(AppSpacing.small)
                 .padding(.horizontal, 4)
                 .padding(.trailing, 28)
@@ -66,6 +68,7 @@ struct AppNoteEditor: View {
                 .padding(10)
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomTrailing)
                 .allowsHitTesting(false)
+                .accessibilityHidden(true)
         }
     }
 }

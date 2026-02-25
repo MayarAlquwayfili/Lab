@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-// Badge Type
+/// Badge Type
 enum BadgeType: Hashable {
     case indoor
     case outdoor
@@ -43,7 +43,7 @@ enum BadgeType: Hashable {
         return false
     }
 
-    /// Maps an icon string (e.g. from Win or filter) to the corresponding BadgeType. Single source of truth for Win/Collection badge display and filtering.
+    /// Maps an icon string to the corresponding BadgeType.
     static func from(iconName: String) -> BadgeType? {
         switch iconName {
         case Constants.Icons.indoor: return .indoor
@@ -61,7 +61,7 @@ enum BadgeType: Hashable {
     }
 }
 
-// Badge Size
+/// Badge Size
 enum BadgeSize {
     case large
     case small
@@ -82,7 +82,7 @@ enum BadgeSize {
 
 }
 
-// Badge Variant
+/// Badge Variant
 enum BadgeVariant: Hashable {
     case primary
     case secondary
@@ -95,7 +95,7 @@ enum BadgeVariant: Hashable {
     }
 }
 
-// StatusBadge View
+/// StatusBadge View
 struct StatusBadge: View {
     let type: BadgeType
     let size: BadgeSize
@@ -156,9 +156,18 @@ struct StatusBadge: View {
                     .resizable()
                     .scaledToFit()
             } else if let sfName = type.sfSymbolName {
-                Image(systemName: sfName)
-                    .font(.system(size: size.iconDimension, weight: .medium))
-                    .scaleEffect(type == .outdoor ? 0.7 : 1.0)
+                Group {
+                    if type == .link {
+                        Image(systemName: sfName)
+                            .font(.system(size: size.iconDimension, weight: .medium))
+                            .scaleEffect(type == .outdoor ? 0.7 : 1.0)
+                            .accessibilityLabel("Reference link available")
+                    } else {
+                        Image(systemName: sfName)
+                            .font(.system(size: size.iconDimension, weight: .medium))
+                            .scaleEffect(type == .outdoor ? 0.7 : 1.0)
+                    }
+                }
             } else {
                 EmptyView()
             }
@@ -188,7 +197,7 @@ struct StatusBadge: View {
     let timeframeLabels = ["1D", "7D","30D","+30D"]
     return ScrollView {
         LazyVStack(alignment: .leading, spacing: 28) {
-            // Icons section
+            /// Icons section
             VStack(alignment: .leading, spacing: AppSpacing.small) {
                 Text("Icons")
                     .font(.appSubHeadline)
@@ -212,7 +221,7 @@ struct StatusBadge: View {
                 }
             }
 
-            // Timeframes section
+            /// Timeframes section
             VStack(alignment: .leading, spacing: AppSpacing.small) {
                 Text("Timeframes")
                     .font(.appSubHeadline)

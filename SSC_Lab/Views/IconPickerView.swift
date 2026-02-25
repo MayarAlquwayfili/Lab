@@ -2,12 +2,13 @@
 //  IconPickerView.swift
 //  SSC_Lab
 //
-//  Curated SF Symbol picker sheet: General, Lab/Science, Food/Drink, Productivity.
+//   SF Symbol picker sheet 
 //
 
 import SwiftUI
+import UIKit
 
-/// Maps SF Symbol names to human-readable labels for VoiceOver. Shared by IconPickerView and AppExperimentInputCard.
+/// SF Symbol names labels for VoiceOver
 enum IconAccessibilityLabel {
     private static let map: [String: String] = [
         "target": "Target", "scope": "Scope", "heart.fill": "Heart", "star.fill": "Star", "flame.fill": "Flame",
@@ -33,7 +34,6 @@ enum IconAccessibilityLabel {
     }
 }
 
-/// Curated SF Symbols (~50–60) for experiments and wins. User taps to select and sheet dismisses.
 struct IconPickerView: View {
     @Binding var selectedIcon: String
     @Environment(\.dismiss) private var dismiss
@@ -104,6 +104,7 @@ struct IconPickerView: View {
         let isSelected = selectedIcon == systemName
         return Button {
             selectedIcon = systemName
+            UISelectionFeedbackGenerator().selectionChanged()
             dismiss()
         } label: {
             Image(systemName: systemName)

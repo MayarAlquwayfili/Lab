@@ -6,6 +6,7 @@
 
 import SwiftUI
 import SwiftData
+import UIKit
 
 struct FilterSheetView: View {
     let allExperiments: [Experiment]
@@ -63,7 +64,7 @@ struct FilterSheetView: View {
                 
                 ScrollView {
                     VStack(alignment: .leading, spacing: 0) {
-                        // Environment section
+                        /// Environment section
                         EmptyView().sectionHeader(
                             title: Constants.Setup.environmentLabel,
                             topSpacing: sectionSpacing,
@@ -77,7 +78,7 @@ struct FilterSheetView: View {
                         )
                         .padding(.horizontal, horizontalMargin)
                         
-                        // Tools section
+                        /// Tools section
                         EmptyView().sectionHeader(
                             title: Constants.Setup.toolsLabel,
                             topSpacing: sectionSpacing,
@@ -91,7 +92,7 @@ struct FilterSheetView: View {
                         )
                         .padding(.horizontal, horizontalMargin)
                         
-                        // Timeframe section
+                        /// Timeframe section
                         EmptyView().sectionHeader(
                             title: Constants.Setup.timeframeLabel,
                             topSpacing: sectionSpacing,
@@ -116,7 +117,7 @@ struct FilterSheetView: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .background(Color.appBg.ignoresSafeArea())
                 
-                // Floating bottom button
+                /// Floating bottom button
                 VStack(spacing: 0) {
                     Button {
                         filterCriteria = FilterCriteria(selectedBadges: selectedBadges)
@@ -142,7 +143,7 @@ struct FilterSheetView: View {
         }
     }
     
-    // Filter Capsule Row
+    /// Filter Capsule Row
     private func filterCapsuleRow(options: [(BadgeType, String, String?)]) -> some View {
         FlowLayout(spacing: capsuleSpacing) {
             ForEach(Array(options.enumerated()), id: \.offset) { _, option in
@@ -158,6 +159,7 @@ struct FilterSheetView: View {
                             selectedBadges.insert(badgeType)
                         }
                     }
+                    UISelectionFeedbackGenerator().selectionChanged()
                 } label: {
                     HStack(spacing: 6) {
                         if let iconName = iconName {
@@ -187,7 +189,7 @@ struct FilterSheetView: View {
     }
 }
 
-// MARK: - Collection Filter Sheet (Wins: categories + sort)
+/// Collection Filter Sheet     
 struct CollectionFilterSheetView: View {
     let allWins: [Win]
     @Binding var filterCriteria: FilterCriteria
@@ -247,7 +249,7 @@ struct CollectionFilterSheetView: View {
 
                 ScrollView {
                     VStack(alignment: .leading, spacing: 0) {
-                        // Environment
+                        /// Environment
                         EmptyView().sectionHeader(
                             title: Constants.Setup.environmentLabel,
                             topSpacing: sectionSpacing,
@@ -259,7 +261,7 @@ struct CollectionFilterSheetView: View {
                         ])
                         .padding(.horizontal, horizontalMargin)
 
-                        // Tools
+                        /// Tools
                         EmptyView().sectionHeader(
                             title: Constants.Setup.toolsLabel,
                             topSpacing: sectionSpacing,
@@ -271,7 +273,7 @@ struct CollectionFilterSheetView: View {
                         ])
                         .padding(.horizontal, horizontalMargin)
 
-                        // Timeframe
+                        /// Timeframe
                         EmptyView().sectionHeader(
                             title: Constants.Setup.timeframeLabel,
                             topSpacing: sectionSpacing,
@@ -285,7 +287,7 @@ struct CollectionFilterSheetView: View {
                         ])
                         .padding(.horizontal, horizontalMargin)
 
-                        // Sort by
+                        /// Sort by
                         EmptyView().sectionHeader(
                             title: "Sort by",
                             topSpacing: sectionSpacing,
@@ -339,6 +341,7 @@ struct CollectionFilterSheetView: View {
                         if isSelected { selectedBadges.remove(badgeType) }
                         else { selectedBadges.insert(badgeType) }
                     }
+                    UISelectionFeedbackGenerator().selectionChanged()
                 } label: {
                     HStack(spacing: 6) {
                         if let iconName = iconName {
@@ -366,6 +369,7 @@ struct CollectionFilterSheetView: View {
             ForEach(CollectionSortOrder.allCases, id: \.self) { order in
                 Button {
                     selectedSortOrder = order
+                    UISelectionFeedbackGenerator().selectionChanged()
                 } label: {
                     HStack {
                         Text(order.rawValue)
@@ -388,7 +392,7 @@ struct CollectionFilterSheetView: View {
     }
 }
 
-// Flow Layout
+/// Flow Layout
 struct FlowLayout: Layout {
     var spacing: CGFloat = 8
     

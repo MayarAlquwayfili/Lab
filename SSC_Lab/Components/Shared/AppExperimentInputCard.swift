@@ -38,6 +38,7 @@ struct AppExperimentInputCard: View {
                 Text("Choose Experiments Icon")
                     .font(.appBodySmall)
                     .foregroundStyle(Color.appSecondary)
+                    .accessibilityHidden(true)
                 Spacer(minLength: 0)
                 Button(action: onIconTap) {
                     Image(systemName: icon)
@@ -46,7 +47,7 @@ struct AppExperimentInputCard: View {
                         .frame(width: 22, height: 22)
                 }
                 .buttonStyle(.plain)
-                .accessibilityLabel("Icon, \(IconAccessibilityLabel.humanReadable(for: icon)). Double tap to change.")
+                .accessibilityLabel("Choose icon, currently \(IconAccessibilityLabel.humanReadable(for: icon))")
                 .accessibilityHint("Double tap to choose a different icon")
             }
             .padding()

@@ -2,15 +2,13 @@
 //  RootPopUpState.swift
 //  SSC_Lab
 //
-//  Unified root-level pop-up state so overlays (dimmed background + centered card)
-//  cover the tab bar. All root pop-ups use: centered card, scale+opacity transition,
-//  tap-outside to dismiss. Add Collection is the first; Quick Log and others can follow.
+//  Unified root-level pop-up state so overlays (dimmed background + centered card)cover the tab bar.
 //
 
 import SwiftUI
 import UIKit
 
-// MARK: - Add Collection pop-up data
+/// Add Collection pop-up data
 
 @Observable
 final class AddCollectionPopUpData: Equatable {
@@ -29,14 +27,14 @@ final class AddCollectionPopUpData: Equatable {
     }
 }
 
-// MARK: - Root pop-up type
+/// Root pop-up type
 
 enum RootPopUpType: Equatable {
     case none
     case addCollection(AddCollectionPopUpData)
 }
 
-// MARK: - Root pop-up state
+/// Root pop-up state
 
 @MainActor
 @Observable
@@ -57,7 +55,7 @@ final class RootPopUpState {
     }
 }
 
-// MARK: - Environment
+// Environment
 
 private struct RootPopUpStateKey: EnvironmentKey {
     nonisolated(unsafe) static let defaultValue: RootPopUpState? = nil
@@ -70,12 +68,13 @@ extension EnvironmentValues {
     }
 }
 
-// MARK: - Add Collection card (same design as before; used at root in MainTabView)
+// Add Collection card
 
 struct AddCollectionCardView: View {
     @Bindable var data: AddCollectionPopUpData
     var onDismiss: () -> Void
     @State private var hasAnnouncedDuplicateInNewCollection = false
+    @AccessibilityFocusState private var nameFieldFocused: Bool
 
     var body: some View {
         let trimmed = data.name.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -95,6 +94,7 @@ struct AddCollectionCardView: View {
                 .textFieldStyle(.roundedBorder)
                 .padding(.horizontal, AppSpacing.section)
                 .padding(.top, AppSpacing.section)
+                .accessibilityFocused($nameFieldFocused)
             if isDuplicate {
                 Text("A collection with this name already exists.")
                     .font(.appBodySmall)
@@ -124,6 +124,9 @@ struct AddCollectionCardView: View {
         .padding(.horizontal, AppSpacing.xLarge)
         .contentShape(Rectangle())
         .onTapGesture { }
+        .onAppear {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) { nameFieldFocused = true }
+        }
         .onChange(of: data.name) { _, _ in
             let t = data.name.trimmingCharacters(in: .whitespacesAndNewlines)
             let dup = !t.isEmpty && data.isDuplicate(data.name)

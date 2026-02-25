@@ -72,6 +72,7 @@ struct MainTabView: View {
     @Namespace private var animation
     @State private var selectedTab: Tab = .lab
     @AccessibilityFocusState private var randomizerFirstButtonFocused: Bool
+    @AccessibilityFocusState private var resultFocused: Bool
     @State private var hideTabBar = false
     @State private var globalToast = GlobalToastState()
     @State private var appPopUpState = AppPopUpState()
@@ -104,17 +105,18 @@ struct MainTabView: View {
             .environment(\.selectedTabBinding, $selectedTab)
             .environment(\.randomizerState, randomizerState)
             .environment(\.rootPopUpState, rootPopUpState)
+            .accessibilityHidden(rootPopUpState.hasActivePopUp || randomizerState.isPresented || appPopUpState.isPresented)
 
             if !hideTabBar {
                 customTabBar
             }
 
-            // Root pop-ups: dimmed background covers tab bar; centered card with scale+opacity
+            // Root pop-ups
             if rootPopUpState.hasActivePopUp {
                 rootPopUpOverlay
             }
 
-            // Randomizer overlay at root: covers entire screen including tab bar
+            // Randomizer overlay
             if randomizerState.isPresented {
                 randomizerOverlay
             }
@@ -181,18 +183,22 @@ struct MainTabView: View {
                     .multilineTextAlignment(.center)
                     .frame(maxWidth: .infinity)
                     .padding(.horizontal, AppSpacing.large)
+                    .accessibilityFocused($resultFocused)
+                    .accessibilityLabel(randomizerState.experiment.map { "Your next experiment is \($0.title)" } ?? "Next Experiment")
                 Text("Your Next Experiment")
                     .font(.appBodySmall)
                     .foregroundStyle(Color.appSecondaryDark)
                     .multilineTextAlignment(.center)
                     .padding(.top, AppSpacing.small)
                     .frame(maxWidth: .infinity)
+                    .accessibilityHidden(true)
                 HStack(spacing: AppSpacing.small) {
                     AppButton(title: "Spin Again", style: .secondary) {
                         randomizerState.onSpinAgain?()
                     }
                     .accessibilityFocused($randomizerFirstButtonFocused)
                     AppButton(title: "Let's Do It!", style: .primary) {
+                        UIImpactFeedbackGenerator(style: .medium).impactOccurred()
                         randomizerState.onLetsDoIt?()
                     }
                 }
@@ -222,9 +228,11 @@ struct MainTabView: View {
         .makeAccessibilityModal(if: true)
         .onChange(of: randomizerState.experiment?.id) { _, newId in
             if newId != nil, let exp = randomizerState.experiment {
-                UIAccessibility.post(notification: .announcement, argument: exp.title)
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
-                    randomizerFirstButtonFocused = true
+                UINotificationFeedbackGenerator().notificationOccurred(.success)
+                UIAccessibility.post(notification: .screenChanged, argument: nil)
+                UIAccessibility.post(notification: .screenChanged, argument: exp.title)
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.75) {
+                    resultFocused = true
                 }
             }
         }
@@ -270,6 +278,8 @@ struct MainTabView: View {
                 tabButton(tab)
             }
         }
+        .accessibilityHidden(randomizerState.isPresented || rootPopUpState.hasActivePopUp)
+        .sensoryFeedback(.selection, trigger: selectedTab)
         .padding(.vertical, AppSpacing.tight)
         .padding(.horizontal, AppSpacing.tight)
         .background(

@@ -7,6 +7,7 @@
 
 import SwiftUI
 import SwiftData
+import UIKit
 import os
 
 struct CollectionsGalleryView: View {
@@ -209,6 +210,7 @@ struct CollectionsGalleryView: View {
                                 collection.name = trimmed
                                 do {
                                     try modelContext.save()
+                                    UINotificationFeedbackGenerator().notificationOccurred(.success)
                                     globalToastState?.show("Collection Renamed")
                                     showRenamePopUp = false
                                     collectionToRename = nil
@@ -240,6 +242,7 @@ struct CollectionsGalleryView: View {
         modelContext.insert(collection)
         do {
             try modelContext.save()
+            UINotificationFeedbackGenerator().notificationOccurred(.success)
             globalToastState?.show("Collection Created")
         } catch {
             Logger().error("SwiftData save failed: \(String(describing: error))")
@@ -255,6 +258,7 @@ struct CollectionsGalleryView: View {
         }
         modelContext.delete(collection)
         try? modelContext.save()
+        UINotificationFeedbackGenerator().notificationOccurred(.warning)
         globalToastState?.show("Collection deleted", style: .destructive, undoTitle: "Undo", onUndo: {
             let newCol = WinCollection(name: name)
             modelContext.insert(newCol)

@@ -53,6 +53,7 @@ struct LabView: View {
                 AppHeader(title: dynamicLabTitle) {
                     HStack(spacing: 4) {
                         EmptyView().navButton(icon: "dice.fill") {
+                            UIImpactFeedbackGenerator(style: .medium).impactOccurred()
                             if filteredExperiments.count < 2 {
                                 showNeedMoreExperimentsPopUp = true
                             } else {
@@ -70,7 +71,7 @@ struct LabView: View {
                 Spacer()
                     .frame(height: AppSpacing.small)
 
-                // Tools: Search (leading), Filter (trailing)
+                /// Tools: Search (leading), Filter (trailing)
                 HStack(spacing: AppSpacing.small) {
                     CustomSearchBar(text: $searchText)
                         .frame(maxWidth: .infinity)
@@ -226,7 +227,7 @@ struct LabView: View {
         showRandomizer(experiment: pick, state: state)
     }
 
-    /// Presents the randomizer overlay at root (MainTabView). Recurses for "Spin Again".
+    /// Presents the randomizer overlay at root (MainTabView). 
     private func showRandomizer(experiment pick: Experiment, state: RandomizerState) {
         state.present(
             experiment: pick,
@@ -300,7 +301,7 @@ struct LabView: View {
         }
     }
 
-    /// Win count for repeat badge: match by activityID when available, else by title (backwards compat).
+    /// Win count for repeat badge 
     private func winCount(for experiment: Experiment) -> Int {
         if let id = experiment.activityID {
             return allWins.filter { $0.activityID == id }.count
@@ -310,6 +311,7 @@ struct LabView: View {
 
     private func performDelete(experiment: Experiment) {
         if let undo = viewModel.deleteExperiment(experiment: experiment, context: modelContext) {
+            UINotificationFeedbackGenerator().notificationOccurred(.warning)
             globalToastState?.show(
                 "Experiment Removed",
                 style: .destructive,
@@ -323,7 +325,7 @@ struct LabView: View {
 }
 
 
-// Search Bar
+/// Search Bar
 private struct CustomSearchBar: View {
     @Binding var text: String
     
@@ -332,11 +334,13 @@ private struct CustomSearchBar: View {
             Image(systemName: "magnifyingglass")
                 .font(.system(size: 16))
                 .foregroundStyle(Color.appSecondary)
+                .accessibilityHidden(true)
             
             TextField("Search experiments...", text: $text)
                 .font(.appBody)
                 .foregroundStyle(Color.appFont)
                 .tint(Color.appPrimary)
+                .accessibilityLabel("Search experiment")
             
             if !text.isEmpty {
                 Button(action: { text = "" }) {
@@ -356,8 +360,6 @@ private struct CustomSearchBar: View {
                         .stroke(Color.appSecondary.opacity(0.3), lineWidth: 1)
                 )
         )
-        .accessibilityElement(children: .contain)
-        .accessibilityLabel("Search experiments")
     }
 }
 

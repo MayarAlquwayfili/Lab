@@ -27,6 +27,7 @@ struct WinDetailView: View {
     @State private var showNewCollectionPopUp = false
     @State private var newCollectionName = ""
     @AccessibilityFocusState private var detailFocused: Bool
+    @AccessibilityFocusState private var newCollectionNameFocused: Bool
     @State private var hasAnnouncedDuplicateInNewCollection = false
 
     /// Carousel: all wins with the same activityID (only). If no activityID, single card.
@@ -120,6 +121,7 @@ struct WinDetailView: View {
                 .ignoresSafeArea(.all, edges: .bottom)
             }
             .ignoresSafeArea(.all, edges: .bottom)
+            .accessibilityHidden(showNewCollectionPopUp)
             .toolbar(.hidden, for: .tabBar)
             .toolbarBackground(.hidden, for: .tabBar)
             .persistentSystemOverlays(.hidden)
@@ -144,6 +146,7 @@ struct WinDetailView: View {
             }
             .onChange(of: showNewCollectionPopUp) { _, isShowing in
                 if !isShowing { newCollectionName = ""; hasAnnouncedDuplicateInNewCollection = false }
+                else { DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) { newCollectionNameFocused = true } }
             }
             .onChange(of: newCollectionName) { _, _ in
                 let dup = !newCollectionName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && collections.isDuplicateOrReservedCollectionName(newCollectionName)
@@ -199,6 +202,7 @@ struct WinDetailView: View {
                     } label: {
                         Label("New Collection...", systemImage: "plus")
                     }
+                    .accessibilityLabel("Add new collection")
                 } label: {
                     HStack(spacing: 4) {
                         Text(collectionDisplayName)
@@ -211,7 +215,7 @@ struct WinDetailView: View {
                 }
                 .buttonStyle(.plain)
                 .animation(.easeInOut(duration: 0.2), value: collectionDisplayName)
-                .accessibilityLabel("Collection, \(collectionDisplayName)")
+                .accessibilityLabel("Collection, currently \(collectionDisplayName)")
                 .accessibilityHint("Double tap to move this win to a different collection")
             }
             .frame(maxWidth: .infinity)
@@ -400,6 +404,7 @@ struct WinDetailView: View {
             case .stay(let newIndex):
                 carouselIndex = newIndex
             }
+            UINotificationFeedbackGenerator().notificationOccurred(.warning)
             globalToastState?.show("Win deleted", style: .destructive, undoTitle: "Undo", onUndo: undo)
         } else {
             globalToastState?.show("Failed to save changes. Please try again.", style: .destructive)
@@ -441,6 +446,7 @@ struct WinDetailView: View {
                     .textFieldStyle(.roundedBorder)
                     .padding(.horizontal, AppSpacing.block)
                     .padding(.top, AppSpacing.section)
+                    .accessibilityFocused($newCollectionNameFocused)
                 if isDuplicate {
                     Text("A collection with this name already exists.")
                         .font(.appBodySmall)

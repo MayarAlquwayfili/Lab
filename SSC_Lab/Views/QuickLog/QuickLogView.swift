@@ -29,6 +29,8 @@ struct QuickLogView: View {
     @State private var showDiscardAlert: Bool = false
     @State private var showIconPicker: Bool = false
     @State private var hasAnnouncedDuplicateInNewCollection = false
+    @AccessibilityFocusState private var winTitleFocused: Bool
+    @AccessibilityFocusState private var newCollectionNameFocused: Bool
     @State private var showMediaOptions: Bool = false
     @State private var showCamera: Bool = false
     @State private var showPhotoLibrarySheet: Bool = false
@@ -82,13 +84,20 @@ struct QuickLogView: View {
 
                         AppNoteEditor(text: $viewModel.quickNote, placeholder: "Add a note...")
                             .padding(.horizontal, horizontalMargin)
-                            .accessibilityLabel("Note")
+                            .accessibilityElement(children: .combine)
+                            .accessibilityLabel(viewModel.quickNote.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? "Note" : "Note. \(viewModel.quickNote)")
                             .accessibilityHint("Optional note for this win")
 
                         Spacer().frame(height: sectionSpacing)
                         Spacer().frame(height: AppSpacing.card)
 
-                        AppButton(title: isEditMode ? "Save" : "Log a Win", style: .primary) { performSave() }
+                        AppButton(title: isEditMode ? "Save" : "Log a Win", style: .primary) {
+                            if !canSave {
+                                UINotificationFeedbackGenerator().notificationOccurred(.warning)
+                                return
+                            }
+                            performSave()
+                        }
                             .disabled(!canSave)
                             .opacity(canSave ? 1 : 0.5)
                             .accessibilityHint(canSave ? "" : "Add a photo and a title to enable saving")
@@ -102,6 +111,7 @@ struct QuickLogView: View {
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .background(Color.appBg.ignoresSafeArea())
+            .accessibilityHidden(showDiscardAlert)
             .showPopUp(
                 isPresented: $showDiscardAlert,
                 title: Constants.Lab.discardAlertTitle,
@@ -156,13 +166,15 @@ struct QuickLogView: View {
             IconPickerView(selectedIcon: $viewModel.selectedIcon)
         }
         .onChange(of: viewModel.showNewCollectionPopUp) { _, isShowing in
-            if !isShowing { viewModel.newCollectionName = "" }
+            if !isShowing {
+                viewModel.newCollectionName = ""
+                hasAnnouncedDuplicateInNewCollection = false
+            } else {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) { newCollectionNameFocused = true }
+            }
         }
         .overlay {
             if viewModel.showNewCollectionPopUp { newCollectionPopUpOverlay }
-        }
-        .onChange(of: viewModel.showNewCollectionPopUp) { _, isShowing in
-            if !isShowing { hasAnnouncedDuplicateInNewCollection = false }
         }
         .onChange(of: viewModel.newCollectionName) { _, _ in
             let trimmed = viewModel.newCollectionName.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -176,7 +188,10 @@ struct QuickLogView: View {
                 hasAnnouncedDuplicateInNewCollection = false
             }
         }
-        .onAppear { viewModel.prefill(experiment: experimentToLog, win: winToEdit, initialCollection: initialCollection) }
+        .onAppear {
+            viewModel.prefill(experiment: experimentToLog, win: winToEdit, initialCollection: initialCollection)
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) { winTitleFocused = true }
+        }
     }
 
     // New Collection popup  
@@ -201,6 +216,7 @@ struct QuickLogView: View {
                     .textFieldStyle(.roundedBorder)
                     .padding(.horizontal, AppSpacing.block)
                     .padding(.top, AppSpacing.section)
+                    .accessibilityFocused($newCollectionNameFocused)
                 if isDuplicate {
                     Text("A collection with this name already exists.")
                         .font(.appBodySmall)
@@ -235,8 +251,12 @@ struct QuickLogView: View {
     private func performSave() {
         switch viewModel.save(context: modelContext, winToEdit: winToEdit, experimentToLog: experimentToLog) {
         case .savedAndDismiss:
+            UIImpactFeedbackGenerator(style: .heavy).impactOccurred()
+            UINotificationFeedbackGenerator().notificationOccurred(.success)
             dismiss()
         case .savedSwitchToWinsAndDismiss:
+            UIImpactFeedbackGenerator(style: .heavy).impactOccurred()
+            UINotificationFeedbackGenerator().notificationOccurred(.success)
             selectedTabBinding?.wrappedValue = .wins
             dismiss()
         case .saveFailed:
@@ -262,7 +282,13 @@ struct QuickLogView: View {
                         }
                         .buttonStyle(.plain)
                         Spacer(minLength: 0)
-                        Button(action: performSave) {
+                        Button(action: {
+                            if !canSave {
+                                UINotificationFeedbackGenerator().notificationOccurred(.warning)
+                                return
+                            }
+                            performSave()
+                        }) {
                             Image(systemName: "checkmark")
                                 .font(.system(size: 15, weight: .semibold))
                                 .foregroundStyle(.white)
@@ -299,6 +325,7 @@ struct QuickLogView: View {
                 .frame(maxWidth: .infinity)
                 .frame(minHeight: minRowHeight)
                 .accessibilityLabel("Win title, required")
+                .accessibilityFocused($winTitleFocused)
 
             Divider()
                 .background(Color.appSecondary)
@@ -317,14 +344,13 @@ struct QuickLogView: View {
                         .frame(width: 22, height: 22)
                 }
                 .buttonStyle(.plain)
-                .accessibilityLabel("Choose your icon")
+                .accessibilityLabel("Choose icon, currently \(IconAccessibilityLabel.humanReadable(for: viewModel.selectedIcon))")
                 .accessibilityHint("Double tap to choose your icon")
             }
             .padding(.horizontal, AppSpacing.card)
             .padding(.vertical, AppSpacing.small)
             .frame(maxWidth: .infinity)
             .frame(minHeight: minRowHeight)
-
             Divider()
                 .background(Color.appSecondary)
                 .padding(.horizontal, AppSpacing.card)
@@ -334,9 +360,11 @@ struct QuickLogView: View {
                     Image(systemName: "folder.fill")
                         .font(.system(size: 14, weight: .medium))
                         .foregroundStyle(Color.appSecondary)
+                        .accessibilityHidden(true)
                     Text("Collection")
                         .font(.appBodySmall)
                         .foregroundStyle(Color.appSecondary)
+                        .accessibilityHidden(true)
                 }
                 Spacer(minLength: 0)
                 Menu {
@@ -355,6 +383,7 @@ struct QuickLogView: View {
                     } label: {
                         Label("New Collection...", systemImage: "plus")
                     }
+                    .accessibilityLabel("Add new collection")
                 } label: {
                     HStack(spacing: 6) {
                         Text(viewModel.selectedCollection?.name ?? "All")
@@ -369,7 +398,7 @@ struct QuickLogView: View {
                     .background(Capsule().fill(Color.appShade02))
                 }
                 .buttonStyle(.plain)
-                .accessibilityLabel("Collection: \(viewModel.selectedCollection?.name ?? "All")")
+                .accessibilityLabel("Collection, currently \(viewModel.selectedCollection?.name ?? "All")")
                 .accessibilityHint("Double tap to move this win to a different collection")
             }
             .padding(.horizontal, AppSpacing.card)
@@ -390,7 +419,6 @@ struct QuickLogView: View {
                 imageMenuContainer {
                     ZStack(alignment: .topTrailing) {
                         imageView(uiImage: uiImage)
-                            .accessibilityHidden(true)
                         Color.clear
                             .frame(width: mediaBoxSize, height: mediaBoxSize)
                             .contentShape(Rectangle())
@@ -413,18 +441,6 @@ struct QuickLogView: View {
                         .buttonStyle(.plain)
                         .contentShape(Rectangle())
                         .padding(AppSpacing.small)
-                    }
-                    .accessibilityElement(children: .ignore)
-                    .accessibilityLabel("Photo added. Double tap to change or remove")
-                    .accessibilityAction {
-                        showMediaOptions = true
-                    }
-                    .accessibilityActions {
-                        Button("Remove photo") {
-                            DispatchQueue.main.async {
-                                withAnimation(.easeInOut(duration: 0.2)) { viewModel.selectedUIImage = nil }
-                            }
-                        }
                     }
                 }
             } else {
@@ -456,6 +472,7 @@ struct QuickLogView: View {
                 Text("+ Add Media")
                     .font(.appBodySmall)
                     .foregroundStyle(Color.appSecondary)
+                    .accessibilityHidden(true)
             }
             .frame(width: mediaBoxSize, height: mediaBoxSize)
             .contentShape(RoundedRectangle(cornerRadius: 12))

@@ -2,11 +2,12 @@
 //  SettingsView.swift
 //  SSC_Lab
 //
-//  Settings screen: Account, About, Danger Zone.
+//  Settings: Account, About, Danger Zone.
 //
 
 import SwiftUI
 import SwiftData
+import UIKit
 
 struct SettingsView: View {
     @Environment(\.globalToastState) private var globalToastState
@@ -40,119 +41,182 @@ struct SettingsView: View {
         .padding(.top, AppSpacing.tight)
     }
 
+    private let cardCornerRadius: CGFloat = 16
+    private let rowMinHeight: CGFloat = 44
+    private let rowPadding: CGFloat = 16
+    private let horizontalMargin: CGFloat = 16
+
     var body: some View {
         VStack(spacing: 0) {
             AppHeader(title: "SETTINGS")
 
-            Form {
-                Section(header: Text("ACCOUNT")) {
-                    HStack(alignment: .center, spacing: AppSpacing.small) {
-                        Text("Username")
-                            .font(.appBodySmall)
-                            .fontWeight(.regular)
-                            .foregroundStyle(Color.appFont)
-                        Spacer(minLength: 8)
-                        HStack(spacing: 6) {
-                            TextField("Your name", text: $userName)
-                                .font(.appBodySmall)
-                                .foregroundStyle(Color.appSecondary)
-                                .multilineTextAlignment(.trailing)
-                                .textFieldStyle(.plain)
-                            if userName.isEmpty {
-                                Image(systemName: "exclamationmark.circle.fill")
-                                    .font(.system(size: 16))
-                                    .foregroundStyle(Color.appAlert.opacity(0.9))
-                            }
-                        }
-                        .padding(.horizontal, 10)
-                        .padding(.vertical, 6)
-                        .background(
-                            RoundedRectangle(cornerRadius: 8)
-                                .fill(userName.isEmpty ? Color.appAlert.opacity(0.08) : Color.clear)
-                        )
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 8)
-                                .stroke(userName.isEmpty ? Color.appAlert.opacity(0.35) : Color.clear, lineWidth: 1)
-                        )
-                    }
-                }
-
-                Section(header: Text("ABOUT")) {
-                    HStack(alignment: .center, spacing: AppSpacing.small) {
-                        Text("Developed by Mayar Alquwayfili")
-                            .font(.appBodySmall)
-                            .fontWeight(.regular)
-                            .foregroundStyle(Color.appFont)
-                        Spacer(minLength: 8)
-                        HStack(spacing: AppSpacing.small) {
-                            Link(destination: URL(string: "https://github.com/MayarAlquwayfili")!) {
-                                Image(systemName: "link")
-                                    .font(.system(size: 16, weight: .medium))
-                                    .foregroundStyle(Color.appSecondary)
-                            }
-                            .buttonStyle(.plain)
-                            .accessibilityLabel("GitHub")
-                            Link(destination: URL(string: "https://www.linkedin.com/in/mayar-alquwayfili-2b8214331/")!) {
-                                Image(systemName: "globe")
-                                    .font(.system(size: 16, weight: .medium))
-                                    .foregroundStyle(Color.appSecondary)
-                            }
-                            .buttonStyle(.plain)
-                            .accessibilityLabel("LinkedIn")
-                        }
-                    }
-
-                    Button {
-                        showLabStorySheet = true
-                    } label: {
-                        HStack(alignment: .center, spacing: AppSpacing.small) {
-                            Text("The Lab Story")
-                                .font(.appBodySmall)
-                                .fontWeight(.regular)
-                                .foregroundStyle(Color.appFont)
-                            Spacer(minLength: 8)
-                            Image(systemName: "chevron.right")
-                                .font(.system(size: 14, weight: .medium))
-                                .foregroundStyle(Color.appSecondary)
-                        }
-                    }
-                    .buttonStyle(.plain)
-                }
-
-                Section(header: Text("DANGER ZONE"), footer: appFooter) {
-                    VStack(spacing: AppSpacing.tight) {
-                        Button {
-                            showResetAlert = true
-                        } label: {
-                            Text("Reset Lab")
-                                .font(.appSubHeadline)
-                                .foregroundStyle(.white)
-                                .frame(maxWidth: .infinity)
-                                .frame(height: 50)
-                                .background(Color.appAlert)
-                                .clipShape(RoundedRectangle(cornerRadius: 12))
-                        }
-                        .buttonStyle(.plain)
-                        .disabled(!hasDataToReset)
-                        .opacity(hasDataToReset ? 1 : 0.5)
-                        .accessibilityHidden(true)
-
-                        Text("Permanently deletes all experiments and wins. This action cannot be undone.")
-                            .font(.appMicro)
+            ScrollView {
+                VStack(alignment: .leading, spacing: 24) {
+                    /// ACCOUNT
+                    VStack(alignment: .leading, spacing: 8) {
+                       Spacer()
+                        Text("ACCOUNT")
+                            .font(.appSubHeadline)
                             .foregroundStyle(Color.appSecondary)
-                            .multilineTextAlignment(.center)
+
+                        VStack(spacing: 0) {
+                            HStack(alignment: .center, spacing: AppSpacing.small) {
+                                Text("Username")
+                                    .font(.appBodySmall)
+                                    .foregroundStyle(Color.appFont)
+                                Spacer(minLength: 8)
+                                HStack(spacing: 6) {
+                                    TextField("Your name", text: $userName)
+                                        .font(.appBodySmall)
+                                        .foregroundStyle(Color.appSecondary)
+                                        .multilineTextAlignment(.trailing)
+                                        .textFieldStyle(.plain)
+                                        .onSubmit {
+                                            globalToastState?.show("Username saved")
+                                        }
+                                    if userName.isEmpty {
+                                        Image(systemName: "exclamationmark.circle.fill")
+                                            .font(.system(size: 16))
+                                            .foregroundStyle(Color.appAlert.opacity(0.9))
+                                    }
+                                }
+                            }
+                            .padding(.horizontal, rowPadding)
                             .frame(maxWidth: .infinity)
-                            .accessibilityHidden(true)
+                            .frame(minHeight: rowMinHeight)
+                        }
+                        .background(userName.isEmpty ? Color.appAlert.opacity(0.08) : Color.white)
+                        .clipShape(RoundedRectangle(cornerRadius: cardCornerRadius))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: cardCornerRadius)
+                                .stroke(userName.isEmpty ? Color.appAlert.opacity(0.4) : Color.appSecondary, lineWidth: 1)
+                        )
+                        if userName.isEmpty {
+                            Text("Username cannot be empty")
+                                .font(.appMicro)
+                                .foregroundStyle(Color.appAlert)
+                                .padding(.leading, 12)
+                        }
                     }
-                    .accessibilityElement(children: .combine)
-                    .accessibilityLabel("Reset Lab. Permanently deletes all experiments and wins. This action cannot be undone.")
-                    .accessibilityAddTraits(.isButton)
-                    .accessibilityHint(hasDataToReset ? "Double tap to reset lab data" : "No data to reset")
-                    .accessibilityAction(.activate) { if hasDataToReset { showResetAlert = true } }
+
+                    /// ABOUT
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("ABOUT")
+                            .font(.appSubHeadline)
+                            .foregroundStyle(Color.appSecondary)
+
+                        VStack(spacing: 0) {
+                            HStack(alignment: .center, spacing: AppSpacing.small) {
+                                Text("Developed by Mayar Alquwayfili")
+                                    .font(.appBodySmall)
+                                    .fontWeight(.regular)
+                                    .foregroundStyle(Color.appFont)
+                                Spacer(minLength: 8)
+                                HStack(spacing: AppSpacing.small) {
+                                    Link(destination: URL(string: "https://github.com/MayarAlquwayfili")!) {
+                                        Image(systemName: "link")
+                                            .font(.system(size: 16, weight: .medium))
+                                            .foregroundStyle(Color.appSecondary)
+                                    }
+                                    .buttonStyle(.plain)
+                                    .accessibilityLabel("GitHub")
+                                    Link(destination: URL(string: "https://www.linkedin.com/in/mayar-alquwayfili-2b8214331/")!) {
+                                        Image(systemName: "globe")
+                                            .font(.system(size: 16, weight: .medium))
+                                            .foregroundStyle(Color.appSecondary)
+                                    }
+                                    .buttonStyle(.plain)
+                                    .accessibilityLabel("LinkedIn")
+                                }
+                            }
+                            .padding(.horizontal, rowPadding)
+                            .frame(maxWidth: .infinity)
+                            .frame(minHeight: rowMinHeight)
+                            Divider()
+                                .background(Color.appSecondary)
+                                .padding(.horizontal, rowPadding)
+                            Button {
+                                showLabStorySheet = true
+                            } label: {
+                                HStack(alignment: .center, spacing: AppSpacing.small) {
+                                    Text("The Lab Story")
+                                        .font(.appBodySmall)
+                                        .fontWeight(.regular)
+                                        .foregroundStyle(Color.appFont)
+                                    Spacer(minLength: 8)
+                                    Image(systemName: "chevron.right")
+                                        .font(.system(size: 14, weight: .medium))
+                                        .foregroundStyle(Color.appSecondary)
+                                }
+                            }
+                            .buttonStyle(.plain)
+                            .padding(.horizontal, rowPadding)
+                            .frame(maxWidth: .infinity)
+                            .frame(minHeight: rowMinHeight)
+                        }
+                        .background(Color.white)
+                        .clipShape(RoundedRectangle(cornerRadius: cardCornerRadius))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: cardCornerRadius)
+                                .stroke(Color.appSecondary, lineWidth: 1)
+                        )
+                    }
+
+                    /// DANGER ZONE
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("DANGER ZONE")
+                            .font(.appSubHeadline)
+                            .foregroundStyle(Color.appSecondary)
+
+                        VStack(spacing: AppSpacing.tight) {
+                            Button {
+                                showResetAlert = true
+                            } label: {
+                                Text("Reset Lab")
+                                    .font(.appSubHeadline)
+                                    .foregroundStyle(.white)
+                                    .frame(maxWidth: .infinity)
+                                    .frame(height: 50)
+                                    .background(Color.appAlert)
+                                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                            }
+                            .buttonStyle(.plain)
+                            .disabled(!hasDataToReset)
+                            .opacity(hasDataToReset ? 1 : 0.5)
+                            .accessibilityHidden(true)
+                            Text("Permanently deletes all experiments and wins. This action cannot be undone.")
+                                .font(.appMicro)
+                                .foregroundStyle(Color.appSecondary)
+                                .multilineTextAlignment(.center)
+                                .frame(maxWidth: .infinity)
+                                .accessibilityHidden(true)
+                        }
+                        .padding(rowPadding)
+                        .frame(maxWidth: .infinity)
+                        .background(Color.white)
+                        .clipShape(RoundedRectangle(cornerRadius: cardCornerRadius))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: cardCornerRadius)
+                                .stroke(Color.appSecondary, lineWidth: 1)
+                        )
+                        .accessibilityElement(children: .combine)
+                        .accessibilityLabel("Reset Lab. Permanently deletes all experiments and wins. This action cannot be undone.")
+                        .accessibilityAddTraits(.isButton)
+                        .accessibilityHint(hasDataToReset ? "Double tap to reset lab data" : "No data to reset")
+                        .accessibilityAction {
+                            if hasDataToReset {
+                                showResetAlert = true
+                            }
+                        }
+                    }
+
+                    appFooter
                 }
+                .padding(.horizontal, horizontalMargin)
+                .padding(.bottom, AppSpacing.large)
             }
-            .scrollContentBackground(.hidden)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .scrollIndicators(.hidden)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color.appBg)
@@ -176,6 +240,7 @@ struct SettingsView: View {
                     await MainActor.run {
                         resetLabData()
                         isResetting = false
+                        UINotificationFeedbackGenerator().notificationOccurred(.success)
                         globalToastState?.show("Lab Data Reset Successfully")
                     }
                 }
@@ -191,7 +256,7 @@ struct SettingsView: View {
         }
     }
     
-    // Resetting overlay
+    /// Resetting overlay
     private var resettingOverlay: some View {
         ZStack {
             Color.appBg.opacity(0.6)
@@ -211,7 +276,7 @@ struct SettingsView: View {
     }
 }
 
-// The Story Behind
+/// The Story Behind
 private struct LabStorySheet: View {
     @Environment(\.dismiss) private var dismiss
     private let horizontalMargin: CGFloat = 16
@@ -258,7 +323,7 @@ private struct LabStorySheet: View {
     }
 }
 
-// Reset Lab Data
+/   /// Reset Lab Data
 extension SettingsView {
     private func resetLabData() {
         // Delete all wins first (they may reference collections)

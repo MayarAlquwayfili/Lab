@@ -7,6 +7,7 @@
 
 import SwiftUI
 import SwiftData
+import UIKit
 
 struct AddNewExperimentView: View {
     var experimentToEdit: Experiment?
@@ -40,8 +41,12 @@ struct AddNewExperimentView: View {
                     .buttonStyle(.plain)
                 } rightContent: {
                     Button(action: {
-                        guard !viewModel.isTitleEmpty else { return }
+                        guard !viewModel.isTitleEmpty else {
+                            UINotificationFeedbackGenerator().notificationOccurred(.warning)
+                            return
+                        }
                         if viewModel.save(context: modelContext) {
+                            UINotificationFeedbackGenerator().notificationOccurred(.success)
                             globalToastState?.show("Experiment Saved")
                             dismiss()
                         } else {
@@ -64,12 +69,12 @@ struct AddNewExperimentView: View {
 
                 ScrollView {
                     VStack(alignment: .leading, spacing: 0) {
-                        // Section 1: Experiments
+                        /// Section 1: Experiments
                         EmptyView().sectionHeader(title: Constants.Lab.sectionExperiments, topSpacing: 10, horizontalPadding: horizontalMargin)
                         AppExperimentInputCard(title: $viewModel.title, icon: $viewModel.icon, onIconTap: { showIconPicker = true }, initialFocus: true)
                             .padding(.horizontal, horizontalMargin)
 
-                        // Section 2: Setup
+                        /// Section 2: Setup
                         EmptyView().sectionHeader(title: Constants.Lab.sectionSetup, horizontalPadding: horizontalMargin)
                         ExperimentSetupCard(
                             showLogType: false,
@@ -81,7 +86,7 @@ struct AddNewExperimentView: View {
                         .frame(maxWidth: .infinity, alignment: .center)
                         .padding(.horizontal, horizontalMargin)
 
-                        // Section 3: Reference
+                        /// Section 3: Reference
                         EmptyView().sectionHeader(title: Constants.Lab.sectionReference, horizontalPadding: horizontalMargin)
                         referenceField
                             .padding(.horizontal, horizontalMargin)
@@ -90,11 +95,16 @@ struct AddNewExperimentView: View {
                             .padding(.top, 30)
                             .padding(.horizontal, horizontalMargin)
 
-                        // Footer
+                        /// Footer
                         Spacer()
                             .frame(height: 30)
                         AppButton(title: viewModel.isEditing ? Constants.Lab.buttonSaveChanges : Constants.Lab.buttonAddToLab, style: .primary) {
+                            guard !viewModel.isTitleEmpty else {
+                                UINotificationFeedbackGenerator().notificationOccurred(.warning)
+                                return
+                            }
                             if viewModel.save(context: modelContext) {
+                                UINotificationFeedbackGenerator().notificationOccurred(.success)
                                 globalToastState?.show("Experiment Saved")
                                 dismiss()
                             } else {
@@ -113,6 +123,7 @@ struct AddNewExperimentView: View {
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .background(Color.appBg.ignoresSafeArea())
+            .accessibilityHidden(showDiscardAlert)
             .navigationBarHidden(true)
             .showPopUp(
                 isPresented: $showDiscardAlert,

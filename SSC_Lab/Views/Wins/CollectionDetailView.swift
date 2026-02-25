@@ -215,6 +215,7 @@ struct CollectionDetailView: View {
     /// Deletes the win and shows "Win deleted" toast with Undo, or error toast on save failure.
     private func deleteWinAndShowToast(_ win: Win) {
         if let undo = viewModel.deleteWin(win: win, context: modelContext) {
+            UINotificationFeedbackGenerator().notificationOccurred(.warning)
             globalToastState?.show("Win deleted", style: .destructive, undoTitle: "Undo", onUndo: undo)
         } else {
             globalToastState?.show("Failed to save changes. Please try again.", style: .destructive)
