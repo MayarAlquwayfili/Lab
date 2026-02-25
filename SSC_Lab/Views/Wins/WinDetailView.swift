@@ -82,7 +82,7 @@ struct WinDetailView: View {
 
                     if winsForCarousel.count > 1 {
                         pageIndicator
-                            .padding(.top, DetailCardLayout.spacingCardToContent)
+                            .padding(.top, 8)
                     }
 
                     Text(displayedWin.date.formatted(date: .abbreviated, time: .omitted))
@@ -166,7 +166,7 @@ struct WinDetailView: View {
         .ignoresSafeArea(.all, edges: .bottom)
     }
 
-    // Header
+    // Header: back | centered title + collection name (4px) | Edit. No badges.
     private var winDetailHeader: some View {
         HStack(alignment: .center, spacing: 0) {
             Button { dismiss() } label: {
@@ -186,37 +186,9 @@ struct WinDetailView: View {
                     .lineLimit(1)
                     .truncationMode(.tail)
                     .multilineTextAlignment(.center)
-                Menu {
-                    Button("All") {
-                        moveToCollection(nil)
-                    }
-                    ForEach(collections) { collection in
-                        Button(collection.name) {
-                            moveToCollection(collection)
-                        }
-                    }
-                    Divider()
-                    Button {
-                        newCollectionName = ""
-                        showNewCollectionPopUp = true
-                    } label: {
-                        Label("New Collection...", systemImage: "plus")
-                    }
-                    .accessibilityLabel("Add new collection")
-                } label: {
-                    HStack(spacing: 4) {
-                        Text(collectionDisplayName)
-                            .font(.appCaption)
-                            .foregroundStyle(Color.appSecondary)
-                        Image(systemName: "chevron.down")
-                            .font(.system(size: 10, weight: .bold))
-                            .foregroundStyle(Color.appSecondary.opacity(0.5))
-                    }
-                }
-                .buttonStyle(.plain)
-                .animation(.easeInOut(duration: 0.2), value: collectionDisplayName)
-                .accessibilityLabel("Collection, currently \(collectionDisplayName)")
-                .accessibilityHint("Double tap to move this win to a different collection")
+                Text(collectionDisplayName)
+                    .font(.appCaption)
+                    .foregroundStyle(Color.appSecondary)
             }
             .frame(maxWidth: .infinity)
 
@@ -320,14 +292,17 @@ struct WinDetailView: View {
                         StatusBadge(type: type, size: .large, variant: .primary)
                     }
                     Spacer(minLength: 0)
-                    if let logType = logTypeBadgeType(for: w) {
-                        StatusBadge(type: logType, size: .large, variant: .primary)
-                    }
                 }
                 .padding(.horizontal, padding)
                 .padding(.bottom, padding)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
+        }
+        .overlay(alignment: .bottomTrailing) {
+            if let logType = logTypeBadgeType(for: w) {
+                StatusBadge(type: logType, size: .large, variant: .primary)
+                    .padding(padding)
+            }
         }
         .overlay(alignment: .topLeading) {
             if winsForCarousel.count > 1 {

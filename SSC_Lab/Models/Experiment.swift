@@ -20,6 +20,7 @@ final class Experiment {
     var labNotes: String
     var isActive: Bool        /// Currently active experiment (only one at a time)
     var isCompleted: Bool     /// true when a Win was logged from this experiment (graduated; hidden from Lab)
+    var activatedAt: Date?    /// When this experiment was last set active (nil when inactive)
     var createdAt: Date       /// For sorting (newest first)
     /// Stable id for linking wins to this experiment (repeat counter, "Do it again"). New experiments get a UUID; existing may be nil.
     var activityID: UUID?
@@ -35,6 +36,7 @@ final class Experiment {
         labNotes: String = "",
         isActive: Bool = false,
         isCompleted: Bool = false,
+        activatedAt: Date? = nil,
         createdAt: Date = .now,
         activityID: UUID? = nil
     ) {
@@ -48,6 +50,7 @@ final class Experiment {
         self.labNotes = labNotes
         self.isActive = isActive
         self.isCompleted = isCompleted
+        self.activatedAt = activatedAt
         self.createdAt = createdAt
         self.activityID = activityID ?? UUID()
     }
@@ -65,6 +68,7 @@ final class Experiment {
             labNotes: experiment.labNotes,
             isActive: experiment.isActive,
             isCompleted: experiment.isCompleted,
+            activatedAt: experiment.activatedAt,
             createdAt: experiment.createdAt,
             activityID: experiment.activityID
         )

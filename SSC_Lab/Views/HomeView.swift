@@ -1,10 +1,3 @@
-//
-//  HomeView.swift
-//  SSC_Lab
-//
-//  Home tab
-//
-
 import SwiftUI
 import SwiftData
 
@@ -12,69 +5,56 @@ struct HomeView: View {
     @Environment(\.globalToastState) private var globalToastState
     @Environment(\.hideTabBarBinding) private var hideTabBarBinding
     @Environment(\.selectedTabBinding) private var selectedTabBinding
+    @Environment(\.randomizerState) private var randomizerState
+    @Environment(\.modelContext) private var modelContext
+    
     @Query(sort: \Experiment.createdAt, order: .reverse) private var experiments: [Experiment]
     @Query(sort: \Win.date, order: .reverse) private var allWins: [Win]
-    @Environment(\.modelContext) private var modelContext
+    
     @State private var viewModel = LabViewModel()
     @State private var showQuickLog = false
-    /// When set, Quick Log sheet pre-fills from this experiment (e.g. "Log a Win" on active card). Nil = spontaneous Quick Log.
     @State private var quickLogExperiment: Experiment?
-    @State private var showRandomPickSheet = false
-    @State private var randomPickedExperiment: Experiment?
     @State private var showLabEmptyAlert = false
 
     private var activeExperiment: Experiment? {
         experiments.first { $0.isActive }
     }
 
-    /// Experiments in the Lab that are not active (candidates for Random Pick).
     private var inactiveExperiments: [Experiment] {
         experiments.filter { !$0.isActive && !$0.isCompleted }
     }
 
-    private var totalWinsCount: Int { allWins.count }
-    private var inactiveCount: Int { inactiveExperiments.count }
-
-    private let horizontalMargin: CGFloat = 16
-    private let cardCornerRadius: CGFloat = 16
-    private let cardPadding: CGFloat = 16
-    private let buttonHeight: CGFloat = 44
-    private let buttonSpacing: CGFloat = 12
-    private let sectionSpacing: CGFloat = 24
-    private let gridSpacing: CGFloat = 12
+    private var lastWin: Win? { allWins.first }
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: sectionSpacing) {
-                // Section 1: Active Hero (top banner)
-                section1ActiveHero
-                    .padding(.horizontal, horizontalMargin)
-                    .padding(.top, AppSpacing.block)
-
-                // Section 2: Action Grid (2 columns)
-                section2ActionGrid
-                    .padding(.horizontal, horizontalMargin)
-
-                // Section 3: Progress Summary (bottom strip)
-                section3ProgressSummary
-                    .padding(.horizontal, horizontalMargin)
-                    .padding(.bottom, AppSpacing.large)
+        VStack(alignment: .leading, spacing: 0) {
+            // FIXED HEADER: Perfectly leading-aligned
+            AppHeader(title: "HOME") {
+                pillStatus
             }
+            .padding(.horizontal, AppSpacing.block)
+
+            ScrollView {
+                VStack(alignment: .leading, spacing: AppSpacing.block) {
+                    heroSection
+                    actionGrid
+                    Spacer(minLength: AppSpacing.block)
+                }
+                .padding(.horizontal, AppSpacing.block)
+                .padding(.top, AppSpacing.small)
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+
+            lastWinRow
+                .padding(.horizontal, AppSpacing.block)
+                .padding(.bottom, AppSpacing.large)
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color.appBg)
-        .onAppear { hideTabBarBinding?.wrappedValue = false }
-        .animation(.spring(response: 0.4, dampingFraction: 0.8), value: activeExperiment?.id)
+        .onAppear {
+            hideTabBarBinding?.wrappedValue = false
+        }
         .sheet(isPresented: $showQuickLog) {
             QuickLogView(experimentToLog: quickLogExperiment)
-        }
-        .onChange(of: showQuickLog) { _, isShowing in
-            if !isShowing { quickLogExperiment = nil }
-        }
-        .sheet(isPresented: $showRandomPickSheet) {
-            if let exp = randomPickedExperiment {
-                randomPickSheet(experiment: exp)
-            }
         }
         .alert("Lab is empty", isPresented: $showLabEmptyAlert) {
             Button("OK", role: .cancel) {}
@@ -83,337 +63,197 @@ struct HomeView: View {
         }
     }
 
-    // MARK: - Section 1: Active Hero
+    // MARK: - Components
 
-    private var section1ActiveHero: some View {
-        Group {
-            if let active = activeExperiment {
-                activeExperimentCard(experiment: active, winCount: winCount(for: active))
-            } else {
-                emptyStateHeroCard
-            }
-        }
-        .transition(.move(edge: .top).combined(with: .opacity))
+    private var pillStatus: some View {
+        Text(activeExperiment != nil ? Constants.Strings.activeStatus : "STANDBY")
+            .font(.appMicro)
+            .fontWeight(.semibold)
+            .foregroundStyle(activeExperiment != nil ? Color.appPrimary : Color.appSecondary)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 6)
+            .background(Capsule().fill(activeExperiment != nil ? Color.appPrimary.opacity(0.15) : Color.appSecondary.opacity(0.15)))
     }
 
-    private var emptyStateHeroCard: some View {
-        VStack(alignment: .leading, spacing: AppSpacing.card) {
-            Text("Ready for a new experiment? Jump to the Lab!")
-                .font(.appSubHeadline)
-                .foregroundStyle(Color.appFont)
-                .multilineTextAlignment(.leading)
-                .frame(maxWidth: .infinity, alignment: .leading)
+    private var heroSection: some View {
+        Group {
+            if let active = activeExperiment {
+                HStack(alignment: .center, spacing: AppSpacing.card) {
+                    heroCard(experiment: active)
+                    sideButtons(experiment: active)
+                }
+                .frame(height: 140)
+            } else {
+                emptyHeroCard
+            }
+        }
+    }
+
+    private func heroCard(experiment: Experiment) -> some View {
+        ZStack(alignment: .topLeading) {
+            // Background
+            Color.white
+
+            // Center: Title (Single line, Larger)
+            Text(experiment.title)
+                .font(.appHero)
+                .foregroundStyle(Color.appPrimary)
+                .lineLimit(1)
+                .truncationMode(.tail)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, 40) // Margin to not hit icons
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+
+            // Top-Leading: Simple Label
+            Text("CURRENT EXPERIMENT")
+                .font(.appMicro)
+                .foregroundStyle(Color.appSecondary)
+                .padding(16)
+
+            // Top-Trailing: Minimalist Icon Badge
+            Circle()
+                .fill(Color.appPrimary)
+                .frame(width: 24, height: 24)
+                .overlay(
+                    Image(systemName: experiment.icon)
+                        .font(.system(size: 12))
+                        .foregroundStyle(.white)
+                )
+                .padding(16)
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
+
+            // Bottom-Trailing: Simple Time Ago (Clean & Subtle)
+            Text(experiment.activatedAt?.timeAgoString ?? experiment.createdAt.timeAgoString)
+                .font(.appMicro)
+                .foregroundStyle(Color.appSecondary)
+                .padding(16)
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomTrailing)
+        }
+        .clipShape(RoundedRectangle(cornerRadius: 16))
+        .overlay(RoundedRectangle(cornerRadius: 16).stroke(Color.appSecondary, lineWidth: 1.5))
+    }
+
+    private func sideButtons(experiment: Experiment) -> some View {
+        VStack(spacing: 8) {
+            Button {
+                quickLogExperiment = experiment
+                showQuickLog = true
+            } label: {
+                Image(systemName: "checkmark")
+                    .font(.system(size: 20, weight: .bold))
+                    .foregroundStyle(Color.appPrimary)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .background(Color.white)
+                    .clipShape(RoundedRectangle(cornerRadius: 16))
+                    .overlay(RoundedRectangle(cornerRadius: 16).stroke(Color.appSecondary, lineWidth: 1.5))
+            }
+            .buttonStyle(.plain)
 
             Button {
-                selectedTabBinding?.wrappedValue = .lab
-            } label: {
-                HStack(spacing: AppSpacing.tight) {
-                    Image(systemName: "viewfinder.circle.fill")
-                        .font(.system(size: 18, weight: .semibold))
-                    Text("Go to Lab")
-                        .font(.appSubHeadline)
+                viewModel.toggleActive(experiment: experiment, allExperiments: experiments, context: modelContext) { previous in
+                    globalToastState?.showActivationToast(previous: previous, undoRevert: { p in
+                        viewModel.toggleActive(experiment: p, allExperiments: experiments, context: modelContext, onActivated: nil)
+                    })
                 }
-                .foregroundStyle(.white)
-                .frame(maxWidth: .infinity)
-                .frame(height: buttonHeight)
-                .background(Color.appPrimary)
-                .clipShape(RoundedRectangle(cornerRadius: 12))
+            } label: {
+                Image(systemName: "xmark")
+                    .font(.system(size: 20, weight: .bold))
+                    .foregroundStyle(Color.appAlert)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .background(Color.white)
+                    .clipShape(RoundedRectangle(cornerRadius: 16))
+                    .overlay(RoundedRectangle(cornerRadius: 16).stroke(Color.appAlert.opacity(0.3), lineWidth: 1.5))
             }
             .buttonStyle(.plain)
         }
-        .padding(cardPadding)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color.white)
-        .clipShape(RoundedRectangle(cornerRadius: cardCornerRadius))
-        .overlay(
-            RoundedRectangle(cornerRadius: cardCornerRadius)
-                .stroke(Color.appSecondary, lineWidth: 1.5)
-        )
+        .frame(width: 60)
     }
 
-    // MARK: - Section 2: Action Grid
-
-    private var section2ActionGrid: some View {
-        HStack(spacing: gridSpacing) {
-            // Left: Quick Log
-            actionGridCard(
-                icon: "bolt.fill",
-                title: "Quick Log",
-                action: {
-                    quickLogExperiment = nil
-                    showQuickLog = true
-                }
-            )
-
-            // Right: Random Pick
-            actionGridCard(
-                icon: "shuffle",
-                title: "Random Pick",
-                action: performRandomPick
-            )
-        }
-    }
-
-    private func actionGridCard(icon: String, title: String, action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            VStack(spacing: AppSpacing.small) {
-                Image(systemName: icon)
-                    .font(.system(size: 28, weight: .medium))
-                    .foregroundStyle(Color.appPrimary)
-                Text(title)
+    private var emptyHeroCard: some View {
+        Button { selectedTabBinding?.wrappedValue = .lab } label: {
+            VStack(spacing: 8) {
+                Text("Ready for a new experiment?\nJump to the Lab!")
                     .font(.appSubHeadline)
                     .foregroundStyle(Color.appFont)
                     .multilineTextAlignment(.center)
+                Image(systemName: "viewfinder.circle.fill")
+                    .font(.system(size: 28))
+                    .foregroundStyle(Color.appPrimary)
             }
             .frame(maxWidth: .infinity)
-            .frame(minHeight: 120)
-            .padding(cardPadding)
+            .frame(height: 140)
             .background(Color.white)
-            .clipShape(RoundedRectangle(cornerRadius: cardCornerRadius))
-            .overlay(
-                RoundedRectangle(cornerRadius: cardCornerRadius)
-                    .stroke(Color.appSecondary, lineWidth: 1.5)
-            )
+            .clipShape(RoundedRectangle(cornerRadius: 16))
+            .overlay(RoundedRectangle(cornerRadius: 16).stroke(Color.appSecondary, lineWidth: 1.5))
         }
         .buttonStyle(.plain)
     }
 
+    private var actionGrid: some View {
+        HStack(spacing: AppSpacing.card) {
+            Button(action: performRandomPick) {
+                HStack(spacing: 12) {
+                    Image(systemName: "dice.fill")
+                        .font(.system(size: 32))
+                        .foregroundStyle(Color.appPrimary)
+                    Text("SPIN")
+                        .font(.appHeroSmall)
+                        .foregroundStyle(Color.appFont)
+                }
+                .frame(maxWidth: .infinity)
+                .frame(height: 120) // Balanced height
+                .background(Color.white)
+                .clipShape(RoundedRectangle(cornerRadius: 16))
+                .overlay(RoundedRectangle(cornerRadius: 16).stroke(Color.appSecondary, lineWidth: 1.5))
+            }
+            .buttonStyle(.plain)
+
+            Button {
+                quickLogExperiment = nil
+                showQuickLog = true
+            } label: {
+                HStack(spacing: 12) {
+                    Image(systemName: "plus")
+                        .font(.system(size: 24, weight: .bold))
+                        .foregroundStyle(Color.appPrimary)
+                    Text("Log a Win")
+                        .font(.appHeroSmall)
+                        .foregroundStyle(Color.appFont)
+                }
+                .frame(maxWidth: .infinity)
+                .frame(height: 120) // Balanced height
+                .background(Color.white)
+                .clipShape(RoundedRectangle(cornerRadius: 16))
+                .overlay(RoundedRectangle(cornerRadius: 16).stroke(Color.appSecondary, lineWidth: 1.5))
+            }
+            .buttonStyle(.plain)
+        }
+    }
+
     private func performRandomPick() {
-        if inactiveExperiments.isEmpty {
+        guard inactiveExperiments.count >= 2,
+              let state = randomizerState,
+              let pick = inactiveExperiments.randomElement() else {
             showLabEmptyAlert = true
             return
         }
-        randomPickedExperiment = viewModel.randomize(from: inactiveExperiments)
-        showRandomPickSheet = true
-    }
-
-    private func randomPickSheet(experiment: Experiment) -> some View {
-        VStack(spacing: AppSpacing.section) {
-            Text("Random Pick")
-                .font(.appHeroSmall)
-                .foregroundStyle(Color.appFont)
-                .padding(.top, AppSpacing.block)
-
-            VStack(alignment: .leading, spacing: AppSpacing.tight) {
-                Text(experiment.title)
-                    .font(.appCard)
-                    .foregroundStyle(Color.appPrimary)
-                    .lineLimit(2)
-                    .minimumScaleFactor(0.7)
-                HStack(spacing: 4) {
-                    Image(systemName: experiment.icon)
-                        .font(.system(size: 14))
-                    Text(experiment.timeframe)
-                        .font(.appMicro)
-                }
-                .foregroundStyle(Color.appSecondary)
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(cardPadding)
-            .background(Color.appShade02)
-            .clipShape(RoundedRectangle(cornerRadius: 12))
-            .padding(.horizontal, horizontalMargin)
-
-            HStack(spacing: AppSpacing.small) {
-                Button {
-                    viewModel.toggleActive(experiment: experiment, allExperiments: experiments, context: modelContext) { previous in
-                        globalToastState?.showActivationToast(previous: previous, undoRevert: { p in
-                            viewModel.toggleActive(experiment: p, allExperiments: experiments, context: modelContext, onActivated: nil)
-                        })
-                    }
-                    showRandomPickSheet = false
-                    randomPickedExperiment = nil
-                } label: {
-                    Text("Start Now")
-                        .font(.appSubHeadline)
-                        .foregroundStyle(.white)
-                        .frame(maxWidth: .infinity)
-                        .frame(height: buttonHeight)
-                        .background(Color.appPrimary)
-                        .clipShape(RoundedRectangle(cornerRadius: 12))
-                }
-                .buttonStyle(.plain)
-
-                Button {
-                    let others = inactiveExperiments.filter { $0.id != experiment.id }
-                    randomPickedExperiment = viewModel.randomize(from: others)
-                    if randomPickedExperiment == nil {
-                        showRandomPickSheet = false
-                    }
-                } label: {
-                    Text("Try Another")
-                        .font(.appSubHeadline)
-                        .foregroundStyle(Color.appSecondaryDark)
-                        .frame(maxWidth: .infinity)
-                        .frame(height: buttonHeight)
-                        .background(Color.appShade02)
-                        .clipShape(RoundedRectangle(cornerRadius: 12))
-                }
-                .buttonStyle(.plain)
-            }
-            .padding(.horizontal, horizontalMargin)
-            .padding(.bottom, AppSpacing.large)
-        }
-        .frame(maxWidth: .infinity)
-        .background(Color.appBg)
-    }
-
-    // MARK: - Section 3: Progress Summary
-
-    private var section3ProgressSummary: some View {
-        HStack(spacing: 0) {
-            progressStat(label: "Total Wins", value: totalWinsCount)
-            Rectangle()
-                .fill(Color.appSecondary.opacity(0.3))
-                .frame(width: 1)
-                .padding(.vertical, AppSpacing.tight)
-            progressStat(label: "Ideas Waiting", value: inactiveCount)
-        }
-        .padding(cardPadding)
-        .frame(maxWidth: .infinity)
-        .background(Color.white)
-        .clipShape(RoundedRectangle(cornerRadius: cardCornerRadius))
-        .overlay(
-            RoundedRectangle(cornerRadius: cardCornerRadius)
-                .stroke(Color.appSecondary, lineWidth: 1.5)
+        state.present(
+            experiment: pick,
+            onLetsDoIt: {
+                state.dismiss()
+                viewModel.toggleActive(experiment: pick, allExperiments: experiments, context: modelContext, onActivated: nil)
+            },
+            onSpinAgain: { performRandomPick() }
         )
     }
 
-    private func progressStat(label: String, value: Int) -> some View {
-        VStack(spacing: 4) {
-            Text("\(value)")
-                .font(.appTimeframeL_High)
-                .foregroundStyle(Color.appPrimary)
-            Text(label)
-                .font(.appMicro)
-                .foregroundStyle(Color.appSecondary)
-        }
-        .frame(maxWidth: .infinity)
-    }
-
-    // MARK: - Helpers
-
-    private func winCount(for experiment: Experiment) -> Int {
-        if let id = experiment.activityID {
-            return allWins.filter { $0.activityID == id }.count
-        }
-        return allWins.filter { $0.title == experiment.title }.count
-    }
-
-    private func activeExperimentCard(experiment: Experiment, winCount: Int = 0) -> some View {
-        ZStack(alignment: .topTrailing) {
-            VStack(alignment: .leading, spacing: 0) {
-                HStack(alignment: .center, spacing: AppSpacing.small) {
-                    VStack(alignment: .leading, spacing: AppSpacing.tight) {
-                        Text(experiment.title)
-                            .font(.appCard)
-                            .foregroundStyle(Color.appPrimary)
-                            .lineLimit(2)
-                            .minimumScaleFactor(0.7)
-
-                        HStack(spacing: 4) {
-                            Circle()
-                                .fill(Color.appPrimary)
-                                .frame(width: 8, height: 8)
-                            Text(Constants.Strings.activeStatus)
-                                .font(.appMicro)
-                                .foregroundStyle(Color.appPrimary)
-                        }
-                    }
-
-                    Spacer(minLength: 0)
-                }
-                .padding(cardPadding)
-
-                Divider()
-                    .background(Color.appSecondary.opacity(0.3))
-
-                HStack(spacing: buttonSpacing) {
-                    Button {
-                        quickLogExperiment = experiment
-                        showQuickLog = true
-                    } label: {
-                        HStack(spacing: 6) {
-                            Image(systemName: "checkmark.circle.fill")
-                                .font(.system(size: 16, weight: .semibold))
-                            Text(Constants.Home.buttonLogWin)
-                                .font(.appSubHeadline)
-                        }
-                        .foregroundStyle(.white)
-                        .frame(maxWidth: .infinity)
-                        .frame(height: buttonHeight)
-                        .background(Color.appPrimary)
-                        .clipShape(RoundedRectangle(cornerRadius: 12))
-                    }
-                    .buttonStyle(.plain)
-
-                    Button {
-                        viewModel.toggleActive(experiment: experiment, allExperiments: experiments, context: modelContext) { previous in
-                            globalToastState?.showActivationToast(previous: previous, undoRevert: { p in
-                                viewModel.toggleActive(experiment: p, allExperiments: experiments, context: modelContext, onActivated: nil)
-                            })
-                        }
-                    } label: {
-                        HStack(spacing: 6) {
-                            Image(systemName: "xmark.circle.fill")
-                                .font(.system(size: 16, weight: .semibold))
-                            Text(Constants.Home.buttonStop)
-                                .font(.appSubHeadline)
-                        }
-                        .foregroundStyle(Color.appSecondaryDark)
-                        .frame(maxWidth: .infinity)
-                        .frame(height: buttonHeight)
-                        .background(Color.appShade02)
-                        .clipShape(RoundedRectangle(cornerRadius: 12))
-                    }
-                    .buttonStyle(.plain)
-                }
-                .padding(cardPadding)
-            }
-            .background(Color.white)
-            .clipShape(RoundedRectangle(cornerRadius: cardCornerRadius))
-            .overlay(
-                RoundedRectangle(cornerRadius: cardCornerRadius)
-                    .stroke(Color.appSecondary, lineWidth: 1.5)
-            )
-
-            if winCount > 1 {
-                Text("x\(winCount)")
-                    .font(.appMicro)
+    private var lastWinRow: some View {
+        HStack {
+            if let win = lastWin {
+                Text("Last Win: \(win.title) • \(win.date.timeAgoString)")
+                    .font(.appBodySmall)
                     .foregroundStyle(Color.appSecondary)
-                    .padding(.horizontal, 6)
-                    .padding(.vertical, 4)
-                    .background(Capsule().fill(Color.appBg.opacity(0.9)))
-                    .padding(AppSpacing.tight)
             }
         }
     }
-}
-
-#Preview("HomeView – with active experiment") {
-    do {
-        let config = ModelConfiguration(isStoredInMemoryOnly: true)
-        let container = try ModelContainer(for: Experiment.self, configurations: config)
-
-        let pottery = Experiment(
-            title: "POTTERY",
-            icon: "hands.and.sparkles.fill",
-            environment: "indoor",
-            tools: "required",
-            timeframe: "7D",
-            referenceURL: "",
-            labNotes: "",
-            isActive: true
-        )
-        container.mainContext.insert(pottery)
-
-        return HomeView()
-            .modelContainer(container)
-    } catch {
-        return Text("Failed to create preview: \(error.localizedDescription)")
-    }
-}
-
-#Preview("HomeView – empty state") {
-    HomeView()
 }

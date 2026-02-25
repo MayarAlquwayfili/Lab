@@ -59,12 +59,15 @@ final class LabViewModel {
     func toggleActive(experiment: Experiment, allExperiments: [Experiment], context: ModelContext, onActivated: ((Experiment?) -> Void)? = nil) {
         if experiment.isActive {
             experiment.isActive = false
+            experiment.activatedAt = nil
         } else {
             let previousActive = allExperiments.first { $0.isActive }
             for exp in allExperiments where exp.id != experiment.id {
                 exp.isActive = false
+                exp.activatedAt = nil
             }
             experiment.isActive = true
+            experiment.activatedAt = Date()
             onActivated?(previousActive)
         }
         try? context.save() // Force write to disk immediately (including after Undo restore)
@@ -134,8 +137,10 @@ final class LabViewModel {
         }
         for e in experiments where e.id != target.id {
             e.isActive = false
+            e.activatedAt = nil
         }
         target.isActive = true
+        target.activatedAt = Date()
         try? context.save()
         switchToHome()
     }

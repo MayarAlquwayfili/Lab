@@ -70,7 +70,7 @@ enum Tab: Int, CaseIterable {
 
 struct MainTabView: View {
     @Namespace private var animation
-    @State private var selectedTab: Tab = .lab
+    @State private var selectedTab: Tab = .home
     @AccessibilityFocusState private var randomizerFirstButtonFocused: Bool
     @AccessibilityFocusState private var resultFocused: Bool
     @State private var hideTabBar = false

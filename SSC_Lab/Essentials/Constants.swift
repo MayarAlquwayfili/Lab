@@ -108,6 +108,10 @@ enum Constants {
         static let buttonStop = "Stop"
         static let emptyStateTitle = "No active experiment"
         static let emptyStateSubtitle = "Go to Lab and start something!"
+        static let labStatusPrefix = "Lab Status: "
+        static let spinTitle = "SPIN"
+        static let quickLogTitle = "QUICK LOG"
+        static let lastWinPrefix = "Last Win : "
     }
 
     // Tab bar

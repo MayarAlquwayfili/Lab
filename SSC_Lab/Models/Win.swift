@@ -89,4 +89,16 @@ extension Date {
         formatter.dateFormat = "MMM d"
         return formatter.string(from: self)
     }
+
+    /// Short relative time for "Last Win" footer (e.g. "2h Ago", "1d Ago").
+    var timeAgoString: String {
+        let sec = Int(-timeIntervalSinceNow)
+        if sec < 60 { return "Just now" }
+        if sec < 3600 { return "\(sec / 60)m Ago" }
+        if sec < 86400 { return "\(sec / 3600)h Ago" }
+        if sec < 604800 { return "\(sec / 86400)d Ago" }
+        let formatter = DateFormatter()
+        formatter.dateFormat = "MMM d"
+        return formatter.string(from: self)
+    }
 }
