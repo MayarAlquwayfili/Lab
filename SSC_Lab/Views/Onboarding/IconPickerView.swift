@@ -11,7 +11,7 @@ import UIKit
 /// SF Symbol names labels for VoiceOver
 enum IconAccessibilityLabel {
     private static let map: [String: String] = [
-        "target": "Target", "scope": "Scope", "heart.fill": "Heart", "star.fill": "Star", "flame.fill": "Flame",
+        "target": "Target", "heart.fill": "Heart", "star.fill": "Star", "flame.fill": "Flame",
         "bolt.fill": "Bolt", "drop.fill": "Drop", "leaf.fill": "Leaf", "sun.max.fill": "Sun", "moon.stars.fill": "Moon and stars",
         "sparkles": "Sparkles", "brain.head.profile": "Brain", "figure.run": "Running", "figure.walk": "Walking",
         "figure.mind.and.body": "Mind and body", "bed.double.fill": "Bed", "book.fill": "Book", "pencil.circle.fill": "Pencil",
@@ -21,6 +21,23 @@ enum IconAccessibilityLabel {
         "gift.fill": "Gift", "music.note": "Music", "camera.fill": "Camera", "envelope.fill": "Envelope", "phone.fill": "Phone",
         "pin.fill": "Pin", "location.fill": "Location", "cup.and.saucer.fill": "Cup and saucer", "fork.knife": "Fork and knife",
         "pills.fill": "Pills", "cross.case.fill": "Medical case", "pawprint.fill": "Paw print", "bird.fill": "Bird", "tree.fill": "Tree",
+        "paintpalette.fill": "Paint palette", "hand.raised.fingers.spread.fill": "Hand raised", "swift": "Swift logo",
+        "video.fill": "Video", "play.square.stack.fill": "Animations", "sparkle.magnifyingglass": "New interest",
+        "bookmark.fill": "Bookmark", "hands.and.sparkles.fill": "One time win", "apple.logo": "Apple logo",
+        "cube.transparent.fill": "3D Cube", "photo.artframe": "Art frame", "pencil.line": "Sketching",
+        "mouth.fill": "Food", "handbag.fill": "Crochet and crafts", "sunrise.fill": "Sunrise",
+        "triangle.bottomhalf.filled": "Onigiri", "suit.heart.fill": "Love", "birthday.cake.fill": "Cake",
+        "chart.bar.xaxis.ascending": "Trading", "square.stack.3d.up.fill": "Paper tower",
+        "computermouse.fill": "Mouse drawing", "takeoutbag.and.cup.and.straw.fill": "Coffee and berry", "fish.fill": "Aquarium",
+        "macbook.and.iphone": "Development Devices", "wifi": "Wifi", "keyboard": "Keyboard", "gamecontroller.fill": "Gaming",
+        "headphones": "Focus music", "briefcase.fill": "Business", "shippingbox.fill": "Catchi Shipping",
+        "paintbrush.pointed.fill": "Anime Drawing", "wand.and.stars": "Magic", "popcorn.fill": "Anime watch session", "paperplane.fill": "Idea sent",
+        "books.vertical.fill": "Library", "newspaper.fill": "News", "dumbbell.fill": "Workout", "basketball.fill": "Sports",
+        "power.circle.fill": "Power", "zzz": "Rest", "sparkle": "Idea", "play.fill": "Play",
+        "exclamationmark.triangle.fill": "Warning", "heart.badge.bolt.fill": "Health energy", "suit.club.fill": "Card games",
+        "flag.pattern.checkered": "Finish line", "wand.and.sparkles": "Creative magic", "puzzlepiece.fill": "Puzzle games",
+        "fireworks": "Celebration", "party.popper.fill": "Party", "teddybear.fill": "Hobbies", "airplane.ticket.fill": "Travel",
+        "hare.fill": "Speed", "staroflife.fill": "Medical", "sunglasses.fill": "Summer vibes", "mug": "Coffee mug"
     ]
 
     static func humanReadable(for symbolName: String) -> String {
@@ -44,16 +61,8 @@ struct IconPickerView: View {
     private let horizontalMargin: CGFloat = 20
 
     private static let curatedIcons: [String] = [
-        "target", "scope", "heart.fill", "star.fill", "flame.fill", "bolt.fill",
-        "drop.fill", "leaf.fill", "sun.max.fill", "moon.stars.fill", "sparkles",
-        "brain.head.profile", "figure.run", "figure.walk", "figure.mind.and.body",
-        "bed.double.fill", "book.fill", "pencil.circle.fill", "graduationcap.fill",
-        "lightbulb.fill", "trophy.fill", "medal.fill", "flag.fill", "checklist",
-        "clock.fill", "timer", "hourglass", "calendar",
-        "house.fill", "cart.fill", "bag.fill", "creditcard.fill", "gift.fill",
-        "music.note", "camera.fill", "envelope.fill", "phone.fill", "pin.fill",
-        "location.fill", "cup.and.saucer.fill", "fork.knife", "pills.fill",
-        "cross.case.fill", "pawprint.fill", "bird.fill", "tree.fill",
+
+        "star.fill", "paintpalette.fill", "paintbrush.pointed.fill", "pencil.line", "pencil.circle.fill", "photo.artframe", "wand.and.stars", "wand.and.sparkles", "sparkles", "sparkle", "fireworks", "party.popper.fill", "swift", "apple.logo", "macbook.and.iphone", "keyboard", "wifi", "cpu", "bolt.fill","cube.transparent.fill", "play.square.stack.fill", "graduationcap.fill", "lightbulb.fill", "brain.head.profile", "briefcase.fill", "shippingbox.fill", "chart.bar.xaxis.ascending", "target", "checklist","calendar", "clock.fill", "timer", "hourglass", "paperplane.fill", "envelope.fill", "cup.and.saucer.fill", "mug", "takeoutbag.and.cup.and.straw.fill", "fork.knife", "mouth.fill", "birthday.cake.fill", "triangle.bottomhalf.filled", "cart.fill", "bag.fill", "handbag.fill",  "book.fill", "books.vertical.fill", "newspaper.fill", "bookmark.fill", "gamecontroller.fill","puzzlepiece.fill", "suit.club.fill", "video.fill", "camera.fill", "music.note", "headphones", "popcorn.fill", "figure.run", "figure.walk", "figure.mind.and.body", "dumbbell.fill", "basketball.fill","trophy.fill", "medal.fill", "flag.pattern.checkered", "heart.fill", "heart.badge.bolt.fill", "pills.fill", "staroflife.fill", "airplane.ticket.fill", "location.fill", "pin.fill", "mountain.2.fill", "sun.max.fill", "sunrise.fill", "moon.stars.fill", "leaf.fill", "tree.fill", "fish.fill", "pawprint.fill", "hare.fill", "teddybear.fill", "house.fill", "bed.double.fill", "zzz", "power.circle.fill", "sunglasses.fill", "gift.fill", "flag.fill", "exclamationmark.triangle.fill"
     ]
 
     var body: some View {
@@ -77,28 +86,31 @@ struct IconPickerView: View {
     }
 
     private var header: some View {
-        HStack {
-            Spacer(minLength: 0)
-            Text("Choose Icon")
-                .font(.appSubHeadline)
-                .foregroundStyle(Color.appFont)
-                .accessibilityAddTraits(.isHeader)
-            Spacer(minLength: 0)
-            Button(action: { dismiss() }) {
-                Image(systemName: "xmark")
-                    .font(.system(size: 15, weight: .semibold))
-                    .foregroundStyle(Color.appSecondaryDark)
-                    .frame(width: 40, height: 40)
-                    .background(Circle().fill(Color.appFont.opacity(0.05)))
-                    .contentShape(Circle())
+            ZStack {
+                Text("Choose Icon")
+                    .font(.appSubHeadline)
+                    .foregroundStyle(Color.appFont)
+                    .accessibilityAddTraits(.isHeader)
+                    .frame(maxWidth: .infinity, alignment: .center)
+
+                HStack {
+                    Spacer()
+                    Button(action: { dismiss() }) {
+                        Image(systemName: "xmark")
+                            .font(.system(size: 15, weight: .semibold))
+                            .foregroundStyle(Color.appSecondaryDark)
+                            .frame(width: 40, height: 40)
+                            .background(Circle().fill(Color.appFont.opacity(0.05)))
+                            .contentShape(Circle())
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel("Close")
+                }
             }
-            .buttonStyle(.plain)
-            .accessibilityLabel("Close")
+            .padding(.horizontal, horizontalMargin)
+            .padding(.vertical, AppSpacing.card)
+            .background(Color.appBg)
         }
-        .padding(.horizontal, horizontalMargin)
-        .padding(.vertical, AppSpacing.card)
-        .background(Color.appBg)
-    }
 
     private func iconCell(systemName: String) -> some View {
         let isSelected = selectedIcon == systemName
@@ -117,14 +129,4 @@ struct IconPickerView: View {
         .accessibilityHint("Double tap to select")
         .accessibilitySelected(isSelected)
     }
-}
-
-#Preview {
-    struct PreviewHost: View {
-        @State private var icon = "star.fill"
-        var body: some View {
-            IconPickerView(selectedIcon: $icon)
-        }
-    }
-    return PreviewHost()
 }
