@@ -2,7 +2,7 @@
 //  IconPickerView.swift
 //  SSC_Lab
 //
-//   SF Symbol picker sheet 
+//   SF Symbol picker sheet
 //
 
 import SwiftUI

@@ -7,10 +7,10 @@ struct HomeView: View {
     @Environment(\.selectedTabBinding) private var selectedTabBinding
     @Environment(\.randomizerState) private var randomizerState
     @Environment(\.modelContext) private var modelContext
-    
+
     @Query(sort: \Experiment.createdAt, order: .reverse) private var experiments: [Experiment]
     @Query(sort: \Win.date, order: .reverse) private var allWins: [Win]
-    
+
     @State private var viewModel = LabViewModel()
     @State private var showQuickLog = false
     @State private var quickLogExperiment: Experiment?
@@ -28,7 +28,6 @@ struct HomeView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            // FIXED HEADER: Perfectly leading-aligned
             AppHeader(title: "HOME") {
                 pillStatus
             }
@@ -91,26 +90,22 @@ struct HomeView: View {
 
     private func heroCard(experiment: Experiment) -> some View {
         ZStack(alignment: .topLeading) {
-            // Background
             Color.white
 
-            // Center: Title (Single line, Larger)
             Text(experiment.title)
                 .font(.appHero)
                 .foregroundStyle(Color.appPrimary)
                 .lineLimit(1)
                 .truncationMode(.tail)
                 .multilineTextAlignment(.center)
-                .padding(.horizontal, 40) // Margin to not hit icons
+                .padding(.horizontal, 40)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
 
-            // Top-Leading: Simple Label
             Text("CURRENT EXPERIMENT")
                 .font(.appMicro)
                 .foregroundStyle(Color.appSecondary)
                 .padding(16)
 
-            // Top-Trailing: Minimalist Icon Badge
             Circle()
                 .fill(Color.appPrimary)
                 .frame(width: 24, height: 24)
@@ -122,7 +117,6 @@ struct HomeView: View {
                 .padding(16)
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
 
-            // Bottom-Trailing: Simple Time Ago (Clean & Subtle)
             Text(experiment.activatedAt?.timeAgoString ?? experiment.createdAt.timeAgoString)
                 .font(.appMicro)
                 .foregroundStyle(Color.appSecondary)
@@ -201,7 +195,7 @@ struct HomeView: View {
                         .foregroundStyle(Color.appFont)
                 }
                 .frame(maxWidth: .infinity)
-                .frame(height: 120) // Balanced height
+                .frame(height: 120)
                 .background(Color.white)
                 .clipShape(RoundedRectangle(cornerRadius: 16))
                 .overlay(RoundedRectangle(cornerRadius: 16).stroke(Color.appSecondary, lineWidth: 1.5))
@@ -221,7 +215,7 @@ struct HomeView: View {
                         .foregroundStyle(Color.appFont)
                 }
                 .frame(maxWidth: .infinity)
-                .frame(height: 120) // Balanced height
+                .frame(height: 120)
                 .background(Color.white)
                 .clipShape(RoundedRectangle(cornerRadius: 16))
                 .overlay(RoundedRectangle(cornerRadius: 16).stroke(Color.appSecondary, lineWidth: 1.5))

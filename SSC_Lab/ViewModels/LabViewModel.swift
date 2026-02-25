@@ -35,12 +35,6 @@ final class LabViewModel {
         }
     }
 
-    /// Returns a random experiment from the array, or nil if empty.
-    func randomize(from experiments: [Experiment]) -> Experiment? {
-        guard !experiments.isEmpty else { return nil }
-        return experiments.randomElement()
-    }
-
     /// Filter experiments by search text and filter criteria.
     func filteredExperiments(_ experiments: [Experiment], searchText: String, filterCriteria: FilterCriteria) -> [Experiment] {
         var result = experiments

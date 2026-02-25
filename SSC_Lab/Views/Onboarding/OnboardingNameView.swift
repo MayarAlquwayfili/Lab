@@ -11,20 +11,20 @@ struct OnboardingNameView: View {
     @Binding var userName: String
     @Binding var hasOnboarded: Bool
     @Environment(\.dismiss) private var dismiss
-    
+
     @State private var nameInput: String = ""
-    
+
     private let horizontalMargin: CGFloat = 16
-    
+
     private var isNameEmpty: Bool {
         nameInput.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
-    
+
     var body: some View {
         NavigationStack {
             VStack(spacing: 0) {
                 Spacer()
-                
+
                 VStack(spacing: 0) {
 
                     VStack(spacing: AppSpacing.tight) {
@@ -32,13 +32,13 @@ struct OnboardingNameView: View {
                             .font(.appHeroSmall)
                             .foregroundStyle(Color.appFont)
                             .multilineTextAlignment(.center)
-                        
+
                         Text("What should we call you, Director?")
                             .font(.appBody)
                             .foregroundStyle(Color.appSecondary)
                             .multilineTextAlignment(.center)
                     }
-                    
+
                     TextField("Enter your name", text: $nameInput)
                         .font(.appTitle)
                         .foregroundStyle(Color.appFont)
@@ -56,10 +56,9 @@ struct OnboardingNameView: View {
                         .padding(.top, 30)
                 }
                 .padding(.horizontal, horizontalMargin)
-                
+
                 Spacer()
-                
-                // Button
+
                 AppButton(title: "Start Experimenting", style: .primary) {
                     if !isNameEmpty {
                         userName = nameInput.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -79,7 +78,6 @@ struct OnboardingNameView: View {
     }
 }
 
-// MARK: - Preview
 #Preview {
     OnboardingNameView(
         userName: .constant("Scientist"),
