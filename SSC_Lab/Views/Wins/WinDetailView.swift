@@ -166,43 +166,67 @@ struct WinDetailView: View {
         .ignoresSafeArea(.all, edges: .bottom)
     }
 
-    // Header: back | centered title + collection name (4px) | Edit. No badges.
-    private var winDetailHeader: some View {
-        HStack(alignment: .center, spacing: 0) {
-            Button { dismiss() } label: {
-                Image(systemName: "chevron.left")
-                    .font(.system(size: 15, weight: .semibold))
+        private var winDetailHeader: some View {
+            HStack(alignment: .center, spacing: 0) {
+                Button { dismiss() } label: {
+                    Image(systemName: "chevron.left")
+                        .font(.system(size: 15, weight: .semibold))
+                        .foregroundStyle(Color.appFont)
+                        .frame(width: 40, height: 40)
+                        .background(Circle().fill(Color.appFont.opacity(0.05)))
+                        .contentShape(Circle())
+                }
+                .buttonStyle(.plain)
+
+                VStack(spacing: 4) {
+                    Text(displayedWin.title)
+                        .font(.appHeroSmall)
+                        .foregroundStyle(Color.appFont)
+                        .lineLimit(1)
+                        .truncationMode(.tail)
+                        .multilineTextAlignment(.center)
+                    
+                    Menu {
+                        Button("All Wins") {
+                            moveToCollection(nil)
+                        }
+                        ForEach(collections) { collection in
+                            Button(collection.name) {
+                                moveToCollection(collection)
+                            }
+                        }
+                        Divider()
+                        Button {
+                            newCollectionName = ""
+                            showNewCollectionPopUp = true
+                        } label: {
+                            Label("New Collection...", systemImage: "plus")
+                        }
+                    } label: {
+                        HStack(spacing: 4) {
+                            Text(collectionDisplayName)
+                                .font(.appCaption)
+                                .foregroundStyle(Color.appSecondary)
+                            Image(systemName: "chevron.down")
+                                .font(.system(size: 10, weight: .bold))
+                                .foregroundStyle(Color.appSecondary.opacity(0.5))
+                        }
+                    }
+                    .buttonStyle(.plain)
+                    .animation(.easeInOut(duration: 0.2), value: collectionDisplayName)
+                }
+                .frame(maxWidth: .infinity)
+
+                Button(Constants.WinDetail.buttonEdit) { showEditSheet = true }
+                    .font(.appBodySmall)
                     .foregroundStyle(Color.appFont)
                     .frame(width: 40, height: 40)
-                    .background(Circle().fill(Color.appFont.opacity(0.05)))
-                    .contentShape(Circle())
             }
-            .buttonStyle(.plain)
-
-            VStack(spacing: 4) {
-                Text(displayedWin.title)
-                    .font(.appHeroSmall)
-                    .foregroundStyle(Color.appFont)
-                    .lineLimit(1)
-                    .truncationMode(.tail)
-                    .multilineTextAlignment(.center)
-                Text(collectionDisplayName)
-                    .font(.appCaption)
-                    .foregroundStyle(Color.appSecondary)
-            }
-            .frame(maxWidth: .infinity)
-
-            Button(Constants.WinDetail.buttonEdit) { showEditSheet = true }
-                .font(.appBodySmall)
-                .foregroundStyle(Color.appFont)
-                .frame(width: 40, height: 40)
+            .padding(.horizontal, Constants.WinDetail.paddingHorizontal)
+            .padding(.top, AppSpacing.card)
         }
-        .padding(.horizontal, Constants.WinDetail.paddingHorizontal)
-        .padding(.top, AppSpacing.card)
-    }
 
-    // Carousel
-
+    /// Carousel
     private var carouselCard: some View {
         ZStack {
             TabView(selection: $carouselIndex) {
@@ -241,6 +265,9 @@ struct WinDetailView: View {
                     Image(uiImage: uiImage)
                         .resizable()
                         .scaledToFill()
+                        .frame(minWidth: 0, maxWidth: .infinity, minHeight: 0, maxHeight: .infinity)
+                        .clipped()  
+                        .accessibilityHidden(true)
                         .accessibilityHidden(true)
                 } else {
                     Rectangle()
@@ -325,7 +352,7 @@ struct WinDetailView: View {
         return "\(w.title). Win. \(dateStr). Tags: \(tags).\(pagePart)"
     }
 
-    /// Human-readable badge list for VoiceOver (same mapping as ExperimentDetailView / WinCard).
+    /// Badge list for VoiceOver
     private func detailCardTagsAccessibilityLabel(for w: Win) -> String {
         var types = bottomBadgeTypes(for: w)
         if let logType = logTypeBadgeType(for: w) { types.append(logType) }
@@ -344,26 +371,25 @@ struct WinDetailView: View {
         return fromBadges.isEmpty ? "(none)" : fromBadges.joined(separator: ", ")
     }
 
-     private func topBadgeType(for w: Win) -> BadgeType? {
-        [w.icon1, w.icon2, w.icon3, w.logTypeIcon]
-            .compactMap { $0 }
-            .first
-            .flatMap { BadgeType.from(iconName: $0) }
-    }
+    private func topBadgeType(for w: Win) -> BadgeType? {
+            [w.environment, w.tools, w.timeframe, w.logTypeIcon]
+                .compactMap { $0 }
+                .compactMap { BadgeType.from(iconName: $0) }
+                .first
+        }
 
-     private func bottomBadgeTypes(for w: Win) -> [BadgeType] {
-        [w.icon1, w.icon2, w.icon3]
-            .compactMap { $0 }
-            .compactMap { BadgeType.from(iconName: $0) }
-    }
+        private func bottomBadgeTypes(for w: Win) -> [BadgeType] {
+            [w.environment, w.tools, w.timeframe]
+                .compactMap { $0 }
+                .compactMap { BadgeType.from(iconName: $0) }
+        }
 
-    private func logTypeBadgeType(for w: Win) -> BadgeType? {
-        guard !w.logTypeIcon.isEmpty else { return nil }
-        return BadgeType.from(iconName: w.logTypeIcon) ?? .oneTime
-    }
+        private func logTypeBadgeType(for w: Win) -> BadgeType? {
+            guard !w.logTypeIcon.isEmpty else { return nil }
+            return BadgeType.from(iconName: w.logTypeIcon) ?? .oneTime
+        }
 
-    // Actions
-
+ 
     private func deleteWinAndDismiss() {
         let (outcome, undo) = viewModel.deleteWin(
             displayedWin: displayedWin,
@@ -386,7 +412,7 @@ struct WinDetailView: View {
         }
     }
 
-    /// Updates the currently displayed win's collection and saves. Used by the header collection Menu.
+    /// Updates the currently displayed win's collection and saves.
     private func moveToCollection(_ collection: WinCollection?) {
         if displayedWin.collection?.id == collection?.id {
             return
@@ -399,7 +425,6 @@ struct WinDetailView: View {
         }
     }
 
-    /// Same custom pop-up as QuickLogView: dimmed overlay, title, TextField, Create/Cancel. On Create: new collection, move win to it, toast.
     private var newCollectionPopUpOverlay: some View {
         let trimmed = newCollectionName.trimmingCharacters(in: .whitespacesAndNewlines)
         let isEmpty = trimmed.isEmpty
@@ -460,7 +485,7 @@ struct WinDetailView: View {
         .animation(.spring(response: 0.35, dampingFraction: 0.8), value: showNewCollectionPopUp)
     }
 
-    /// Do It Again: make the experiment active, save, switch to Home (QuickLogView can then be presented).
+    /// Do It Again: make the experiment active, save, switch to Home 
     private func openDoItAgain() {
         viewModel.openDoItAgain(win: win, experiments: experiments, context: modelContext) {
             selectedTabBinding?.wrappedValue = .home
@@ -478,9 +503,9 @@ struct WinDetailView: View {
             title: "APP STORE PUBLISH",
             imageData: nil,
             logTypeIcon: "trophy.fill",
-            icon1: "apple.logo",
-            icon2: "globe",
-            icon3: "FINAL",
+            environment: "apple.logo",
+            tools: "globe",
+            timeframe: "FINAL",
             notes: "Shipped!"
         )
         container.mainContext.insert(win)

@@ -57,7 +57,7 @@ struct CollectionDetailView: View {
         return allWins.filter { $0.collection == nil }
     }
 
-    /// One card per experiment (activityID): most recent win in the group. Image = latest; winCount = total in group. Used for "All" and for collections.
+    /// One card per experiment (activityID)
     private func oneWinPerActivity(from wins: [Win]) -> [Win] {
         let sorted = wins.sorted { $0.date > $1.date }
         var seenActivityIDs = Set<UUID>()
@@ -109,12 +109,12 @@ struct CollectionDetailView: View {
     /// Returns (columnIndex 0 or 1, isTall: true if tall card).
     private func columnAndStyle(forIndex index: Int) -> (column: Int, isTall: Bool) {
         switch index % 6 {
-        case 0: return (0, false)  // Col1 Square
-        case 1: return (1, true)    // Col2 Tall
-        case 2: return (0, true)    // Col1 Tall
-        case 3: return (1, false)    // Col2 Square
-        case 4: return (0, false)   // Col1 Square
-        case 5: return (1, false)   // Col2 Square
+        case 0: return (0, false)  /// Col1 Square
+        case 1: return (1, true)    /// Col2 Tall
+        case 2: return (0, true)    /// Col1 Tall
+        case 3: return (1, false)    /// Col2 Square
+        case 4: return (0, false)   /// Col1 Square
+        case 5: return (1, false)   /// Col2 Square
         default: return (0, false)
         }
     }
@@ -230,7 +230,6 @@ struct CollectionDetailView: View {
         return items
     }
 
-    /// Staggered grid: exactly 16pt margins, 12pt between columns. Card width = (availableWidth - 44) / 2. Uses parent width so no NavigationStack/ScrollView padding affects margins.
     private func staggeredGrid(availableWidth: CGFloat) -> some View {
         let cardWidth = max(1, (availableWidth - totalHorizontalInset) / 2)
         let squareHeight = cardWidth
@@ -347,7 +346,7 @@ struct CollectionDetailView: View {
         }
     }
 
-    /// Empty state when filters return no results (matches Lab's filter empty state: same icon, text, Clear Filter button).
+    /// Empty state when filters return no results
     private var filterEmptyState: some View {
         VStack(spacing: 0) {
             Spacer()
@@ -379,7 +378,7 @@ struct CollectionDetailView: View {
 
 }
 
-// Sharing a win
+/// Sharing a win
 private struct ShareSheet: UIViewControllerRepresentable {
     let activityItems: [Any]
 
@@ -390,7 +389,7 @@ private struct ShareSheet: UIViewControllerRepresentable {
     func updateUIViewController(_ uiViewController: UIActivityViewController, context: Context) {}
 }
 
-// Masonry card
+/// Masonry card
 struct WinMasonryCard: View {
     let win: Win
     let cardWidth: CGFloat
@@ -413,7 +412,6 @@ struct WinMasonryCard: View {
 
     var body: some View {
         ZStack(alignment: .bottom) {
-            // 1. Full image background
             Group {
                 if let data = win.imageData, let uiImage = UIImage(data: data) {
                     Image(uiImage: uiImage)
@@ -429,7 +427,6 @@ struct WinMasonryCard: View {
             }
             .clipShape(RoundedRectangle(cornerRadius: cornerRadius))
 
-            // 2. Dark overlay so title and badges are readable
             RoundedRectangle(cornerRadius: cornerRadius)
                 .fill(
                     LinearGradient(
@@ -439,7 +436,6 @@ struct WinMasonryCard: View {
                     )
                 )
 
-            // 3. Bottom stack
             VStack(spacing: 0) {
                 Spacer(minLength: 0)
                 strokedTitle(text: win.title)
@@ -481,13 +477,13 @@ struct WinMasonryCard: View {
     }
 
     private var bottomBadgeTypes: [BadgeType] {
-        [win.icon1, win.icon2, win.icon3, win.logTypeIcon]
+        [win.environment, win.tools, win.timeframe, win.logTypeIcon]
             .compactMap { $0 }
             .compactMap { BadgeType.from(iconName: $0) }
     }
 }
 
-// Win row placeholder  
+/// Win row placeholder  
 struct WinRowView: View {
     var win: Win
 

@@ -19,7 +19,7 @@ enum QuickLogSaveResult {
 
 @Observable
 final class QuickLogViewModel {
-    // Form state
+    /// Form state
     var winTitle: String = ""
     var selectedIcon: String = "star.fill"
     var selectedCollection: WinCollection?
@@ -30,11 +30,11 @@ final class QuickLogViewModel {
     var timeframe: TimeframeOption = .oneD
     var logType: LogTypeOption = .oneTime
 
-    // New collection popup
+    /// New collection popup
     var showNewCollectionPopUp: Bool = false
     var newCollectionName: String = ""
 
-    /// Set to true only when the user picks a new image from gallery/camera. Reset in prefill. Used so hasChanges doesn't false-positive on image Data comparison.
+    /// Set to true only when the user picks a new image from gallery/camera.
     private(set) var isImageNew: Bool = false
 
     /// Call when the user has picked a new image from camera or photo library.
@@ -42,7 +42,7 @@ final class QuickLogViewModel {
         isImageNew = true
     }
 
-    /// True only when user actually modified something. Compare current state directly to the original win when editing; when adding, true if any field is non-empty. Image "changed" only if isImageNew (user picked new photo).
+    /// True only when user actually modified something. Compare current state directly to the original win when editing; when adding, true if any field is non-empty.
     func hasChanges(winToEdit: Win?) -> Bool {
         guard let win = winToEdit else {
             return !winTitle.isEmpty || !quickNote.isEmpty || selectedUIImage != nil
@@ -50,9 +50,9 @@ final class QuickLogViewModel {
         let imageChanged = isImageNew || (win.imageData != nil && selectedUIImage == nil)
         let collectionChanged = (selectedCollection?.id != win.collection?.id)
         let iconSame = (selectedIcon == (win.icon ?? "star.fill"))
-        let envSame = (environment == ((win.icon1 == Constants.Icons.outdoor) ? .outdoor : .indoor))
-        let toolsSame = (tools == ((win.icon2 == Constants.Icons.toolsNone) ? .none : .required))
-        let timeframeSame = (timeframe == (TimeframeOption(rawValue: win.icon3 ?? "1D") ?? .oneD))
+        let envSame = (environment == ((win.environment == Constants.Icons.outdoor) ? .outdoor : .indoor))
+        let toolsSame = (tools == ((win.tools == Constants.Icons.toolsNone) ? .none : .required))
+        let timeframeSame = (timeframe == (TimeframeOption(rawValue: win.timeframe ?? "1D") ?? .oneD))
         let logTypeSame = (logType == ((win.logTypeIcon == Constants.Icons.newInterest) ? .newInterest : .oneTime))
         return winTitle != win.title
             || quickNote != win.notes
@@ -81,9 +81,9 @@ final class QuickLogViewModel {
             quickNote = w.notes
             selectedUIImage = w.imageData.flatMap { UIImage(data: $0) }
             selectedCollection = w.collection
-            environment = (w.icon1 == Constants.Icons.outdoor) ? .outdoor : .indoor
-            tools = (w.icon2 == Constants.Icons.toolsNone) ? .none : .required
-            timeframe = TimeframeOption(rawValue: w.icon3 ?? "1D") ?? .oneD
+            environment = (w.environment == Constants.Icons.outdoor) ? .outdoor : .indoor
+            tools = (w.tools == Constants.Icons.toolsNone) ? .none : .required
+            timeframe = TimeframeOption(rawValue: w.timeframe ?? "1D") ?? .oneD
             logType = (w.logTypeIcon == Constants.Icons.newInterest) ? .newInterest : .oneTime
         }
         if let initial = initialCollection, selectedCollection == nil {
@@ -103,9 +103,9 @@ final class QuickLogViewModel {
             win.title = winTitle.isEmpty ? "New Win" : winTitle
             win.notes = quickNote
             win.imageData = imageData
-            win.icon1 = icon1
-            win.icon2 = icon2
-            win.icon3 = icon3
+            win.environment = icon1
+            win.tools = icon2
+            win.timeframe = icon3
             win.logTypeIcon = logTypeIcon
             win.icon = selectedIcon
             win.collection = selectedCollection
@@ -123,9 +123,9 @@ final class QuickLogViewModel {
                 title: winTitle.isEmpty ? "New Win" : winTitle,
                 imageData: imageData,
                 logTypeIcon: logTypeIcon,
-                icon1: icon1,
-                icon2: icon2,
-                icon3: icon3,
+                environment: icon1,
+                tools: icon2,
+                timeframe: icon3,
                 collectionName: selectedCollection?.name,
                 collection: selectedCollection,
                 notes: quickNote,
