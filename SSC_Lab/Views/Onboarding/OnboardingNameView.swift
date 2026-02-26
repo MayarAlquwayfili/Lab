@@ -2,7 +2,6 @@
 //  OnboardingNameView.swift
 //  SSC_Lab
 //
-//  Onboarding view for user's name.
 //
 
 import SwiftUI
@@ -11,76 +10,122 @@ struct OnboardingNameView: View {
     @Binding var userName: String
     @Binding var hasOnboarded: Bool
     @Environment(\.dismiss) private var dismiss
-
+    
     @State private var nameInput: String = ""
-
-    private let horizontalMargin: CGFloat = 16
-
-    private var isNameEmpty: Bool {
-        nameInput.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-    }
+    @FocusState private var isFocused: Bool
+    
+    @State private var isRecordingAction: Bool = false
+    
+    private let myPadding: CGFloat = 16
 
     var body: some View {
-        NavigationStack {
+        ZStack {
+            Color.appBg.ignoresSafeArea()
+            
             VStack(spacing: 0) {
+
+                headerView
+                    .padding(.horizontal, myPadding)
+                    .padding(.top, 32)
+                
                 Spacer()
+                
 
-                VStack(spacing: 0) {
-
-                    VStack(spacing: AppSpacing.tight) {
-                        Text("Welcome to SSC Lab! 🧪")
-                            .font(.appHeroSmall)
-                            .foregroundStyle(Color.appFont)
-                            .multilineTextAlignment(.center)
-
-                        Text("What should we call you, Director?")
-                            .font(.appBody)
-                            .foregroundStyle(Color.appSecondary)
-                            .multilineTextAlignment(.center)
-                    }
-
-                    TextField("Enter your name", text: $nameInput)
-                        .font(.appTitle)
+                VStack(spacing: 24) {
+                    Text("What should we record you as?")
+                        .font(.appHeroSmall)
                         .foregroundStyle(Color.appFont)
                         .multilineTextAlignment(.center)
-                        .padding(.horizontal, AppSpacing.section)
-                        .padding(.vertical, AppSpacing.card)
+                    
+                    TextField("Record me as...", text: $nameInput)
+                        .font(.appBody)
+                        .fontWeight(.medium)
+                        .multilineTextAlignment(.center)
+                        .padding(.vertical, 16)
                         .background(
                             RoundedRectangle(cornerRadius: 16)
                                 .fill(Color.white)
                                 .overlay(
                                     RoundedRectangle(cornerRadius: 16)
-                                        .stroke(Color.appSecondary.opacity(0.3), lineWidth: 1)
+                                        .stroke(Color.appFont, lineWidth: 1.5)
                                 )
                         )
-                        .padding(.top, 30)
+                        .focused($isFocused)
+                        .disabled(isRecordingAction)
+                                           
                 }
-                .padding(.horizontal, horizontalMargin)
-
+                .padding(.horizontal, myPadding)
+                
                 Spacer()
-
-                AppButton(title: "Start Experimenting", style: .primary) {
-                    if !isNameEmpty {
-                        userName = nameInput.trimmingCharacters(in: .whitespacesAndNewlines)
+                
+                Button {
+                    startRecordingSequence()
+                } label: {
+                    HStack(spacing: 8) {
+                        if isRecordingAction {
+                            Circle()
+                                .fill(Color.white)
+                                .frame(width: 10, height: 10)
+                            Text("REC")
+                        } else {
+                            Text("START RECORDING")
+                        }
                     }
-                    hasOnboarded = true
-                    dismiss()
+                    .font(.appSubHeadline)
+                    .padding(.horizontal, 32)
+                    .padding(.vertical, 16)
+                    .background(isRecordingAction ? Color.red : Color.appPrimary)
+                    .foregroundStyle(.white)
+                    .clipShape(Capsule())
+                    .scaleEffect(isRecordingAction ? 1.05 : 1.0)
                 }
-                .disabled(isNameEmpty)
-                .opacity(isNameEmpty ? 0.5 : 1)
-                .padding(.horizontal, horizontalMargin)
-                .padding(.bottom, AppSpacing.large)
+                .disabled(nameInput.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || isRecordingAction)
+                .opacity(nameInput.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ?   0.3 : 1)
+                .padding(.bottom, 40)
             }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .background(Color.appBg)
-            .navigationBarHidden(true)
+        }
+        .ignoresSafeArea(.keyboard, edges: .bottom)
+    }
+
+    private var headerView: some View {
+        HStack {
+
+            Text(isRecordingAction ? "REC" : "STBY")
+                .foregroundStyle(isRecordingAction ? Color.red : Color.appSecondary)
+            Spacer()
+            Text("00:00")
+        }
+        .font(.system(size: 14, weight: .bold, design: .monospaced))
+        .foregroundStyle(Color.appSecondary)
+    }
+
+    private func startRecordingSequence() {
+        isFocused = false
+        
+        withAnimation(.easeInOut(duration: 0.3)) {
+            isRecordingAction = true
+        }
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+            userName = nameInput.trimmingCharacters(in: .whitespacesAndNewlines)
+            hasOnboarded = true
+            dismiss()
         }
     }
 }
 
 #Preview {
-    OnboardingNameView(
-        userName: .constant("Scientist"),
-        hasOnboarded: .constant(false)
-    )
+    struct PreviewWrapper: View {
+        @State private var previewName = ""
+        @State private var previewOnboarded = false
+        
+        var body: some View {
+            OnboardingNameView(
+                userName: $previewName,
+                hasOnboarded: $previewOnboarded
+            )
+        }
+    }
+    
+    return PreviewWrapper()
 }
