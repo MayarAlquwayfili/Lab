@@ -12,7 +12,7 @@ enum Constants {
     
     // UI
     enum Strings {
-        static let activeStatus  = "ACTIVE"
+        static let activeStatus  = "Recording..."
         static let quickLog      = "QUICK_LOG"
         static let spinWheel     = "SPIN_WHEEL"
     }
@@ -73,11 +73,11 @@ enum Constants {
 
     enum ExperimentDetail {
         static let buttonLogWin = "Log a Win"
-        static let buttonLetsDoIt = "Let's do it!"
+        static let buttonLetsDoIt = "Rec it !"
         static let buttonDelete = "Delete"
         static let buttonEdit = "Edit"
-        static let activeAlertTitle = "Active Experiment"
-        static let activeAlertMessage = "You already have an active experiment. Do you want to cancel the current one and start this?"
+        static let activeAlertTitle = "Already on REC"
+        static let activeAlertMessage = "You're currently recording another experiment. Wanna stop that and Start This One?"
         static let activeAlertStart = "Start This One"
         static let activeAlertSwitch = "Switch"
         static let activeAlertCancel = "Cancel"
@@ -106,7 +106,7 @@ enum Constants {
         static let currentlyTestingTitle = "Currently Testing"
         static let buttonLogWin = "Log a Win"
         static let buttonStop = "Stop"
-        static let emptyStateTitle = "No active experiment"
+        static let emptyStateTitle = "Nothing's on REC"
         static let emptyStateSubtitle = "Go to Lab and start something!"
         static let labStatusPrefix = "Lab Status: "
         static let spinTitle = "SPIN"

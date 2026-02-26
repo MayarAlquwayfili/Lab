@@ -77,13 +77,13 @@ struct HomeView: View {
     /// Components
 
     private var pillStatus: some View {
-        Text(activeExperiment != nil ? Constants.Strings.activeStatus : "STANDBY")
+        Text(activeExperiment != nil ? Constants.Strings.activeStatus : "STBY")
             .font(.appMicro)
             .fontWeight(.semibold)
-            .foregroundStyle(activeExperiment != nil ? Color.appPrimary : Color.appSecondary)
+            .foregroundStyle(activeExperiment != nil ? Color.appAlert : Color.appSecondary)
             .padding(.horizontal, 12)
             .padding(.vertical, 6)
-            .background(Capsule().fill(activeExperiment != nil ? Color.appPrimary.opacity(0.15) : Color.appSecondary.opacity(0.15)))
+            .background(Capsule().fill(activeExperiment != nil ? Color.appAlert.opacity(0.15) : Color.appSecondary.opacity(0.15)))
     }
 
     private var heroSection: some View {
@@ -178,7 +178,7 @@ struct HomeView: View {
     private var emptyHeroCard: some View {
         Button { selectedTabBinding?.wrappedValue = .lab } label: {
             VStack(spacing: 8) {
-                Text("No active experiment right now.\nJump to the Lab to activate one!")
+                Text("Nothing on REC right now.\nJump to the Lab to REC one!")
                     .font(.appSubHeadline)
                     .foregroundStyle(Color.appFont)
                     .multilineTextAlignment(.center)

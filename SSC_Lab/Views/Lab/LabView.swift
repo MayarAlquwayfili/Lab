@@ -28,9 +28,7 @@ struct LabView: View {
     @State private var filterCriteria = FilterCriteria()
     @State private var showFilterSheet = false
 
-    @AppStorage("userName") private var userName = ""
-    @AppStorage("hasOnboarded") private var hasOnboarded = false
-    @State private var showOnboarding = false
+    @AppStorage("userName") private var userName = "" 
 
     private let horizontalMargin: CGFloat = Constants.Lab.horizontalMargin
     private let gridSpacing: CGFloat = Constants.Lab.gridSpacing
@@ -94,7 +92,7 @@ struct LabView: View {
                         .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
-                    .accessibilityLabel(filterCriteria.isEmpty ? "Filter" : "Filter, active")
+                    .accessibilityLabel(filterCriteria.isEmpty ? "Filter" : "Filter, applied")
                     .accessibilityHint("Double tap to filter experiments by category")
                 }
                 .padding(.horizontal, horizontalMargin)
@@ -174,6 +172,7 @@ struct LabView: View {
                         }
                         .padding(.horizontal, horizontalMargin)
                         .padding(.top, AppSpacing.tight)
+                        .padding(.bottom, 100)
                         .animation(.spring(response: 0.35, dampingFraction: 0.8), value: filteredExperiments.count)
                     }
                     .scrollDismissesKeyboard(.immediately)
@@ -221,15 +220,6 @@ struct LabView: View {
                 onPrimary: { showNeedMoreExperimentsPopUp = false },
                 onSecondary: {}
             )
-            .sheet(isPresented: $showOnboarding) {
-                OnboardingNameView(userName: $userName, hasOnboarded: $hasOnboarded)
-                    .interactiveDismissDisabled()
-            }
-            .onAppear {
-                if !hasOnboarded {
-                    showOnboarding = true
-                }
-            }
     }
     
     private func pickRandomAndShowResult() {

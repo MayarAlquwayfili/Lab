@@ -69,6 +69,10 @@ enum Tab: Int, CaseIterable {
 }
 
 struct MainTabView: View {
+
+    @AppStorage("userName") private var userName = ""
+    @AppStorage("hasOnboarded") private var hasOnboarded = false
+    @State private var showOnboarding = false
     @Namespace private var animation
     @State private var selectedTab: Tab = .home
     @AccessibilityFocusState private var randomizerFirstButtonFocused: Bool
@@ -84,7 +88,7 @@ struct MainTabView: View {
             // Tab content + tab bar
             ZStack {
                 Color.appBg.ignoresSafeArea(.all, edges: .bottom)
-
+                
                 Group {
                     switch selectedTab {
                     case .home: NavigationStack { HomeView() }
@@ -106,16 +110,16 @@ struct MainTabView: View {
             .environment(\.randomizerState, randomizerState)
             .environment(\.rootPopUpState, rootPopUpState)
             .accessibilityHidden(rootPopUpState.hasActivePopUp || randomizerState.isPresented || appPopUpState.isPresented)
-
+            
             if !hideTabBar {
                 customTabBar
             }
-
+            
             // Root pop-ups
             if rootPopUpState.hasActivePopUp {
                 rootPopUpOverlay
             }
-
+            
             // Randomizer overlay
             if randomizerState.isPresented {
                 randomizerOverlay
@@ -143,6 +147,15 @@ struct MainTabView: View {
         .overlay {
             if appPopUpState.isPresented {
                 appPopUpOverlay
+            }
+        }
+        .sheet(isPresented: $showOnboarding) {
+            OnboardingNameView(userName: $userName, hasOnboarded: $hasOnboarded)
+                .interactiveDismissDisabled()
+        }
+        .onAppear {
+            if !hasOnboarded {
+                showOnboarding = true
             }
         }
     }

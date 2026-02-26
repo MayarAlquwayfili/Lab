@@ -19,6 +19,9 @@ struct SampleData {
         let gazzaColl = WinCollection(name: "Gazza!")
         [summerColl, gazzaColl].forEach { context.insert($0) }
         
+        let chalkArt = Experiment( title: "CHALK ART", icon: "sparkles", environment: "Outdoor", tools: "Required", timeframe: "1D", referenceURL: "https://www.pinterest.com/pin/2955556003410532/", labNotes: "aesthetic chalk stars on the floor! very pinteresty and colorful. Can't wait ! ")
+                chalkArt.isActive = true
+        
         let experiments = [
             Experiment(title: "COLOR SPRAY", icon: "paintpalette.fill", environment: "Outdoor", tools: "Required", timeframe: "1D", referenceURL: "https://pin.it/spray-art-inspo", labNotes: "wanna try the chaos vibe! let's see how messy it gets haha"),
         
@@ -28,7 +31,7 @@ struct SampleData {
             
             Experiment(title: "CUSTOM HOODIE", icon: "tshirt.fill", environment: "Indoor", tools: "None", timeframe: "7D", referenceURL: "https://www.pinterest.com/pin/814025701438982413/", labNotes: "wanna design my own jacket with some cool doodles and lyrics."),
             
-            Experiment(title: "CHALK ART", icon: "sparkles", environment: "Outdoor", tools: "Required", timeframe: "1D", referenceURL: "https://www.pinterest.com/pin/2955556003410532/", labNotes: "aesthetic chalk stars on the floor! very pinteresty and colorful. Can't wait ! "),
+            chalkArt,
             
             Experiment(title: "ANIMATION", icon: "play.square.stack.fill", environment: "Indoor", tools: "None", timeframe: "7D", labNotes: "I want to see my characters move!! Ive the scene in my head, just need the time 4 it..."),
             

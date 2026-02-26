@@ -192,6 +192,6 @@ extension View {
     ZStack(alignment: .bottom) {
         Color.appBg.ignoresSafeArea()
         Text("Content")
-            .appToast(isShowing: .constant(true), message: "Lab's now Active! 🔥")
+            .appToast(isShowing: .constant(true), message: "Recording Started")
     }
 }

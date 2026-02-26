@@ -72,7 +72,7 @@ struct ExperimentDetailView: View {
                                         })
                                     }
                                 }
-                                .accessibilityHint("Double tap to set as active experiment")
+                                .accessibilityHint("Double tap to start recording this experiment")
                             }
                             AppButton(title: Constants.ExperimentDetail.buttonDelete, style: .secondary) {
                                 showDeleteAlert = true

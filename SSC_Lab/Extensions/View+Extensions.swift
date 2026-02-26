@@ -135,7 +135,7 @@ final class GlobalToastState {
         if let p = previous {
             show("Lab Switched!", undoTitle: "Undo", onUndo: { undoRevert(p) })
         } else {
-            show("Lab's now Active!")
+            show("Lab is LIVE")
         }
     }
 }
