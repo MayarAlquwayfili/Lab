@@ -15,8 +15,6 @@ enum FontRegistration {
     private static let fontFiles: [(name: String, nameNoSpaces: String?, ext: String)] = [
         ("Bobby Jones Soft", "BobbyJonesSoft", "otf"),
         ("Bobby Jones Soft Outline", "BobbyJonesSoftOutline", "otf"),
-        ("magic-world.line", nil, "ttf"),
-        ("magic-world.regular", nil, "ttf"),
     ]
 
     /// Registers custom fonts from the bundle so they are available globally.

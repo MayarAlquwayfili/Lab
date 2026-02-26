@@ -11,34 +11,36 @@ import SwiftUI
 extension Font {
     
  
-    /// Bobby Jones Soft (36)
+    // Bobby Jones Soft
+    
+    /// (36)
     static var appHero: Font {
         .custom("Bobby Jones Soft", size: 36, relativeTo: .largeTitle)
     }
-    /// Bobby Jones Soft (24) – smaller hero for detail/nav titles
+    ///(24) – smaller hero for detail/nav titles
     static var appHeroSmall: Font {
         .custom("Bobby Jones Soft", size: 24, relativeTo: .title2)
     }
-    /// Magic World Line (36)
+    /// Outline (36)
     static var appWin: Font {
-        .custom("MAGICWORLDLINE", size: 36, relativeTo: .largeTitle)
+        .custom("Bobby Jones Soft Outline", size: 36, relativeTo: .largeTitle)
     }
-    /// Magic World Line (64) – outline style for Win detail card title
+    /// Outline (64) – outline style for Win detail card title
     static var appHeroOutline: Font {
-        .custom("MAGICWORLDLINE", size: 64, relativeTo: .title)
+        .custom("Bobby Jones Soft Outline", size: 64, relativeTo: .title)
     }
-    /// Magic World (64) – Lab / detail card titles
+    /// (64) – Lab / detail card titles
     static var appDetailCard: Font {
-        .custom("MAGICWORLD", size: 64, relativeTo: .title)
+        .custom("Bobby Jones Soft", size: 64, relativeTo: .title)
     }
-    /// Bobby Jones Soft (24) – empty state title only
+    /// (24) – empty state title only
     static var appEmptyStateTitle: Font {
         .custom("Bobby Jones Soft", size: 24)
     }
 
-    /// Magic World  (36)
+    /// (36)
     static var appCard: Font {
-        .custom("MAGICWORLD", size: 36, relativeTo: .title)
+        .custom("Bobby Jones Soft", size: 36, relativeTo: .title)
     }
     
 
