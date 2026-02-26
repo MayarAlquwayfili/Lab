@@ -1,25 +1,19 @@
-//
-//  SSC_LabApp.swift
-//  SSC_Lab
-//
-//  Created by yumii on 09/02/2026.
-//
-//  Data: Username/onboarding live in UserDefaults (@AppStorage). Wins, Experiments,
-//  and Collections live in SwiftData (persistent store). If SwiftData fails to load
-//  or migrates badly, only the DB is affected; UserDefaults is separate, so the
-//  username can persist while Wins/Collections disappear.
-//
-
 import SwiftUI
 import SwiftData
 import os
 
-/// Holds the result of loading the SwiftData container. Used so we can show DatabaseErrorView instead of crashing.
 private final class DatabaseLoader: ObservableObject {
     let container: ModelContainer?
     let loadError: Error?
 
     init() {
+        let fileManager = FileManager.default
+        if let appSupportURL = fileManager.urls(for: .applicationSupportDirectory, in: .userDomainMask).first {
+            if !fileManager.fileExists(atPath: appSupportURL.path) {
+                try? fileManager.createDirectory(at: appSupportURL, withIntermediateDirectories: true)
+            }
+        }
+
         let config = ModelConfiguration(isStoredInMemoryOnly: false)
         do {
             self.container = try ModelContainer(
@@ -39,11 +33,11 @@ private final class DatabaseLoader: ObservableObject {
 @main
 struct SSC_LabApp: App {
     @StateObject private var database = DatabaseLoader()
-
+    
     init() {
         FontRegistration.registerCustomFonts()
     }
-
+    
     var body: some Scene {
         WindowGroup {
             if database.loadError != nil {
@@ -51,6 +45,12 @@ struct SSC_LabApp: App {
             } else if let container = database.container {
                 MainTabView()
                     .modelContainer(container)
+                    .onAppear {
+                        Task {
+                            try? await Task.sleep(for: .seconds(1.0))
+                            SampleData.insertSampleData(context: container.mainContext)
+                        }
+                    }
             }
         }
     }

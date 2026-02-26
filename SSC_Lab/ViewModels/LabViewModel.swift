@@ -93,13 +93,13 @@ final class LabViewModel {
         !experiment.referenceURL.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
 
-    // MARK: - Do it again (shared by WinDetailView and CollectionDetailView)
+    //Do it again
 
     /// Creates a temporary experiment from a Win so QuickLogView can prefill (e.g. when original experiment was removed from Lab).
     static func temporaryExperiment(from win: Win) -> Experiment {
-        let env = (win.icon1 == Constants.Icons.outdoor) ? "outdoor" : "indoor"
-        let toolsStr = (win.icon2 == Constants.Icons.toolsNone) ? "none" : "required"
-        let timeframeStr = win.icon3 ?? "1D"
+        let env = (win.environment == Constants.Icons.outdoor) ? "outdoor" : "indoor"
+        let toolsStr = (win.tools == Constants.Icons.toolsNone) ? "none" : "required"
+        let timeframeStr = win.timeframe ?? "1D"
         let logTypeStr: String? = (win.logTypeIcon == Constants.Icons.newInterest) ? "newInterest" : "oneTime"
         return Experiment(
             title: win.title,
@@ -117,7 +117,7 @@ final class LabViewModel {
         )
     }
 
-    /// Finds or creates an experiment for the win, sets it active, saves, then calls switchToHome (e.g. switch tab to Home so QuickLogView can be presented).
+    /// Finds or creates an experiment for the win, sets it active, saves, then calls switchToHome
     func openDoItAgain(win: Win, experiments: [Experiment], context: ModelContext, switchToHome: () -> Void) {
         let exp: Experiment? = win.activityID.flatMap { id in experiments.first(where: { $0.activityID == id }) }
             ?? experiments.first(where: { $0.title == win.title })

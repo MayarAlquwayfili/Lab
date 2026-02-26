@@ -15,18 +15,14 @@ final class Win {
     var createdAt: Date = Date()
     var logTypeIcon: String
     var date: Date = Date()
-    var icon1: String?
-    var icon2: String?
-    var icon3: String?
-    /// Collection name (e.g. from Quick Log); shown as a tag on the card.
+    var environment: String?
+    var tools: String?
+    var timeframe: String?
     var collectionName: String?
-    /// Optional SwiftData relationship to a WinCollection. If nil, win appears in "Uncategorized".
     var collection: WinCollection?
-    /// User notes for the win (bound in detail view).
     var notes: String = ""
     /// When set, links this win to an experiment for repeat count and "Do it again". Preserved even if user edits the title.
     var activityID: UUID?
-    /// SF Symbol for the win (experiment icon when created from Lab; user choice when editing). Used for the card badge.
     var icon: String? = nil
 
     /// Relative date string for UI
@@ -37,9 +33,9 @@ final class Win {
         imageData: Data? = nil,
         logTypeIcon: String,
         date: Date = .now,
-        icon1: String? = nil,
-        icon2: String? = nil,
-        icon3: String? = nil,
+        environment: String? = nil,
+        tools: String? = nil,
+        timeframe: String? = nil,
         collectionName: String? = nil,
         collection: WinCollection? = nil,
         notes: String = "",
@@ -50,9 +46,9 @@ final class Win {
         self.imageData = imageData
         self.logTypeIcon = logTypeIcon
         self.date = date
-        self.icon1 = icon1
-        self.icon2 = icon2
-        self.icon3 = icon3
+        self.environment = environment
+        self.tools = tools
+        self.timeframe = timeframe
         self.collectionName = collectionName
         self.collection = collection
         self.notes = notes
@@ -67,9 +63,9 @@ final class Win {
             imageData: win.imageData,
             logTypeIcon: win.logTypeIcon,
             date: win.date,
-            icon1: win.icon1,
-            icon2: win.icon2,
-            icon3: win.icon3,
+            environment: win.environment,
+            tools: win.tools,
+            timeframe: win.timeframe,
             collectionName: win.collectionName,
             collection: win.collection,
             notes: win.notes,
@@ -79,7 +75,7 @@ final class Win {
     }
 }
 
-// Relative date string for Win UI
+/// Relative date string for Win UI
 extension Date {
     var relativeString: String {
         let cal = Calendar.current
@@ -90,7 +86,7 @@ extension Date {
         return formatter.string(from: self)
     }
 
-    /// Short relative time for "Last Win" footer (e.g. "2h Ago", "1d Ago").
+    /// Short relative time for "Last Win" footer 
     var timeAgoString: String {
         let sec = Int(-timeIntervalSinceNow)
         if sec < 60 { return "Just now" }
