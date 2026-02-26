@@ -246,9 +246,7 @@ struct MainTabView: View {
                 .ignoresSafeArea(.all)
                 .contentShape(Rectangle())
                 .onTapGesture {
-                    if appPopUpState.showCloseButton {
-                        appPopUpState.dismiss()
-                    }
+                    appPopUpState.dismiss()
                 }
             AppPopUp(
                 title: appPopUpState.title,

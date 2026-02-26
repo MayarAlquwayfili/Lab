@@ -2,7 +2,6 @@
 //  LabView.swift
 //  SSC_Lab
 //
-//  Created by yumii on 11/02/2026.
 //
 
 import SwiftUI
@@ -104,13 +103,26 @@ struct LabView: View {
                     .frame(height: AppSpacing.card)
 
                 if experiments.isEmpty {
-                    Text("No experiments yet. Tap Add experiment to start your first one.")
-                        .font(.appBody)
-                        .foregroundStyle(Color.appSecondary)
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    VStack(spacing: AppSpacing.card) {
+                        Spacer()
+                        
+                        VStack(spacing: 8) {
+                            Text("No experiments yet.")
+                                .font(.appBody)
+                                .foregroundStyle(Color.appFont)
+
+                            Text("Tap the + button to start your first one!")
+                                .font(.appBodySmall)
+                                .foregroundStyle(Color.appSecondary)
+                        }
                         .multilineTextAlignment(.center)
-                        .accessibilityElement(children: .combine)
-                        .accessibilityLabel("No experiments yet. Tap Add experiment to start your first one.")
+                        .padding(.horizontal, horizontalMargin)
+
+                        Spacer()
+                    }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .accessibilityElement(children: .combine)
+                    .accessibilityLabel("No experiments yet. Tap the plus button to start your first one.")
                 } else if filteredExperiments.isEmpty {
                     searchEmptyState
                 } else {
@@ -227,7 +239,7 @@ struct LabView: View {
         showRandomizer(experiment: pick, state: state)
     }
 
-    /// Presents the randomizer overlay at root (MainTabView). 
+    /// Presents the randomizer
     private func showRandomizer(experiment pick: Experiment, state: RandomizerState) {
         state.present(
             experiment: pick,
@@ -247,7 +259,7 @@ struct LabView: View {
         )
     }
 
-    // Search empty state (experiments exist but filter/search have no matches)
+    /// Search empty state (experiments exist but filter/search have no matches)
     private var searchEmptyStateButtonTitle: String {
         let searchActive = !searchText.isEmpty
         let filterActive = !filterCriteria.isEmpty

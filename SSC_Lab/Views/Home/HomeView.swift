@@ -1,3 +1,9 @@
+//
+//  HomeView.swift
+//  Lab
+//
+//
+
 import SwiftUI
 import SwiftData
 
@@ -14,7 +20,7 @@ struct HomeView: View {
     @State private var viewModel = LabViewModel()
     @State private var showQuickLog = false
     @State private var quickLogExperiment: Experiment?
-    @State private var showLabEmptyAlert = false
+    @State private var showNeedMoreExperimentsPopUp = false
 
     private var activeExperiment: Experiment? {
         experiments.first { $0.isActive }
@@ -31,7 +37,7 @@ struct HomeView: View {
             AppHeader(title: "HOME") {
                 pillStatus
             }
-            .padding(.horizontal, AppSpacing.block)
+            .padding(.horizontal, AppSpacing.card)
 
             ScrollView {
                 VStack(alignment: .leading, spacing: AppSpacing.block) {
@@ -55,14 +61,20 @@ struct HomeView: View {
         .sheet(isPresented: $showQuickLog) {
             QuickLogView(experimentToLog: quickLogExperiment)
         }
-        .alert("Lab is empty", isPresented: $showLabEmptyAlert) {
-            Button("OK", role: .cancel) {}
-        } message: {
-            Text("Lab is empty, add ideas first!")
-        }
+        .showPopUp(
+            isPresented: $showNeedMoreExperimentsPopUp,
+            title: "You need at least 2 experiments to spin!",
+            message: "",
+            primaryButtonTitle: "Got it",
+            secondaryButtonTitle: "",
+            useGlobal: true,
+            showCloseButton: false,
+            onPrimary: { showNeedMoreExperimentsPopUp = false },
+            onSecondary: {}
+        )
     }
 
-    // MARK: - Components
+    /// Components
 
     private var pillStatus: some View {
         Text(activeExperiment != nil ? Constants.Strings.activeStatus : "STANDBY")
@@ -166,13 +178,10 @@ struct HomeView: View {
     private var emptyHeroCard: some View {
         Button { selectedTabBinding?.wrappedValue = .lab } label: {
             VStack(spacing: 8) {
-                Text("Ready for a new experiment?\nJump to the Lab!")
+                Text("No active experiment right now.\nJump to the Lab to activate one!")
                     .font(.appSubHeadline)
                     .foregroundStyle(Color.appFont)
                     .multilineTextAlignment(.center)
-                Image(systemName: "viewfinder.circle.fill")
-                    .font(.system(size: 28))
-                    .foregroundStyle(Color.appPrimary)
             }
             .frame(maxWidth: .infinity)
             .frame(height: 140)
@@ -228,7 +237,7 @@ struct HomeView: View {
         guard inactiveExperiments.count >= 2,
               let state = randomizerState,
               let pick = inactiveExperiments.randomElement() else {
-            showLabEmptyAlert = true
+            showNeedMoreExperimentsPopUp = true
             return
         }
         state.present(

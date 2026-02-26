@@ -229,9 +229,7 @@ private struct GlobalPopUpSyncView: View {
                         .ignoresSafeArea(.all)
                         .contentShape(Rectangle())
                         .onTapGesture {
-                            if showCloseButton {
-                                isPresented = false
-                            }
+                            isPresented = false
                         }
                     AppPopUp(
                         title: title,
@@ -250,7 +248,7 @@ private struct GlobalPopUpSyncView: View {
     }
 }
 
-// Custom popup
+/// Custom popup
 extension View {
     func showPopUp(
         isPresented: Binding<Bool>,

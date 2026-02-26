@@ -53,7 +53,7 @@ struct FilterCriteria {
     /// Returns true if criteria is empty, or if the win matches at least one selected badge in every active category (AND logic).
     func matches(_ win: Win) -> Bool {
         guard !selectedBadges.isEmpty else { return true }
-        let iconNames = [win.icon1, win.icon2, win.icon3, win.logTypeIcon].compactMap { $0 }
+        let iconNames = [win.environment, win.tools, win.timeframe, win.logTypeIcon].compactMap { $0 }
         let winBadges = Set(iconNames.compactMap { BadgeType.from(iconName: $0) })
         let envSelected = selectedBadges.filter { Self.category(of: $0) == 0 }
         let toolsSelected = selectedBadges.filter { Self.category(of: $0) == 1 }
