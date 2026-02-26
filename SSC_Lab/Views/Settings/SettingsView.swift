@@ -139,7 +139,7 @@ struct SettingsView: View {
                                 showLabStorySheet = true
                             } label: {
                                 HStack(alignment: .center, spacing: AppSpacing.small) {
-                                    Text("The Lab Story")
+                                    Text("Behind the REC")
                                         .font(.appBodySmall)
                                         .fontWeight(.regular)
                                         .foregroundStyle(Color.appFont)
@@ -276,44 +276,103 @@ struct SettingsView: View {
     }
 }
 
-/// The Story Behind
+/// Behind the REC
 private struct LabStorySheet: View {
     @Environment(\.dismiss) private var dismiss
     private let horizontalMargin: CGFloat = 16
     
-    private let storyText = """
-         Lab is a place for running small experiments in your daily life—trying new habits, testing ideas, and logging what works.
-        
-        The app helps you define experiments with clear setup (environment, tools, timeframe), track wins, and reflect in lab notes. You can filter, search, and use the Random Picker when you want to let chance choose your next experiment.
-        
-        Everything stays on your device. No account required. Built for the Swift Student Challenge.
-        """
-    
     var body: some View {
         VStack(spacing: 0) {
-            AppHeader(title: "The Story Behind SSC Lab", leftContent: {
-                EmptyView()
+            AppHeader(title: "Behind the REC", leftContent: {
+                Image(systemName: "xmark")
+                    .font(.system(size: 16, weight: .bold))
+                    .opacity(0)
             }, rightContent: {
                 Button {
                     dismiss()
                 } label: {
-                    Text("Done")
-                        .font(.appSubHeadline)
-                        .foregroundStyle(Color.appPrimary)
+                    Image(systemName: "xmark")
+                        .font(.system(size: 16, weight: .bold))
+                        .foregroundStyle(Color.appSecondary)
                 }
                 .buttonStyle(.plain)
             })
             
             ScrollView {
-                Text(storyText)
-                    .font(.appBody)
-                    .foregroundStyle(Color.appFont)
-                    .lineSpacing(6)
-                    .multilineTextAlignment(.leading)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(.horizontal, horizontalMargin)
-                    .padding(.top, AppSpacing.card)
-                    .padding(.bottom, AppSpacing.large)
+                VStack(alignment: .leading, spacing: 24) {
+                    
+                    Text("\"What are your hobbies?\" Honestly, I never know how to answer this because I’m basically")
+                        .font(.appBody)
+                        .fontWeight(.regular)
+                        .foregroundStyle(Color.appFont)
+                    + Text("\"Hobby collector\"").bold()
+
+                    Text("Recently, I discovered a word that perfectly describes me: ")
+                        .font(.appBody)
+                        .fontWeight(.regular)
+                        .foregroundStyle(Color.appFont)
+                    + Text("Multipotentialite").bold()
+                    + Text(" (someone who's insanely curious to try a range of hobbies and skills, finding joy in the journey of learning something new). One month, I’m obsessed with 3D modeling in Blender, the next, I’m writing novels, diving into UI/UX design, game development, or trying a new matcha recipe.")
+                        .font(.appBody)
+                        .fontWeight(.regular)
+                        .foregroundStyle(Color.appFont)
+                    
+                    Text("For me, the goal is simply to enjoy the experience! I also love the satisfaction of completing a checklist. I used to create random \"Summer Checklists\" to keep track of everything I wanted to do (I would even log my daily coffee just to check it off lol). But over time, I realized I wanted a \"memory box\" for all these experiments so they wouldn’t just fade away.")
+                        .font(.appBody)
+                        .fontWeight(.regular)
+                        .foregroundStyle(Color.appFont)
+                    
+                                      
+                    
+                VStack(spacing: 6) {                                            HStack(spacing: 8) {
+                        Image(systemName: "sparkles")
+                            .font(.appTitle)
+
+                        Text("That’s how ")
+                            .font(.appTitle)
+                            .fontWeight(.semibold)
+                        + Text("RECLAB ")
+                            .font(.appTitle)
+                            .fontWeight(.heavy)
+                        + Text("was born")
+                            .font(.appTitle)
+                            .fontWeight(.semibold)
+                            
+                        Image(systemName: "sparkles")
+                            .font(.appTitle)
+                    }
+                    .foregroundStyle(Color.appPrimary)
+                    
+                    Text("(REC)ord + (LAB)oratory")
+                        .font(.caption)
+                        .fontWeight(.medium)
+                        .foregroundStyle(Color.appSecondary)
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 12)
+                                                
+                                       
+                    
+                    Text("Think about it: scientists in movies always use those old-school tape recorders to log their daily experiments, right? I wanted to capture that exact vibe.")
+                        .font(.appBody)
+                        .fontWeight(.regular)
+                        .foregroundStyle(Color.appFont)
+                    
+                    Text("In this lab, there are no rules. Every idea you want to try is an experiment, and the moment you actually do it? That's a recorded win.")
+                        .font(.appBody)
+                        .fontWeight(.regular)
+                        .foregroundStyle(Color.appFont)
+                    
+                    Text("Don't just do it... hit REC. Document the chaos, archive your journey, and build your own collection of wins.")
+                        .font(.appBody)
+                        .fontWeight(.bold)
+                        .foregroundStyle(Color.appFont)
+                }
+                .lineSpacing(6)
+                .multilineTextAlignment(.leading)
+                .padding(.horizontal, horizontalMargin)
+                .padding(.top, 24)
+                .padding(.bottom, 40)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .background(Color.appBg)
@@ -322,7 +381,6 @@ private struct LabStorySheet: View {
         .background(Color.appBg)
     }
 }
-
 /// Reset Lab Data
 extension SettingsView {
     private func resetLabData() {
