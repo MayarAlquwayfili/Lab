@@ -38,6 +38,7 @@ struct HomeView: View {
                 pillStatus
             }
             .padding(.horizontal, AppSpacing.card)
+            .accessibilityAddTraits(.isHeader)
 
             ScrollView {
                 VStack(alignment: .leading, spacing: AppSpacing.block) {
@@ -53,13 +54,18 @@ struct HomeView: View {
             lastWinRow
                 .padding(.horizontal, AppSpacing.block)
                 .padding(.bottom, AppSpacing.large)
+                .accessibilityElement(children: .combine)
         }
         .background(Color.appBg)
         .onAppear {
             hideTabBarBinding?.wrappedValue = false
         }
+        .sheet(item: $quickLogExperiment) { exp in
+            QuickLogView(experimentToLog: exp)
+                .id(exp.id)
+        }
         .sheet(isPresented: $showQuickLog) {
-            QuickLogView(experimentToLog: quickLogExperiment)
+            QuickLogView(experimentToLog: nil)
         }
         .showPopUp(
             isPresented: $showNeedMoreExperimentsPopUp,
@@ -84,6 +90,7 @@ struct HomeView: View {
             .padding(.horizontal, 12)
             .padding(.vertical, 6)
             .background(Capsule().fill(activeExperiment != nil ? Color.appAlert.opacity(0.15) : Color.appSecondary.opacity(0.15)))
+            .accessibilityLabel(activeExperiment != nil ? "Lab Status: Recording" : "Lab Status: Standby")
     }
 
     private var heroSection: some View {
@@ -91,11 +98,14 @@ struct HomeView: View {
             if let active = activeExperiment {
                 HStack(alignment: .center, spacing: AppSpacing.card) {
                     heroCard(experiment: active)
+                        .accessibilityElement(children: .combine)
+                        .accessibilityLabel("Current Experiment: \(active.title)")
                     sideButtons(experiment: active)
                 }
                 .frame(height: 140)
             } else {
                 emptyHeroCard
+                    .accessibilityLabel("No current experiment. Tap to go to the Lab.")
             }
         }
     }
@@ -143,7 +153,6 @@ struct HomeView: View {
         VStack(spacing: 8) {
             Button {
                 quickLogExperiment = experiment
-                showQuickLog = true
             } label: {
                 Image(systemName: "checkmark")
                     .font(.system(size: 20, weight: .bold))
@@ -154,6 +163,7 @@ struct HomeView: View {
                     .overlay(RoundedRectangle(cornerRadius: 16).stroke(Color.appSecondary, lineWidth: 1.5))
             }
             .buttonStyle(.plain)
+            .accessibilityLabel("Log a win for this experiment")
 
             Button {
                 viewModel.toggleActive(experiment: experiment, allExperiments: experiments, context: modelContext) { previous in
@@ -171,6 +181,7 @@ struct HomeView: View {
                     .overlay(RoundedRectangle(cornerRadius: 16).stroke(Color.appAlert.opacity(0.3), lineWidth: 1.5))
             }
             .buttonStyle(.plain)
+            .accessibilityLabel("Close")
         }
         .frame(width: 60)
     }
@@ -210,6 +221,8 @@ struct HomeView: View {
                 .overlay(RoundedRectangle(cornerRadius: 16).stroke(Color.appSecondary, lineWidth: 1.5))
             }
             .buttonStyle(.plain)
+            .accessibilityLabel("Spin the dice")
+            .accessibilityHint("Double tap to randomly pick an experiment")
 
             Button {
                 quickLogExperiment = nil
@@ -230,6 +243,7 @@ struct HomeView: View {
                 .overlay(RoundedRectangle(cornerRadius: 16).stroke(Color.appSecondary, lineWidth: 1.5))
             }
             .buttonStyle(.plain)
+            .accessibilityLabel("log a win")
         }
     }
 

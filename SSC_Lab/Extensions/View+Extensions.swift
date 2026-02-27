@@ -8,7 +8,7 @@
 import SwiftUI
 import UIKit
 
-/// Button style that shows no press feedback (no opacity, scale, or color change)
+/// Button style  
 struct NoHighlightButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
@@ -45,6 +45,7 @@ extension View {
 }
 
 /// Global popup state
+@MainActor 
 @Observable
 final class AppPopUpState {
     var isPresented = false
@@ -101,6 +102,7 @@ extension EnvironmentValues {
 }
 
 /// Global toast state
+@MainActor 
 @Observable
 final class GlobalToastState {
     var isShowing = false

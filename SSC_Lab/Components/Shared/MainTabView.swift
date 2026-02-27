@@ -2,7 +2,6 @@
 //  MainTabView.swift
 //  SSC_Lab
 //
-//  Created by yumii on 11/02/2026.
 //
 
 import SwiftUI
@@ -85,7 +84,6 @@ struct MainTabView: View {
 
     var body: some View {
         ZStack(alignment: .bottom) {
-            // Tab content + tab bar
             ZStack {
                 Color.appBg.ignoresSafeArea(.all, edges: .bottom)
                 
@@ -115,12 +113,10 @@ struct MainTabView: View {
                 customTabBar
             }
             
-            // Root pop-ups
             if rootPopUpState.hasActivePopUp {
                 rootPopUpOverlay
             }
             
-            // Randomizer overlay
             if randomizerState.isPresented {
                 randomizerOverlay
             }
@@ -160,7 +156,6 @@ struct MainTabView: View {
         }
     }
 
-    /// Unified root pop-up: dimmed background (covers tab bar), tap-outside to dismiss, centered card with scale+opacity transition.
     private var rootPopUpOverlay: some View {
         ZStack {
             Color.black.opacity(0.4)

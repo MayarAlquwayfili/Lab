@@ -10,14 +10,14 @@ import CoreGraphics
 
 enum Constants {
     
-    // UI
+    /// UI
     enum Strings {
         static let activeStatus  = "Recording..."
         static let quickLog      = "QUICK_LOG"
         static let spinWheel     = "SPIN_WHEEL"
     }
     
-    // SF Symbols
+    /// SF Symbols
     enum Icons {
         static let home          = "house"
         static let homeFill      = "house.fill"
@@ -25,7 +25,7 @@ enum Constants {
         static let cancel        = "xmark"
         static let dice          = "dice"
         static let log           = "plus.app"
-        // StatusBadge
+        /// StatusBadge
         static let indoor        = "house.fill"
         static let outdoor       = "mountain.2.fill"
         static let tools         = "hammer.fill"
@@ -35,7 +35,7 @@ enum Constants {
         static let link          = "link"
     }
 
-    // Experiment Setup card
+    /// Experiment Setup card
     enum Setup {
         static let environmentLabel = "Environment"
         static let toolsLabel       = "Tools"
@@ -49,7 +49,7 @@ enum Constants {
         static let newInterest      = "New Interest"
     }
 
-    // Lab & Experiment  
+    /// Lab & Experiment  
     enum Lab {
         static let labTitle = "My Lab"
         static let emptyStateTitle = "Tap the + button to start your first experiment!"
@@ -101,7 +101,7 @@ enum Constants {
         static let deletePopUpSecondary = "Cancel"
     }
 
-    // Home page
+    /// Home page
     enum Home {
         static let currentlyTestingTitle = "Currently Testing"
         static let buttonLogWin = "Log a Win"
@@ -114,7 +114,7 @@ enum Constants {
         static let lastWinPrefix = "Last Win : "
     }
 
-    // Tab bar
+    /// Tab bar
     enum AppTabBar {
         static let homeIcon     = "square.grid.2x2.fill"
         static let homeLabel    = "Home"

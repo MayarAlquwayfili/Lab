@@ -2,7 +2,7 @@
 //  ArchiveCardView.swift
 //  SSC_Lab
 //
-//  Card for Wins Archive grid: 181×181 image box, title, win count.
+//  Card for Wins Archive grid
 //
 
 import SwiftUI
@@ -20,7 +20,6 @@ struct ArchiveCardView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            // Image/Box: 181×181, rounded corners, border
             ZStack {
                 RoundedRectangle(cornerRadius: cornerRadius)
                     .fill(Color.appShade02)
@@ -61,6 +60,8 @@ struct ArchiveCardView: View {
         .frame(width: boxSize)
     }
 }
+
+// MARK: - Previews
 
 #Preview("ArchiveCardView – with image") {
     ArchiveCardView(title: "Pottery", winCount: 10, mostRecentImageName: nil)

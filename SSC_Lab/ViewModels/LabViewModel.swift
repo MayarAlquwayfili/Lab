@@ -12,7 +12,7 @@ import os
 @Observable
 final class LabViewModel {
 
-    // SwiftData actions
+    /// SwiftData actions
 
     /// Deletes the experiment immediately and saves. On success returns an undo closure that re-inserts the experiment; on save failure returns nil (caller should show error toast).
     func deleteExperiment(experiment: Experiment, context: ModelContext) -> (() -> Void)? {
@@ -93,7 +93,7 @@ final class LabViewModel {
         !experiment.referenceURL.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
 
-    //Do it again
+    /// Do it again
 
     /// Creates a temporary experiment from a Win so QuickLogView can prefill (e.g. when original experiment was removed from Lab).
     static func temporaryExperiment(from win: Win) -> Experiment {

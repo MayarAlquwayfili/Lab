@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-// Setup option enums
+/// Setup option enums
 enum EnvironmentOption: String, CaseIterable {
     case indoor
     case outdoor
@@ -62,7 +62,7 @@ enum LogTypeOption: String, CaseIterable {
     }
 }
 
-// Picker used in each setup row
+/// Picker used in each setup row
 private struct SetupPickerView<Option: Hashable & Equatable>: View {
     @Binding var selection: Option
     var namespace: Namespace.ID
@@ -121,7 +121,7 @@ private struct SetupPickerView<Option: Hashable & Equatable>: View {
     }
 }
 
-// ExperimentSetupCard
+/// ExperimentSetupCard
 struct ExperimentSetupCard: View {
     var showLogType: Bool = true
     
@@ -229,7 +229,8 @@ struct ExperimentSetupCard: View {
     @Namespace private var namespaceLogType
 }
 
-// Previews
+// MARK: - Previews
+
 #Preview("ExperimentSetupCard – With Log Type") {
     ExperimentSetupCard(showLogType: true)
         .padding()

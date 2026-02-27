@@ -2,7 +2,6 @@
 //  SettingsView.swift
 //  SSC_Lab
 //
-//  Settings: Account, About, Danger Zone.
 //
 
 import SwiftUI
@@ -113,13 +112,7 @@ struct SettingsView: View {
                                     .foregroundStyle(Color.appFont)
                                 Spacer(minLength: 8)
                                 HStack(spacing: AppSpacing.small) {
-                                    Link(destination: URL(string: "https://github.com/MayarAlquwayfili")!) {
-                                        Image(systemName: "link")
-                                            .font(.system(size: 16, weight: .medium))
-                                            .foregroundStyle(Color.appSecondary)
-                                    }
-                                    .buttonStyle(.plain)
-                                    .accessibilityLabel("GitHub")
+                                    
                                     Link(destination: URL(string: "https://www.linkedin.com/in/mayar-alquwayfili-2b8214331/")!) {
                                         Image(systemName: "globe")
                                             .font(.system(size: 16, weight: .medium))
@@ -324,7 +317,8 @@ private struct LabStorySheet: View {
                     
                                       
                     
-                VStack(spacing: 6) {                                            HStack(spacing: 8) {
+                VStack(spacing: 6) {                                            
+                    HStack(spacing: 8) {
                         Image(systemName: "sparkles")
                             .font(.appTitle)
 
@@ -353,7 +347,7 @@ private struct LabStorySheet: View {
                                                 
                                        
                     
-                    Text("Think about it: scientists in movies always use those old-school tape recorders to log their daily experiments, right? I wanted to capture that exact vibe.")
+                    Text("Think about it: scientists in movies always use those old-school tape recorders to log their experiments, right? I wanted to capture that exact vibe.")
                         .font(.appBody)
                         .fontWeight(.regular)
                         .foregroundStyle(Color.appFont)

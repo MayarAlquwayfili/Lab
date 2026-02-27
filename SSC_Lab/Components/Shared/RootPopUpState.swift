@@ -2,7 +2,7 @@
 //  RootPopUpState.swift
 //  SSC_Lab
 //
-//  Unified root-level pop-up state so overlays (dimmed background + centered card)cover the tab bar.
+//  Unified root-level pop-up state so overlays  
 //
 
 import SwiftUI

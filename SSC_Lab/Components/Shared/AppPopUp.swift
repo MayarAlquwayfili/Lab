@@ -2,7 +2,7 @@
 //  AppPopUp.swift
 //  SSC_Lab
 //
-//  Reusable modal popup: dimmed overlay + white card with title, message, two buttons.
+//  Reusable modal popup 
 //
 
 import SwiftUI
@@ -24,7 +24,6 @@ struct AppPopUp: View {
     var body: some View {
         ZStack(alignment: .topTrailing) {
             VStack(spacing: 0) {
-                // Reserve space for X so title sits below it
                 Spacer()
                     .frame(height: onClose != nil ? 40 : 0)
 
@@ -75,6 +74,8 @@ struct AppPopUp: View {
         .padding(.horizontal, AppSpacing.large)
     }
 }
+
+// MARK: - Previews
 
 #Preview("AppPopUp") {
     ZStack {

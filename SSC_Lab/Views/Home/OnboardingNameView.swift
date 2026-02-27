@@ -52,6 +52,7 @@ struct OnboardingNameView: View {
                         )
                         .focused($isFocused)
                         .disabled(isRecordingAction)
+                        .accessibilityLabel("Enter your name here")
                                            
                 }
                 .padding(.horizontal, myPadding)
@@ -82,6 +83,9 @@ struct OnboardingNameView: View {
                 .disabled(nameInput.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || isRecordingAction)
                 .opacity(nameInput.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ?   0.3 : 1)
                 .padding(.bottom, 40)
+                .accessibilityLabel(isRecordingAction ? "Recording in progress" : "Confirm name and start recording")
+                .accessibilityHint("Double tap to save your name and enter the lab")
+                            
             }
         }
         .ignoresSafeArea(.keyboard, edges: .bottom)

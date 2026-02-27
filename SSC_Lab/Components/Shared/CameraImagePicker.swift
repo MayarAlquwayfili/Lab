@@ -2,7 +2,7 @@
 //  CameraImagePicker.swift
 //  SSC_Lab
 //
-//  UIKit bridge for camera capture. Presents UIImagePickerController with sourceType .camera.
+//  UIKit bridge for camera capture.
 //
 
 import SwiftUI

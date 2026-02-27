@@ -48,7 +48,7 @@ struct WinsView: View {
     }
 }
 
-// MARK: - White list card (icon, title, optional thumbnail, collection tag)
+/// White list card 
 
 private struct WinArchiveCard: View {
     var win: Win

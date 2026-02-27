@@ -194,7 +194,7 @@ struct QuickLogView: View {
         }
     }
 
-    // New Collection popup  
+    /// New Collection popup  
     private var newCollectionPopUpOverlay: some View {
         let trimmed = viewModel.newCollectionName.trimmingCharacters(in: .whitespacesAndNewlines)
         let isEmpty = trimmed.isEmpty
@@ -313,7 +313,7 @@ struct QuickLogView: View {
         .frame(height: AppSpacing.section + 44)
     }
 
-    //Entry Card
+    /// Entry Card
 
     private var entryCard: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -411,7 +411,7 @@ struct QuickLogView: View {
         .overlay(RoundedRectangle(cornerRadius: cornerRadius).stroke(Color.appSecondary, lineWidth: 1))
     }
 
-    // Media Section
+    /// Media Section
 
     private var mediaSection: some View {
         Group {

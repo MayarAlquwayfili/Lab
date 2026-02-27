@@ -8,20 +8,20 @@ import PackageDescription
 import AppleProductTypes
 
 let package = Package(
-    name: "Lab",
+    name: "RECLAB",
     platforms: [
         .iOS("18.0")
     ],
     products: [
         .iOSApplication(
-            name: "Lab",
+            name: "RECLAB",
             targets: ["AppModule"],
-            bundleIdentifier: "com.mayar.Lab",
+            bundleIdentifier: "com.mayar.reclab",
             teamIdentifier: "65WKCCK99N",
             displayVersion: "1.0",
             bundleVersion: "1",
             appIcon: .asset("AppIcon"),
-            accentColor: .presetColor(.teal),
+            accentColor: .presetColor(.mint),
             supportedDeviceFamilies: [
                 .pad,
                 .phone
@@ -36,7 +36,8 @@ let package = Package(
                 .camera(purposeString: "Capture your wins!"),
                 .photoLibrary(purposeString: "Capture your wins!"),
                 .photoLibraryAdd(purposeString: "To save your captured wins to your photo library.")
-            ]
+            ],
+            appCategory: .productivity
         )
     ],
     targets: [
@@ -48,5 +49,5 @@ let package = Package(
             ]
         )
     ],
-    swiftLanguageVersions: [.version("6")]
+    swiftLanguageModes: [.v6]
 )

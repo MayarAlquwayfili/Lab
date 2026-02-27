@@ -54,7 +54,7 @@ struct AppHeader<Trailing: View>: View {
         self.trailing = { EmptyView() }
     }
 
-    /// Sub-screen with custom left and right (e.g. Edit mode: X cancel, checkmark save)
+    /// Sub-screen with custom left and right (e.g. checkmark save)
     init<Left: View, Right: View>(title: String, @ViewBuilder leftContent: @escaping () -> Left, @ViewBuilder rightContent: @escaping () -> Right) where Trailing == EmptyView {
         self.title = title
         self.isSubScreen = true
@@ -106,7 +106,6 @@ struct AppHeader<Trailing: View>: View {
 
     private var subContent: some View {
         HStack(alignment: .center, spacing: 0) {
-            // Left button area (min 44pt touch target)
             Group {
                 if let customLeft = customSubScreenLeft {
                     customLeft()
@@ -121,7 +120,7 @@ struct AppHeader<Trailing: View>: View {
             }
             .frame(width: minTouchTarget + horizontalPadding, alignment: .leading)
             
-            // Center title area
+            /// Center title area
             Text(title)
                 .font(.appHeroSmall)
                 .foregroundStyle(Color.appFont)
@@ -130,7 +129,7 @@ struct AppHeader<Trailing: View>: View {
                 .multilineTextAlignment(.center)
                 .frame(maxWidth: .infinity)
             
-            // Right button area (min 44pt touch target)
+            /// Right button area (min 44pt touch target)
             Group {
                 if let customRight = customSubScreenRight {
                     customRight()
@@ -163,15 +162,13 @@ struct AppHeader<Trailing: View>: View {
     }
 }
 
-// Safe area top
-
+/// Safe area top
 private struct SafeAreaTopKey: PreferenceKey {
     static let defaultValue: CGFloat = 0
     static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) { value = nextValue() }
 }
 
-// Main header
-
+/// Main header
 extension AppHeader where Trailing == EmptyView {
     init(title: String) {
         self.title = title

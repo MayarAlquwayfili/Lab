@@ -103,9 +103,11 @@ struct ExperimentDetailView: View {
             }
             .sheet(isPresented: $showEditSheet) {
                 AddNewExperimentView(experimentToEdit: experiment)
+                .id(experiment.id)
             }
             .sheet(isPresented: $showLogSheet) {
                 QuickLogView(experimentToLog: experiment)
+                .id(experiment.id)
             }
             .showPopUp(
                 isPresented: $showDeleteAlert,

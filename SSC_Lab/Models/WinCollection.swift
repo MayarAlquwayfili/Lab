@@ -25,7 +25,7 @@ final class WinCollection {
     }
 }
 
-// MARK: - Collection name validation (shared by QuickLogView, WinDetailView, CollectionsGalleryView)
+/// Collection name validation (shared by QuickLogView, WinDetailView, CollectionsGalleryView)
 
 extension Array where Element == WinCollection {
     /// Reserved names that cannot be used for user-created collections (normalized for comparison).

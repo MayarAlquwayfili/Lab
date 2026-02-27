@@ -146,7 +146,6 @@ struct LabView: View {
                                 .contextMenu {
                                     SharedEditMenuItem {
                                         experimentToEdit = experiment
-                                        showEditSheet = true
                                     }
                                     Button {
                                         viewModel.toggleActive(experiment: experiment, allExperiments: experiments, context: modelContext) { previous in
@@ -195,10 +194,8 @@ struct LabView: View {
             .sheet(isPresented: $showAddSheet) {
                 AddNewExperimentView()
             }
-            .sheet(isPresented: $showEditSheet) {
-                if let experiment = experimentToEdit {
-                    AddNewExperimentView(experimentToEdit: experiment)
-                }
+            .sheet(item: $experimentToEdit) { experiment in
+                AddNewExperimentView(experimentToEdit: experiment)
             }
             .sheet(isPresented: $showQuickLogSheet) {
                 QuickLogView(experimentToLog: experimentForLog)

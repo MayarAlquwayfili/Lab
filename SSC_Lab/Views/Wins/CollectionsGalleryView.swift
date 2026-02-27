@@ -62,19 +62,19 @@ struct CollectionsGalleryView: View {
 
     /// Shown when there are no user collections. No Create button — use '+' in header.
     private var emptyStateMessage: some View {
-        VStack(spacing: AppSpacing.card) {
-            Image(systemName: "folder.badge.plus")
-                .font(.system(size: 40, weight: .medium))
-                .foregroundStyle(Color.appSecondary)
-            Text("No Collections Yet. Tap the + button at the top to organize your wins!")
-                .font(.appBodySmall)
+        VStack(spacing: 8) {
+            Text("No Collections yet.")
+                .font(.appBody)
                 .foregroundStyle(Color.appFont)
-                .multilineTextAlignment(.center)
-                .padding(.horizontal, horizontalPadding)
+            Text("Tap the + button at the top to organize your wins!")
+                .font(.appBodySmall)
+                .foregroundStyle(Color.appSecondary)
+                .foregroundStyle(Color.appFont)
         }
-        .frame(maxWidth: .infinity)
-        .padding(.vertical, AppSpacing.block)
+        .multilineTextAlignment(.center)
+        .padding(.horizontal, horizontalPadding)
     }
+
 
     var body: some View {
         ZStack {
@@ -181,7 +181,7 @@ struct CollectionsGalleryView: View {
         .navigationBarHidden(true)
     }
 
-    // Rename popup
+    /// Rename popup
     private var renamePopUpOverlay: some View {
         Group {
             if showRenamePopUp, let collection = collectionToRename {
@@ -270,7 +270,7 @@ struct CollectionsGalleryView: View {
     }
 }
 
-// Grid item model
+/// Grid item model
 private struct GalleryGridItem: Identifiable {
     let id: String
     let title: String

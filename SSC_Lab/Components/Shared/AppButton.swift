@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-// Button style
+/// Button style
 enum AppButtonStyle {
     case primary
     case secondary
@@ -33,7 +33,7 @@ enum AppButtonStyle {
     }
 }
 
-// AppButton
+/// AppButton
 struct AppButton: View {
     var title: String
     var style: AppButtonStyle = .primary

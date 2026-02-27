@@ -17,7 +17,6 @@ extension Color {
     static let appShade01   = Color("Base_Shade_01")
     static let appShade02   = Color("Base_Shade_02")
     static let appAlert     = Color("AlertColor")
-    /// Darker tone for close/cancel actions (e.g. X button)
     static var appSecondaryDark: Color { Color.appFont.opacity(0.55) }
 }
 

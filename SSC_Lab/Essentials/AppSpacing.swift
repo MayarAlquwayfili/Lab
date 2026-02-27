@@ -2,8 +2,7 @@
 //  AppSpacing.swift
 //  SSC_Lab
 //
-//  Design system spacing constants. Use these in .padding(), spacing:, and
-//  spacing-related .frame() to keep layout consistent without changing pixels.
+//  Design system spacing constants.  
 //
 
 import SwiftUI
