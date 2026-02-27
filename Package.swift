@@ -33,9 +33,9 @@ let package = Package(
                 .portraitUpsideDown(.when(deviceFamilies: [.pad]))
             ],
             capabilities: [
-                .camera(purposeString: "Capture your wins!"),
-                .photoLibrary(purposeString: "Capture your wins!"),
-                .photoLibraryAdd(purposeString: "To save your captured wins to your photo library.")
+                .camera(purposeString: "RECLAB needs camera access to capture and document your experiments."),
+                .photoLibrary(purposeString: "RECLAB needs access to your photo library to select photos for your projects."),
+                .photoLibraryAdd(purposeString: "RECLAB needs permission to save your captured results to your library.")
             ],
             appCategory: .productivity
         )
@@ -49,5 +49,5 @@ let package = Package(
             ]
         )
     ],
-    swiftLanguageModes: [.v6]
+    swiftLanguageVersions: [.version("6")]
 )

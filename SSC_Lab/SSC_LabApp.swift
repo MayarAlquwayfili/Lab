@@ -36,6 +36,7 @@ struct SSC_LabApp: App {
     
     init() {
         FontRegistration.registerCustomFonts()
+        
     }
     
     var body: some Scene {

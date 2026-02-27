@@ -9,10 +9,10 @@ import Foundation
 
 enum FontRegistration {
 
-    /// Original names  
+
     private static let fontFiles: [(name: String, nameNoSpaces: String?, ext: String)] = [
-        ("Bobby Jones Soft", "BobbyJonesSoft", "otf"),
-        ("Bobby Jones Soft Outline", "BobbyJonesSoftOutline", "otf"),
+        ("Londrina Outline Regular", "LondrinaOutline-Regular", "ttf"),
+        ("Londrina Solid Regular", "LondrinaSolid-Regular", "ttf"),
     ]
 
     /// Registers custom fonts from the bundle so they are available globally.

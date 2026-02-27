@@ -9,38 +9,38 @@ import Foundation
 import SwiftUI
 
 extension Font {
-    
+     
  
-    // Bobby Jones Soft
+    // Londrina 
     
     /// (36)
     static var appHero: Font {
-        .custom("Bobby Jones Soft", size: 36, relativeTo: .largeTitle)
+        .custom("LondrinaSolid-Regular", size: 36, relativeTo: .largeTitle)
     }
     ///(24) – smaller hero for detail/nav titles
     static var appHeroSmall: Font {
-        .custom("Bobby Jones Soft", size: 24, relativeTo: .title2)
+        .custom("LondrinaSolid-Regular", size: 24, relativeTo: .title2)
     }
     /// Outline (36)
     static var appWin: Font {
-        .custom("Bobby Jones Soft Outline", size: 36, relativeTo: .largeTitle)
+        .custom("LondrinaOutline-Regular", size: 36, relativeTo: .largeTitle)
     }
     /// Outline (64) – outline style for Win detail card title
     static var appHeroOutline: Font {
-        .custom("Bobby Jones Soft Outline", size: 64, relativeTo: .title)
+        .custom("LondrinaOutline-Regular", size: 64, relativeTo: .title)
     }
     /// (64) – Lab / detail card titles
     static var appDetailCard: Font {
-        .custom("Bobby Jones Soft", size: 64, relativeTo: .title)
+        .custom("LondrinaSolid-Regular", size: 64, relativeTo: .title)
     }
     /// (24) – empty state title only
     static var appEmptyStateTitle: Font {
-        .custom("Bobby Jones Soft", size: 24)
+        .custom("LondrinaSolid-Regular", size: 24)
     }
 
     /// (36)
     static var appCard: Font {
-        .custom("Bobby Jones Soft", size: 36, relativeTo: .title)
+        .custom("LondrinaSolid-Regular", size: 36, relativeTo: .title)
     }
     
 
